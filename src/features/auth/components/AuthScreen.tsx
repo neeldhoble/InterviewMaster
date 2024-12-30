@@ -55,6 +55,11 @@ export const AuthScreen = ({ onClose }: AuthScreenProps) => {
     router.push(redirectUrl);
   };
 
+  const handleContinueAsGuest = () => {
+    localStorage.setItem('userStatus', 'guest');
+    router.push('/');
+  };
+
   return (
     <section className="relative flex flex-col items-center justify-center p-8 rounded-2xl min-h-[500px]">
       {/* Close button with glow effect */}
@@ -129,6 +134,28 @@ export const AuthScreen = ({ onClose }: AuthScreenProps) => {
             {/* Subtle glow effect */}
             <div className="absolute inset-0 bg-[#fcba28]/5 blur-xl opacity-0 group-hover:opacity-100 transition-opacity" />
           </motion.div>
+
+          <div className="mt-4 text-center">
+            <div className="relative">
+              <div className="absolute inset-0 flex items-center">
+                <div className="w-full border-t border-gray-700"></div>
+              </div>
+              <div className="relative flex justify-center text-sm">
+                <span className="px-2 bg-black text-gray-400">Or</span>
+              </div>
+            </div>
+
+            <button
+              onClick={handleContinueAsGuest}
+              className="mt-4 w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-black bg-[#fcba28] hover:bg-[#fcba28]/90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#fcba28]"
+            >
+              Continue as Guest
+            </button>
+
+            <p className="mt-2 text-xs text-gray-500">
+              You can sign in later to save your progress
+            </p>
+          </div>
         </motion.div>
       </motion.div>
     </section>

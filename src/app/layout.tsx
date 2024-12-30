@@ -12,7 +12,8 @@ import NextTopLoader from 'nextjs-toploader';
 import { Header } from "@/components/Header";
 import { Footer } from "@/components/Footer";
 import { Toaster } from "@/components/ui/sonner";
-import { AuthModal } from "@/features/auth/components/AuthModal"; // Updated import statement
+import { AuthModal } from "@/features/auth/components/AuthModal"; 
+import { AuthProvider } from '@/features/auth/context/AuthContext'; // Added import statement
 
 
 const font = Noto_Sans({ weight: ['400', '700'], subsets: ['latin'] });
@@ -37,15 +38,17 @@ export default function RootLayout({
           )}
         >
           <ConvexClientProvider>
-            {/* TODO: Use a different color here based on your app theme */}
-            <NextTopLoader showSpinner={false} color="#fcba28" />
-            <div id="portal-root" /> {/* Add portal root for modals */}
-            <Toaster />
-            <Header />
-            <AuthModal />
-            <main>{children}</main>
-            <Footer />
-            <Analytics />
+            <AuthProvider>
+              {/* TODO: Use a different color here based on your app theme */}
+              <NextTopLoader showSpinner={false} color="#fcba28" />
+              <div id="portal-root" /> {/* Add portal root for modals */}
+              <Toaster />
+              <Header />
+              <AuthModal />
+              <main>{children}</main>
+              <Footer />
+              <Analytics />
+            </AuthProvider>
           </ConvexClientProvider>
         </body>
       </html>
