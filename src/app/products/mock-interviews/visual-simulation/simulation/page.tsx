@@ -2,21 +2,22 @@
 
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import AIAvatar from './components/AIAvatar';
+import { AIAvatar } from './components/AIAvatar';
 import VideoFeed from './components/VideoFeed';
 import QuestionPanel from './components/QuestionPanel';
 import VideoPreview from './components/VideoPreview';
-import { interviewQuestions } from './data/questions';
+import { Question, interviewQuestions } from './data/questions';
 import { MessageSquare, BarChart, Download, Share2, ThumbsUp, Volume2, Mic, Camera, Settings, ChevronLeft } from 'lucide-react';
 import { recordingService } from './services/recordingService';
 
 export default function SimulationPage() {
   const [isRecording, setIsRecording] = useState(false);
-  const [currentQuestion, setCurrentQuestion] = useState<number>(0);
+  const [timeElapsed, setTimeElapsed] = useState(0);
+  const [currentQuestion, setCurrentQuestion] = useState(0);
   const [isAISpeaking, setIsAISpeaking] = useState(false);
+  const [questions, setQuestions] = useState(interviewQuestions);
   const [isMuted, setIsMuted] = useState(false);
   const [isVideoOn, setIsVideoOn] = useState(true);
-  const [timeElapsed, setTimeElapsed] = useState(0);
   const [recordings, setRecordings] = useState<Array<{
     id: string;
     timestamp: Date;
@@ -74,15 +75,19 @@ export default function SimulationPage() {
     }
   };
 
-  const handleNextQuestion = () => {
-    const nextIndex = (currentQuestion + 1) % interviewQuestions.length;
-    setCurrentQuestion(nextIndex);
+  const handleQuestionSelect = (index: number) => {
+    setCurrentQuestion(index);
     setIsAISpeaking(true);
     setTimeout(() => setIsAISpeaking(false), 3000);
   };
 
-  const handleSelectQuestion = (index: number) => {
-    setCurrentQuestion(index);
+  const handleCustomQuestionAdd = (question: Question) => {
+    setQuestions(prev => [...prev, question]);
+  };
+
+  const handleNextQuestion = () => {
+    const nextIndex = (currentQuestion + 1) % questions.length;
+    setCurrentQuestion(nextIndex);
     setIsAISpeaking(true);
     setTimeout(() => setIsAISpeaking(false), 3000);
   };
@@ -154,60 +159,50 @@ export default function SimulationPage() {
       </header>
 
       <main className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className="grid grid-cols-12 gap-8">
-          {/* Left Column - Question Panel and AI */}
-          <div className="col-span-12 lg:col-span-4 space-y-6">
-            <QuestionPanel
-              questions={interviewQuestions}
-              currentQuestionIndex={currentQuestion}
-              onSelectQuestion={handleSelectQuestion}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+          {/* Left Column: AI Avatar and Question Panel */}
+          <div className="space-y-8">
+            <AIAvatar
+              isSpoken={isAISpeaking}
+              currentQuestion={questions[currentQuestion]?.text}
             />
-            
-            <div className="flex flex-col items-center space-y-4">
-              <AIAvatar 
-                isSpoken={isAISpeaking} 
-                currentQuestion={interviewQuestions[currentQuestion]?.question}
-              />
-              <button
-                onClick={handleNextQuestion}
-                className="px-4 py-2 rounded-lg bg-[#fcba28] text-black font-medium hover:bg-[#fcd978] transition-colors"
-              >
-                Next Question
-              </button>
-            </div>
+            <QuestionPanel
+              currentQuestion={currentQuestion}
+              onQuestionSelect={handleQuestionSelect}
+              onCustomQuestionAdd={handleCustomQuestionAdd}
+              questions={questions}
+            />
           </div>
 
-          {/* Right Column - Video Feed */}
-          <div className="col-span-12 lg:col-span-8 space-y-6">
-            <div className="relative">
-              <VideoFeed isRecording={isRecording} />
-              
-              {/* Video Controls Overlay */}
-              <div className="absolute bottom-0 left-0 right-0 p-4 bg-gradient-to-t from-black/80 to-transparent">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-4">
-                    <button
-                      onClick={() => setIsMuted(!isMuted)}
-                      className="p-2 rounded-full bg-white/10 hover:bg-white/20 transition-colors"
-                    >
-                      <Volume2 className="w-5 h-5 text-white" />
-                    </button>
-                    <button
-                      onClick={() => setIsVideoOn(!isVideoOn)}
-                      className="p-2 rounded-full bg-white/10 hover:bg-white/20 transition-colors"
-                    >
-                      <Camera className="w-5 h-5 text-white" />
-                    </button>
-                  </div>
-                  
-                  <div className="flex items-center gap-4">
-                    {isRecording && (
-                      <div className="flex items-center gap-2">
-                        <div className="w-2 h-2 rounded-full bg-red-500 animate-pulse" />
-                        <span className="text-white">{formatTime(timeElapsed)}</span>
-                      </div>
-                    )}
-                  </div>
+          {/* Right Column: Video Feed and Controls */}
+          <div className="space-y-8">
+            <VideoFeed isRecording={isRecording} />
+            
+            {/* Video Controls Overlay */}
+            <div className="absolute bottom-0 left-0 right-0 p-4 bg-gradient-to-t from-black/80 to-transparent">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-4">
+                  <button
+                    onClick={() => setIsMuted(!isMuted)}
+                    className="p-2 rounded-full bg-white/10 hover:bg-white/20 transition-colors"
+                  >
+                    <Volume2 className="w-5 h-5 text-white" />
+                  </button>
+                  <button
+                    onClick={() => setIsVideoOn(!isVideoOn)}
+                    className="p-2 rounded-full bg-white/10 hover:bg-white/20 transition-colors"
+                  >
+                    <Camera className="w-5 h-5 text-white" />
+                  </button>
+                </div>
+                
+                <div className="flex items-center gap-4">
+                  {isRecording && (
+                    <div className="flex items-center gap-2">
+                      <div className="w-2 h-2 rounded-full bg-red-500 animate-pulse" />
+                      <span className="text-white">{formatTime(timeElapsed)}</span>
+                    </div>
+                  )}
                 </div>
               </div>
             </div>

@@ -109,44 +109,35 @@ export const AIAvatar: React.FC<AIAvatarProps> = ({ isSpoken, currentQuestion })
   const [showFullQuestion, setShowFullQuestion] = useState(false);
   const [isInitialized, setIsInitialized] = useState(false);
 
-  // Initialize speech synthesis
   useEffect(() => {
     if (typeof window !== 'undefined') {
-      // Create a dummy utterance to initialize the speech synthesis
       const dummy = new SpeechSynthesisUtterance('');
       window.speechSynthesis.speak(dummy);
       setIsInitialized(true);
     }
     
-    // Cleanup function to cancel any ongoing speech
     return () => {
       window.speechSynthesis.cancel();
     };
   }, []);
 
-  // Handle speech synthesis
   useEffect(() => {
     if (!isInitialized) return;
 
     const speakQuestion = async () => {
       try {
         if (isSpoken && currentQuestion) {
-          // Cancel any ongoing speech
           window.speechSynthesis.cancel();
 
-          // Create new utterance
           const utterance = new SpeechSynthesisUtterance(currentQuestion);
           speechSynthesisRef.current = utterance;
 
-          // Configure voice settings for Indian accent
-          utterance.rate = 0.9;  // Slightly slower for clarity
-          utterance.pitch = 1.1; // Slightly higher pitch
+          utterance.rate = 0.9;
+          utterance.pitch = 1.1;
           utterance.volume = 1.0;
 
-          // Get available voices
           let voices = window.speechSynthesis.getVoices();
           
-          // If voices are not loaded yet, wait for them
           if (voices.length === 0) {
             await new Promise<void>((resolve) => {
               window.speechSynthesis.onvoiceschanged = () => {
@@ -156,29 +147,16 @@ export const AIAvatar: React.FC<AIAvatarProps> = ({ isSpoken, currentQuestion })
             });
           }
 
-          // Try to find an Indian English voice
-          const indianVoice = voices.find(voice => 
-            voice.name.toLowerCase().includes('indian') || 
-            voice.lang.includes('en-IN') ||
-            voice.name.toLowerCase().includes('hindi')
+          const englishVoice = voices.find(voice => 
+            voice.lang.startsWith('en-')
           );
-
-          if (indianVoice) {
-            utterance.voice = indianVoice;
-          } else {
-            // Fallback to any English voice
-            const englishVoice = voices.find(voice => 
-              voice.lang.startsWith('en-')
-            );
-            if (englishVoice) {
-              utterance.voice = englishVoice;
-            }
+          
+          if (englishVoice) {
+            utterance.voice = englishVoice;
           }
 
-          // Add event listeners
           utterance.onstart = () => {
             setIsSpeaking(true);
-            // Ensure the speech synthesis doesn't get interrupted
             document.addEventListener('visibilitychange', handleVisibilityChange);
           };
 
@@ -193,18 +171,13 @@ export const AIAvatar: React.FC<AIAvatarProps> = ({ isSpoken, currentQuestion })
             document.removeEventListener('visibilitychange', handleVisibilityChange);
           };
 
-          // Split question into chunks if it's too long
           const chunks = splitTextIntoChunks(currentQuestion);
           
-          // Speak each chunk in sequence
           for (const chunk of chunks) {
             utterance.text = chunk;
             window.speechSynthesis.speak(utterance);
-            // Wait for the chunk to finish before speaking the next one
             await new Promise(resolve => {
-              utterance.onend = () => {
-                resolve(null);
-              };
+              utterance.onend = () => resolve(null);
             });
           }
         }
@@ -217,7 +190,6 @@ export const AIAvatar: React.FC<AIAvatarProps> = ({ isSpoken, currentQuestion })
     speakQuestion();
   }, [isSpoken, currentQuestion, isInitialized]);
 
-  // Handle visibility change to prevent speech from stopping when tab is inactive
   const handleVisibilityChange = () => {
     if (document.hidden) {
       window.speechSynthesis.pause();
@@ -226,14 +198,10 @@ export const AIAvatar: React.FC<AIAvatarProps> = ({ isSpoken, currentQuestion })
     }
   };
 
-  // Split long text into smaller chunks to prevent speech synthesis from cutting off
   const splitTextIntoChunks = (text: string): string[] => {
     const maxChunkLength = 200;
     const chunks: string[] = [];
-    
-    // Split by sentence endings and punctuation
     const sentences = text.match(/[^.!?]+[.!?]+/g) || [text];
-    
     let currentChunk = '';
     
     for (const sentence of sentences) {
@@ -332,5 +300,3 @@ export const AIAvatar: React.FC<AIAvatarProps> = ({ isSpoken, currentQuestion })
     </div>
   );
 };
-
-export default AIAvatar;
