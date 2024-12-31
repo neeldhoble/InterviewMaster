@@ -2,138 +2,129 @@
 
 import React from 'react';
 import { motion } from 'framer-motion';
-import { BarChart, Smile, Volume2, Eye, Clock, ThumbsUp, AlertCircle } from 'lucide-react';
-
-interface FeedbackMetric {
-  category: string;
-  score: number;
-  icon: React.ElementType;
-  color: string;
-  feedback: string;
-}
+import { ChevronRight, BarChart, MessageSquare, ThumbsUp, ThumbsDown, RefreshCw } from 'lucide-react';
 
 interface FeedbackPanelProps {
-  metrics?: FeedbackMetric[];
+  feedback: {
+    confidence: number;
+    clarity: number;
+    content: number;
+    improvements: string[];
+  };
+  onNext: () => void;
+  onRetry: () => void;
 }
 
-const defaultMetrics: FeedbackMetric[] = [
-  {
-    category: 'Body Language',
-    score: 85,
-    icon: Smile,
-    color: '#22c55e',
-    feedback: 'Good eye contact and confident posture. Try to reduce hand movements.'
-  },
-  {
-    category: 'Voice Clarity',
-    score: 78,
-    icon: Volume2,
-    color: '#fcba28',
-    feedback: 'Clear pronunciation. Consider varying your pace for emphasis.'
-  },
-  {
-    category: 'Eye Contact',
-    score: 92,
-    icon: Eye,
-    color: '#22c55e',
-    feedback: 'Excellent eye contact maintained throughout the interview.'
-  },
-  {
-    category: 'Pacing',
-    score: 70,
-    icon: Clock,
-    color: '#fcba28',
-    feedback: 'Good overall pace. Some answers could be more concise.'
-  }
-];
-
-export const FeedbackPanel: React.FC<FeedbackPanelProps> = ({ metrics = defaultMetrics }) => {
+export const FeedbackPanel: React.FC<FeedbackPanelProps> = ({
+  feedback,
+  onNext,
+  onRetry
+}) => {
   const getScoreColor = (score: number) => {
-    if (score >= 90) return 'bg-green-500';
-    if (score >= 70) return 'bg-[#fcba28]';
-    return 'bg-red-500';
+    if (score >= 80) return 'text-green-500';
+    if (score >= 60) return 'text-yellow-500';
+    return 'text-red-500';
+  };
+
+  const getScoreBackground = (score: number) => {
+    if (score >= 80) return 'bg-green-500/20';
+    if (score >= 60) return 'bg-yellow-500/20';
+    return 'bg-red-500/20';
+  };
+
+  const getScoreEmoji = (score: number) => {
+    if (score >= 80) return '🌟';
+    if (score >= 60) return '👍';
+    return '💪';
   };
 
   return (
-    <div className="bg-white/5 border border-white/10 rounded-2xl p-6 backdrop-blur-lg">
-      {/* Header */}
-      <div className="flex items-center gap-2 mb-6">
-        <BarChart className="w-5 h-5 text-[#fcba28]" />
-        <h3 className="text-lg font-semibold text-white">AI Feedback</h3>
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      className="space-y-6"
+    >
+      {/* Score Overview */}
+      <div className="bg-white/5 border border-white/10 rounded-xl p-6 backdrop-blur-sm">
+        <div className="flex items-center gap-2 mb-6">
+          <BarChart className="w-5 h-5 text-[#fcba28]" />
+          <h3 className="text-lg font-semibold text-white">Performance Analysis</h3>
+        </div>
+
+        <div className="grid grid-cols-3 gap-4">
+          {/* Confidence Score */}
+          <div className="text-center">
+            <div className={`inline-flex items-center justify-center w-16 h-16 rounded-full ${getScoreBackground(feedback.confidence)} mb-2`}>
+              <span className={`text-2xl font-bold ${getScoreColor(feedback.confidence)}`}>
+                {Math.round(feedback.confidence)}
+              </span>
+            </div>
+            <p className="text-sm text-gray-400">Confidence</p>
+          </div>
+
+          {/* Clarity Score */}
+          <div className="text-center">
+            <div className={`inline-flex items-center justify-center w-16 h-16 rounded-full ${getScoreBackground(feedback.clarity)} mb-2`}>
+              <span className={`text-2xl font-bold ${getScoreColor(feedback.clarity)}`}>
+                {Math.round(feedback.clarity)}
+              </span>
+            </div>
+            <p className="text-sm text-gray-400">Clarity</p>
+          </div>
+
+          {/* Content Score */}
+          <div className="text-center">
+            <div className={`inline-flex items-center justify-center w-16 h-16 rounded-full ${getScoreBackground(feedback.content)} mb-2`}>
+              <span className={`text-2xl font-bold ${getScoreColor(feedback.content)}`}>
+                {Math.round(feedback.content)}
+              </span>
+            </div>
+            <p className="text-sm text-gray-400">Content</p>
+          </div>
+        </div>
       </div>
 
-      {/* Metrics Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
-        {metrics.map((metric, index) => {
-          const Icon = metric.icon;
-          return (
-            <motion.div
-              key={metric.category}
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: index * 0.1 }}
-              className="bg-white/10 rounded-lg p-4"
+      {/* Detailed Feedback */}
+      <div className="bg-white/5 border border-white/10 rounded-xl p-6 backdrop-blur-sm">
+        <div className="flex items-center gap-2 mb-6">
+          <MessageSquare className="w-5 h-5 text-[#fcba28]" />
+          <h3 className="text-lg font-semibold text-white">Areas for Improvement</h3>
+        </div>
+
+        <div className="space-y-4">
+          {feedback.improvements.map((improvement, index) => (
+            <div
+              key={index}
+              className="flex items-start gap-3 text-gray-300"
             >
-              <div className="flex items-center gap-3 mb-3">
-                <div className="p-2 rounded-lg" style={{ backgroundColor: `${metric.color}20` }}>
-                  <Icon className="w-5 h-5" style={{ color: metric.color }} />
-                </div>
-                <span className="text-white font-medium">{metric.category}</span>
-              </div>
-              
-              {/* Score Bar */}
-              <div className="h-2 bg-white/10 rounded-full mb-3">
-                <motion.div
-                  initial={{ width: 0 }}
-                  animate={{ width: `${metric.score}%` }}
-                  transition={{ duration: 1, delay: index * 0.1 }}
-                  className={`h-full rounded-full ${getScoreColor(metric.score)}`}
-                />
-              </div>
-
-              <div className="flex items-center justify-between mb-2">
-                <span className="text-sm text-gray-400">Score</span>
-                <span className="text-white font-medium">{metric.score}%</span>
-              </div>
-
-              <p className="text-sm text-gray-400">{metric.feedback}</p>
-            </motion.div>
-          );
-        })}
+              {index % 2 === 0 ? (
+                <ThumbsUp className="w-5 h-5 text-[#fcba28] flex-shrink-0 mt-0.5" />
+              ) : (
+                <ThumbsDown className="w-5 h-5 text-[#fcba28] flex-shrink-0 mt-0.5" />
+              )}
+              <p>{improvement}</p>
+            </div>
+          ))}
+        </div>
       </div>
 
-      {/* Overall Feedback */}
-      <div className="bg-white/10 rounded-lg p-4">
-        <div className="flex items-center gap-2 mb-3">
-          <ThumbsUp className="w-5 h-5 text-[#fcba28]" />
-          <h4 className="text-white font-medium">Strengths</h4>
-        </div>
-        <ul className="space-y-2 mb-4">
-          <li className="text-gray-400 text-sm flex items-center gap-2">
-            <div className="w-1 h-1 rounded-full bg-green-500" />
-            Strong communication skills with clear articulation
-          </li>
-          <li className="text-gray-400 text-sm flex items-center gap-2">
-            <div className="w-1 h-1 rounded-full bg-green-500" />
-            Maintained professional demeanor throughout
-          </li>
-        </ul>
-
-        <div className="flex items-center gap-2 mb-3">
-          <AlertCircle className="w-5 h-5 text-[#fcba28]" />
-          <h4 className="text-white font-medium">Areas for Improvement</h4>
-        </div>
-        <ul className="space-y-2">
-          <li className="text-gray-400 text-sm flex items-center gap-2">
-            <div className="w-1 h-1 rounded-full bg-red-500" />
-            Consider providing more specific examples
-          </li>
-          <li className="text-gray-400 text-sm flex items-center gap-2">
-            <div className="w-1 h-1 rounded-full bg-red-500" />
-            Work on reducing filler words
-          </li>
-        </ul>
+      {/* Action Buttons */}
+      <div className="flex items-center justify-between gap-4">
+        <button
+          onClick={onRetry}
+          className="flex-1 p-4 rounded-xl bg-white/5 hover:bg-white/10 transition-colors text-white font-medium flex items-center justify-center gap-2"
+        >
+          <RefreshCw className="w-5 h-5" />
+          Try Again
+        </button>
+        <button
+          onClick={onNext}
+          className="flex-1 p-4 rounded-xl bg-[#fcba28] hover:bg-[#fcd978] transition-colors text-black font-medium flex items-center justify-center gap-2"
+        >
+          Next Question
+          <ChevronRight className="w-5 h-5" />
+        </button>
       </div>
-    </div>
+    </motion.div>
   );
 };

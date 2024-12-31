@@ -1,4 +1,4 @@
-export type QuestionType = 'behavioral' | 'technical' | 'leadership' | 'problem-solving' | 'custom';
+export type QuestionType = 'introduction' | 'behavioral' | 'technical' | 'leadership' | 'problem-solving' | 'cultural-fit' | 'closing';
 
 export interface Question {
   id: string;
@@ -9,108 +9,202 @@ export interface Question {
 }
 
 export const interviewQuestions: Question[] = [
+  // Introduction Questions
+  {
+    id: 'i1',
+    text: 'Tell me about yourself and your background.',
+    type: 'introduction',
+    category: 'Opening',
+    difficulty: 'easy'
+  },
+  {
+    id: 'i2',
+    text: 'Walk me through your resume and highlight your key achievements.',
+    type: 'introduction',
+    category: 'Opening',
+    difficulty: 'easy'
+  },
+  {
+    id: 'i3',
+    text: 'What made you interested in this position and our company?',
+    type: 'introduction',
+    category: 'Opening',
+    difficulty: 'easy'
+  },
+
   // Behavioral Questions
   {
     id: 'b1',
-    text: 'Tell me about a time when you had to work with a difficult team member. How did you handle it?',
+    text: 'Tell me about a challenging project you worked on and how you handled it.',
+    type: 'behavioral',
+    category: 'Project Management',
+    difficulty: 'medium'
+  },
+  {
+    id: 'b2',
+    text: 'Describe a situation where you had to deal with a difficult team member or stakeholder.',
     type: 'behavioral',
     category: 'Teamwork',
     difficulty: 'medium'
   },
   {
-    id: 'b2',
-    text: 'Describe a situation where you had to meet a tight deadline. What was your approach?',
+    id: 'b3',
+    text: 'Give me an example of a time when you had to meet a tight deadline.',
     type: 'behavioral',
     category: 'Time Management',
     difficulty: 'medium'
   },
   {
-    id: 'b3',
-    text: 'Can you share an example of a time when you failed at something? What did you learn from it?',
+    id: 'b4',
+    text: 'Tell me about a time when you had to learn a new technology or skill quickly.',
     type: 'behavioral',
-    category: 'Growth & Learning',
+    category: 'Adaptability',
     difficulty: 'medium'
+  },
+  {
+    id: 'b5',
+    text: 'Describe a situation where you had to make a difficult decision with limited information.',
+    type: 'behavioral',
+    category: 'Decision Making',
+    difficulty: 'hard'
   },
 
   // Technical Questions
   {
     id: 't1',
-    text: 'Explain the concept of RESTful APIs and their key principles.',
+    text: 'What is your experience with modern web development frameworks? Which ones have you used and why?',
     type: 'technical',
     category: 'Web Development',
     difficulty: 'medium'
   },
   {
     id: 't2',
-    text: 'What is the difference between SQL and NoSQL databases? When would you choose one over the other?',
+    text: 'How do you approach testing and quality assurance in your development process?',
     type: 'technical',
-    category: 'Databases',
+    category: 'Testing',
     difficulty: 'medium'
   },
   {
     id: 't3',
-    text: 'Explain the concept of time complexity and give examples of O(n) and O(n²) algorithms.',
+    text: 'Explain your experience with cloud services and deployment strategies.',
     type: 'technical',
-    category: 'Algorithms',
+    category: 'DevOps',
     difficulty: 'hard'
+  },
+  {
+    id: 't4',
+    text: 'How do you handle performance optimization in your applications?',
+    type: 'technical',
+    category: 'Performance',
+    difficulty: 'hard'
+  },
+  {
+    id: 't5',
+    text: 'Describe your approach to writing clean, maintainable code.',
+    type: 'technical',
+    category: 'Code Quality',
+    difficulty: 'medium'
   },
 
   // Leadership Questions
   {
     id: 'l1',
-    text: 'Describe a time when you had to lead a team through a difficult project. What challenges did you face and how did you overcome them?',
+    text: 'How do you approach mentoring junior developers?',
     type: 'leadership',
-    category: 'Project Management',
-    difficulty: 'hard'
-  },
-  {
-    id: 'l2',
-    text: 'How do you motivate team members who are struggling with their tasks?',
-    type: 'leadership',
-    category: 'Team Motivation',
+    category: 'Mentorship',
     difficulty: 'medium'
   },
   {
-    id: 'l3',
-    text: 'Tell me about a time when you had to make an unpopular decision. How did you handle the situation?',
+    id: 'l2',
+    text: 'Tell me about a time when you had to lead a project or initiative.',
     type: 'leadership',
-    category: 'Decision Making',
+    category: 'Project Leadership',
+    difficulty: 'hard'
+  },
+  {
+    id: 'l3',
+    text: 'How do you handle conflicts within your team?',
+    type: 'leadership',
+    category: 'Conflict Resolution',
     difficulty: 'hard'
   },
 
-  // Problem Solving Questions
+  // Problem-Solving Questions
   {
     id: 'p1',
-    text: 'How would you design a system to handle millions of concurrent users?',
+    text: 'How would you design a scalable system for handling millions of concurrent users?',
     type: 'problem-solving',
     category: 'System Design',
     difficulty: 'hard'
   },
   {
     id: 'p2',
-    text: 'Describe how you would troubleshoot a production issue with limited information.',
+    text: 'Describe how you would debug a production issue with limited information.',
     type: 'problem-solving',
     category: 'Debugging',
-    difficulty: 'medium'
+    difficulty: 'hard'
   },
   {
     id: 'p3',
     text: 'How would you improve the performance of a slow-running application?',
     type: 'problem-solving',
-    category: 'Performance',
+    category: 'Optimization',
     difficulty: 'medium'
+  },
+
+  // Cultural Fit Questions
+  {
+    id: 'c1',
+    text: 'What type of work environment do you thrive in?',
+    type: 'cultural-fit',
+    category: 'Work Environment',
+    difficulty: 'easy'
+  },
+  {
+    id: 'c2',
+    text: 'How do you stay updated with the latest technology trends?',
+    type: 'cultural-fit',
+    category: 'Professional Growth',
+    difficulty: 'easy'
+  },
+  {
+    id: 'c3',
+    text: 'Where do you see yourself in 5 years?',
+    type: 'cultural-fit',
+    category: 'Career Goals',
+    difficulty: 'medium'
+  },
+
+  // Closing Questions
+  {
+    id: 'cl1',
+    text: 'What questions do you have for me about the role or company?',
+    type: 'closing',
+    category: 'Final Questions',
+    difficulty: 'easy'
+  },
+  {
+    id: 'cl2',
+    text: 'Is there anything else you would like to share about your background or experience?',
+    type: 'closing',
+    category: 'Final Thoughts',
+    difficulty: 'easy'
   }
 ];
 
 // Helper functions for question management
-export const getQuestionsByType = (type: QuestionType) => 
-  interviewQuestions.filter(q => q.type === type);
+export const getQuestionsByType = (type: QuestionType) => {
+  return interviewQuestions.filter(q => q.type === type);
+};
 
-export const getQuestionsByDifficulty = (difficulty: 'easy' | 'medium' | 'hard') =>
-  interviewQuestions.filter(q => q.difficulty === difficulty);
+export const getQuestionsByDifficulty = (difficulty: 'easy' | 'medium' | 'hard') => {
+  return interviewQuestions.filter(q => q.difficulty === difficulty);
+};
 
-export const getQuestionsByCategory = (category: string) =>
-  interviewQuestions.filter(q => q.category === category);
+export const getQuestionsByCategory = (category: string) => {
+  return interviewQuestions.filter(q => q.category === category);
+};
 
-export const getAllCategories = () =>
-  Array.from(new Set(interviewQuestions.map(q => q.category)));
+export const getAllCategories = () => {
+  return [...new Set(interviewQuestions.map(q => q.category))];
+};
