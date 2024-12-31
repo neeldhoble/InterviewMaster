@@ -8,7 +8,7 @@ import QuestionPanel from './components/QuestionPanel';
 import VideoPreview from './components/VideoPreview';
 import RecordingsList from './components/RecordingsList';
 import { Question, interviewQuestions } from './data/questions';
-import { MessageSquare, BarChart, Download, Share2, ThumbsUp, Volume2, Mic, Camera, Settings, ChevronLeft } from 'lucide-react';
+import { MessageSquare, BarChart, Download, Share2, ThumbsUp, Volume2, Mic, Camera, Settings, ChevronLeft, X } from 'lucide-react';
 import { recordingService } from './services/recordingService';
 import { aiAnalysisService } from './services/aiAnalysisService';
 import { enhancedAnalysisService } from './services/enhancedAnalysisService';
@@ -274,30 +274,65 @@ export default function SimulationPage() {
   const handlePlayRecording = (id: string) => {
     const recording = recordings.find(r => r.id === id);
     if (recording) {
-      // Create a modal or player to show the recording
+      // Create a modal wrapper
+      const modalWrapper = document.createElement('div');
+      modalWrapper.className = 'fixed inset-0 bg-black/80 flex items-center justify-center p-8 z-50';
+      modalWrapper.style.backdropFilter = 'blur(8px)';
+
+      // Create modal content
+      const modalContent = document.createElement('div');
+      modalContent.className = 'relative w-full max-w-4xl bg-white/5 rounded-xl overflow-hidden backdrop-blur-sm border border-white/10';
+
+      // Create close button
+      const closeButton = document.createElement('button');
+      closeButton.className = 'absolute top-4 right-4 p-2 rounded-lg bg-white/10 hover:bg-white/20 transition-colors z-10';
+      closeButton.innerHTML = `
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-white">
+          <line x1="18" y1="6" x2="6" y2="18"></line>
+          <line x1="6" y1="6" x2="18" y2="18"></line>
+        </svg>
+      `;
+
+      // Create video container
+      const videoContainer = document.createElement('div');
+      videoContainer.className = 'relative aspect-video';
+
+      // Create and setup video element
       const video = document.createElement('video');
       video.src = recording.url;
       video.controls = true;
-      
-      // Create a modal container
-      const modal = document.createElement('div');
-      modal.className = 'fixed inset-0 bg-black/80 flex items-center justify-center z-50';
-      
-      const modalContent = document.createElement('div');
-      modalContent.className = 'relative bg-white/5 backdrop-blur-lg p-4 rounded-xl max-w-4xl w-full mx-4';
-      
-      const closeButton = document.createElement('button');
-      closeButton.className = 'absolute top-4 right-4 text-white hover:text-[#fcba28]';
-      closeButton.innerHTML = '×';
-      closeButton.onclick = () => document.body.removeChild(modal);
-      
-      video.className = 'w-full aspect-video rounded-lg';
-      
-      modalContent.appendChild(video);
+      video.className = 'w-full h-full object-contain bg-black';
+
+      // Create info section
+      const infoSection = document.createElement('div');
+      infoSection.className = 'p-6 text-white';
+      infoSection.innerHTML = `
+        <h3 class="text-xl font-semibold mb-2">${questions[recording.questionIndex]?.text || 'Interview Answer'}</h3>
+        <p class="text-white/60 text-sm">${new Date(recording.timestamp).toLocaleString()}</p>
+      `;
+
+      // Add click handlers
+      modalWrapper.onclick = (e) => {
+        if (e.target === modalWrapper) {
+          document.body.removeChild(modalWrapper);
+          video.pause();
+        }
+      };
+
+      closeButton.onclick = () => {
+        document.body.removeChild(modalWrapper);
+        video.pause();
+      };
+
+      // Assemble modal
+      videoContainer.appendChild(video);
       modalContent.appendChild(closeButton);
-      modal.appendChild(modalContent);
-      document.body.appendChild(modal);
-      
+      modalContent.appendChild(videoContainer);
+      modalContent.appendChild(infoSection);
+      modalWrapper.appendChild(modalContent);
+      document.body.appendChild(modalWrapper);
+
+      // Start playback
       video.play();
     }
   };
@@ -634,23 +669,65 @@ export default function SimulationPage() {
               recordings={recordings}
               questions={questions}
               onPlay={(recording) => {
-                // Handle playing the recording
+                // Create a modal wrapper
+                const modalWrapper = document.createElement('div');
+                modalWrapper.className = 'fixed inset-0 bg-black/80 flex items-center justify-center p-8 z-50';
+                modalWrapper.style.backdropFilter = 'blur(8px)';
+
+                // Create modal content
+                const modalContent = document.createElement('div');
+                modalContent.className = 'relative w-full max-w-4xl bg-white/5 rounded-xl overflow-hidden backdrop-blur-sm border border-white/10';
+
+                // Create close button
+                const closeButton = document.createElement('button');
+                closeButton.className = 'absolute top-4 right-4 p-2 rounded-lg bg-white/10 hover:bg-white/20 transition-colors z-10';
+                closeButton.innerHTML = `
+                  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-white">
+                    <line x1="18" y1="6" x2="6" y2="18"></line>
+                    <line x1="6" y1="6" x2="18" y2="18"></line>
+                  </svg>
+                `;
+
+                // Create video container
+                const videoContainer = document.createElement('div');
+                videoContainer.className = 'relative aspect-video';
+
+                // Create and setup video element
                 const video = document.createElement('video');
                 video.src = recording.url;
                 video.controls = true;
-                video.className = 'w-full';
-                
-                // Create modal for video playback
-                const modal = document.createElement('div');
-                modal.className = 'fixed inset-0 bg-black/80 flex items-center justify-center p-8 z-50';
-                modal.onclick = (e) => {
-                  if (e.target === modal) {
-                    document.body.removeChild(modal);
+                video.className = 'w-full h-full object-contain bg-black';
+
+                // Create info section
+                const infoSection = document.createElement('div');
+                infoSection.className = 'p-6 text-white';
+                infoSection.innerHTML = `
+                  <h3 class="text-xl font-semibold mb-2">${questions[recording.questionIndex]?.text || 'Interview Answer'}</h3>
+                  <p class="text-white/60 text-sm">${new Date(recording.timestamp).toLocaleString()}</p>
+                `;
+
+                // Add click handlers
+                modalWrapper.onclick = (e) => {
+                  if (e.target === modalWrapper) {
+                    document.body.removeChild(modalWrapper);
+                    video.pause();
                   }
                 };
-                
-                modal.appendChild(video);
-                document.body.appendChild(modal);
+
+                closeButton.onclick = () => {
+                  document.body.removeChild(modalWrapper);
+                  video.pause();
+                };
+
+                // Assemble modal
+                videoContainer.appendChild(video);
+                modalContent.appendChild(closeButton);
+                modalContent.appendChild(videoContainer);
+                modalContent.appendChild(infoSection);
+                modalWrapper.appendChild(modalContent);
+                document.body.appendChild(modalWrapper);
+
+                // Start playback
                 video.play();
               }}
             />
