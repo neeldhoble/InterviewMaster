@@ -22,83 +22,171 @@ const AIFace = ({ isSpeaking }: { isSpeaking: boolean }) => (
       stroke="#fcba28"
       strokeWidth="2"
       initial={{ scale: 0.9 }}
-      animate={{ scale: 1 }}
-      transition={{ duration: 0.5 }}
+      animate={{ 
+        scale: [1, 1.02, 1],
+        rotate: isSpeaking ? [0, 1, -1, 0] : 0
+      }}
+      transition={{ 
+        duration: 2,
+        repeat: Infinity,
+        repeatType: "reverse",
+        ease: "easeInOut"
+      }}
     />
 
     {/* Eyes */}
     <motion.g
       initial={{ scale: 0.9 }}
-      animate={{ scale: 1 }}
-      transition={{ duration: 0.3, repeat: isSpeaking ? Infinity : 0, repeatType: "reverse" }}
+      animate={{ 
+        scale: [1, 1.05, 1],
+        y: isSpeaking ? [0, -1, 0] : 0
+      }}
+      transition={{ 
+        duration: 0.5,
+        repeat: Infinity,
+        repeatType: "reverse",
+        ease: "easeInOut"
+      }}
     >
       {/* Left Eye */}
+      <circle cx="70" cy="85" r="10" fill="#fcba28" opacity="0.3" />
       <circle cx="70" cy="85" r="8" fill="#fcba28" />
       <circle cx="70" cy="85" r="4" fill="#1a1a1a" />
       <circle cx="72" cy="83" r="2" fill="white" />
 
       {/* Right Eye */}
+      <circle cx="130" cy="85" r="10" fill="#fcba28" opacity="0.3" />
       <circle cx="130" cy="85" r="8" fill="#fcba28" />
       <circle cx="130" cy="85" r="4" fill="#1a1a1a" />
       <circle cx="132" cy="83" r="2" fill="white" />
+
+      {/* Eyebrows */}
+      <motion.path
+        d="M60,75 Q70,72 80,75"
+        stroke="#fcba28"
+        strokeWidth="2"
+        fill="none"
+        animate={{
+          d: isSpeaking 
+            ? ["M60,75 Q70,72 80,75", "M60,73 Q70,70 80,73"]
+            : "M60,75 Q70,72 80,75"
+        }}
+        transition={{ duration: 0.5, repeat: Infinity, repeatType: "reverse" }}
+      />
+      <motion.path
+        d="M120,75 Q130,72 140,75"
+        stroke="#fcba28"
+        strokeWidth="2"
+        fill="none"
+        animate={{
+          d: isSpeaking 
+            ? ["M120,75 Q130,72 140,75", "M120,73 Q130,70 140,73"]
+            : "M120,75 Q130,72 140,75"
+        }}
+        transition={{ duration: 0.5, repeat: Infinity, repeatType: "reverse" }}
+      />
     </motion.g>
 
     {/* Mouth */}
     <motion.path
       d={isSpeaking 
-        ? "M65,120 Q100,140 135,120" // Speaking mouth
-        : "M65,120 Q100,130 135,120"  // Normal mouth
+        ? "M65,120 Q100,145 135,120" // Speaking mouth (more open)
+        : "M65,120 Q100,130 135,120"  // Normal mouth (slight smile)
       }
       stroke="#fcba28"
       strokeWidth="4"
       fill="none"
       animate={{
         d: isSpeaking 
-          ? ["M65,120 Q100,140 135,120", "M65,120 Q100,130 135,120", "M65,120 Q100,140 135,120"]
+          ? [
+              "M65,120 Q100,145 135,120", // Open wide
+              "M65,120 Q100,135 135,120", // Half open
+              "M65,120 Q100,145 135,120"  // Open wide again
+            ]
           : "M65,120 Q100,130 135,120"
       }}
       transition={{
-        duration: 0.5,
-        repeat: isSpeaking ? Infinity : 0,
-        repeatType: "reverse"
+        duration: 0.3,
+        repeat: Infinity,
+        repeatType: "reverse",
+        ease: "easeInOut"
       }}
     />
 
-    {/* Digital Circuit Lines */}
-    <g stroke="#fcba28" strokeWidth="1" opacity="0.3">
+    {/* Digital Circuit Lines with Glowing Effect */}
+    <g stroke="#fcba28" strokeWidth="1.5" filter="url(#glow)">
       <motion.path
         d="M10,50 L50,50 L70,70"
-        initial={{ pathLength: 0 }}
-        animate={{ pathLength: 1 }}
-        transition={{ duration: 1, repeat: Infinity }}
+        initial={{ pathLength: 0, opacity: 0.3 }}
+        animate={{ 
+          pathLength: 1,
+          opacity: [0.3, 0.8, 0.3]
+        }}
+        transition={{ 
+          duration: 1.5,
+          repeat: Infinity,
+          ease: "linear"
+        }}
       />
       <motion.path
         d="M190,50 L150,50 L130,70"
-        initial={{ pathLength: 0 }}
-        animate={{ pathLength: 1 }}
-        transition={{ duration: 1, repeat: Infinity, delay: 0.2 }}
+        initial={{ pathLength: 0, opacity: 0.3 }}
+        animate={{ 
+          pathLength: 1,
+          opacity: [0.3, 0.8, 0.3]
+        }}
+        transition={{ 
+          duration: 1.5,
+          repeat: Infinity,
+          delay: 0.2,
+          ease: "linear"
+        }}
       />
       <motion.path
         d="M10,150 L50,150 L70,130"
-        initial={{ pathLength: 0 }}
-        animate={{ pathLength: 1 }}
-        transition={{ duration: 1, repeat: Infinity, delay: 0.4 }}
+        initial={{ pathLength: 0, opacity: 0.3 }}
+        animate={{ 
+          pathLength: 1,
+          opacity: [0.3, 0.8, 0.3]
+        }}
+        transition={{ 
+          duration: 1.5,
+          repeat: Infinity,
+          delay: 0.4,
+          ease: "linear"
+        }}
       />
       <motion.path
         d="M190,150 L150,150 L130,130"
-        initial={{ pathLength: 0 }}
-        animate={{ pathLength: 1 }}
-        transition={{ duration: 1, repeat: Infinity, delay: 0.6 }}
+        initial={{ pathLength: 0, opacity: 0.3 }}
+        animate={{ 
+          pathLength: 1,
+          opacity: [0.3, 0.8, 0.3]
+        }}
+        transition={{ 
+          duration: 1.5,
+          repeat: Infinity,
+          delay: 0.6,
+          ease: "linear"
+        }}
       />
     </g>
 
-    {/* Gradients */}
+    {/* Enhanced Gradients */}
     <defs>
       <radialGradient id="gradientFace" cx="50%" cy="50%" r="50%">
         <stop offset="0%" stopColor="#2a2a2a" />
-        <stop offset="90%" stopColor="#1a1a1a" />
+        <stop offset="80%" stopColor="#1a1a1a" />
+        <stop offset="90%" stopColor="#0a0a0a" />
         <stop offset="100%" stopColor="#000000" />
       </radialGradient>
+      <filter id="glow">
+        <feGaussianBlur stdDeviation="2" result="coloredBlur"/>
+        <feMerge>
+          <feMergeNode in="coloredBlur"/>
+          <feMergeNode in="SourceGraphic"/>
+        </feMerge>
+      </filter>
     </defs>
   </svg>
 );
