@@ -6,9 +6,12 @@ import { AIAvatar } from './components/AIAvatar';
 import VideoFeed from './components/VideoFeed';
 import QuestionPanel from './components/QuestionPanel';
 import VideoPreview from './components/VideoPreview';
+import RecordingsList from './components/RecordingsList';
 import { Question, interviewQuestions } from './data/questions';
 import { MessageSquare, BarChart, Download, Share2, ThumbsUp, Volume2, Mic, Camera, Settings, ChevronLeft } from 'lucide-react';
 import { recordingService } from './services/recordingService';
+import { aiAnalysisService } from './services/aiAnalysisService';
+import { enhancedAnalysisService } from './services/enhancedAnalysisService';
 
 export default function SimulationPage() {
   const [isRecording, setIsRecording] = useState(false);
@@ -18,6 +21,25 @@ export default function SimulationPage() {
   const [questions, setQuestions] = useState(interviewQuestions);
   const [isMuted, setIsMuted] = useState(false);
   const [isVideoOn, setIsVideoOn] = useState(true);
+  const [analysis, setAnalysis] = useState({
+    communicationScore: 0,
+    bodyLanguageScore: 0,
+    answerQualityScore: 0,
+    emotionData: {
+      happy: 0,
+      neutral: 0,
+      sad: 0,
+      angry: 0,
+      surprised: 0
+    },
+    speechMetrics: {
+      pace: 0,
+      clarity: 0,
+      fillerWords: 0,
+      confidence: 0
+    },
+    tips: ['Start speaking to see real-time feedback']
+  });
   const [recordings, setRecordings] = useState<Array<{
     id: string;
     timestamp: Date;
@@ -25,8 +47,15 @@ export default function SimulationPage() {
     url: string;
     thumbnailUrl: string;
     questionIndex: number;
+    transcript: string;
     blob?: Blob;
   }>>([]);
+  const [recognition, setRecognition] = useState<any>(null);
+  const [transcript, setTranscript] = useState({
+    final: '',
+    interim: '',
+    segments: [] as { text: string; timestamp: number }[]
+  });
 
   useEffect(() => {
     let interval: NodeJS.Timeout;
@@ -38,24 +67,133 @@ export default function SimulationPage() {
     return () => clearInterval(interval);
   }, [isRecording]);
 
-  const formatTime = (seconds: number) => {
-    const mins = Math.floor(seconds / 60);
-    const secs = seconds % 60;
-    return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+  useEffect(() => {
+    let recognitionInstance: any = null;
+
+    if (typeof window !== 'undefined') {
+      const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+      
+      if (SpeechRecognition) {
+        recognitionInstance = new SpeechRecognition();
+        recognitionInstance.continuous = true;
+        recognitionInstance.interimResults = true;
+        recognitionInstance.lang = 'en-US';
+
+        recognitionInstance.onstart = () => {
+          console.log('Speech recognition started');
+        };
+
+        recognitionInstance.onresult = (event: any) => {
+          let interimTranscript = '';
+          let finalTranscript = '';
+
+          for (let i = event.resultIndex; i < event.results.length; ++i) {
+            const transcript = event.results[i][0].transcript;
+            
+            if (event.results[i].isFinal) {
+              finalTranscript += transcript;
+              setTranscript(prev => ({
+                ...prev,
+                final: prev.final + ' ' + transcript,
+                segments: [...prev.segments, {
+                  text: transcript,
+                  timestamp: Date.now()
+                }]
+              }));
+            } else {
+              interimTranscript += transcript;
+              setTranscript(prev => ({
+                ...prev,
+                interim: interimTranscript
+              }));
+            }
+          }
+
+          // Update analysis if we have final transcript
+          if (finalTranscript) {
+            enhancedAnalysisService.addSpeechSegment(finalTranscript, 1);
+            enhancedAnalysisService.analyzeResponse(
+              finalTranscript,
+              questions[currentQuestion]?.text || ''
+            ).then(setAnalysis);
+          }
+        };
+
+        recognitionInstance.onerror = (event: any) => {
+          console.error('Speech recognition error:', event.error);
+        };
+
+        recognitionInstance.onend = () => {
+          console.log('Speech recognition ended');
+          if (isRecording) {
+            recognitionInstance.start();
+          }
+        };
+
+        setRecognition(recognitionInstance);
+      }
+    }
+
+    return () => {
+      if (recognitionInstance) {
+        recognitionInstance.stop();
+      }
+    };
+  }, []);
+
+  useEffect(() => {
+    return () => {
+      if (recognition) {
+        recognition.stop();
+      }
+    };
+  }, [recognition]);
+
+  const handleVideoMetricsUpdate = async (videoElement: HTMLVideoElement) => {
+    if (isRecording) {
+      const faceAnalysis = await enhancedAnalysisService.analyzeFace(videoElement);
+      if (faceAnalysis.expressions) {
+        // Update will happen through speech analysis
+        // as it combines both speech and face metrics
+      }
+    }
   };
 
   const handleToggleRecording = async () => {
     try {
       if (!isRecording) {
+        // Start recording
         await recordingService.startRecording();
         setIsRecording(true);
         setIsAISpeaking(true);
+        
+        // Clear transcript
+        setTranscript({
+          final: '',
+          interim: '',
+          segments: []
+        });
+
+        // Start speech recognition
+        if (recognition) {
+          recognition.start();
+        }
+
+        enhancedAnalysisService.clearHistory();
         setTimeout(() => setIsAISpeaking(false), 3000);
       } else {
+        // Stop recording
         const blob = await recordingService.stopRecording();
+        
+        // Stop speech recognition
+        if (recognition) {
+          recognition.stop();
+        }
+
         const thumbnailUrl = await recordingService.generateThumbnail(blob);
         const url = URL.createObjectURL(blob);
         
+        // Save recording with transcript
         setRecordings(prev => [...prev, {
           id: Date.now().toString(),
           timestamp: new Date(),
@@ -63,6 +201,7 @@ export default function SimulationPage() {
           url,
           thumbnailUrl,
           questionIndex: currentQuestion,
+          transcript: transcript.final.trim(),
           blob
         }]);
         
@@ -71,18 +210,50 @@ export default function SimulationPage() {
       }
     } catch (error) {
       console.error('Recording error:', error);
-      // Handle error appropriately
+      setIsRecording(false);
+      if (recognition) {
+        recognition.stop();
+      }
     }
   };
 
   const handleQuestionSelect = (index: number) => {
+    // Stop recognition if it's running
+    if (recognition && isRecording) {
+      try {
+        recognition.stop();
+      } catch (error) {
+        console.error('Failed to stop recognition on question change:', error);
+      }
+    }
+    
     setCurrentQuestion(index);
     setIsAISpeaking(true);
-    setTimeout(() => setIsAISpeaking(false), 3000);
+    
+    // Clear transcript for new question
+    setTranscript({
+      final: '',
+      interim: '',
+      segments: []
+    });
+    
+    setTimeout(() => {
+      setIsAISpeaking(false);
+      // Only start recognition if we're recording
+      if (isRecording && recognition) {
+        try {
+          recognition.start();
+        } catch (error) {
+          console.error('Failed to start recognition after question change:', error);
+        }
+      }
+    }, 3000);
   };
 
-  const handleCustomQuestionAdd = (question: Question) => {
-    setQuestions(prev => [...prev, question]);
+  const formatTime = (seconds: number) => {
+    const mins = Math.floor(seconds / 60);
+    const secs = seconds % 60;
+    return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
   };
 
   const handleNextQuestion = () => {
@@ -129,6 +300,10 @@ export default function SimulationPage() {
       
       video.play();
     }
+  };
+
+  const handleCustomQuestionAdd = (question: Question) => {
+    setQuestions(prev => [...prev, question]);
   };
 
   return (
@@ -282,6 +457,205 @@ export default function SimulationPage() {
             </div>
           </div>
         </div>
+
+        {/* AI Feedback Section */}
+        <div className="mt-8 p-6 bg-white/5 border border-white/10 rounded-xl backdrop-blur-lg">
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-full bg-[#fcba28]/20 flex items-center justify-center">
+                <MessageSquare className="w-6 h-6 text-[#fcba28]" />
+              </div>
+              <h3 className="text-xl font-semibold text-white">AI Interview Feedback</h3>
+            </div>
+            {isRecording && (
+              <div className="flex items-center gap-2">
+                <div className="w-2 h-2 rounded-full bg-[#fcba28] animate-pulse" />
+                <span className="text-white/60">Analyzing response...</span>
+              </div>
+            )}
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {/* Communication Skills */}
+            <div className="space-y-3">
+              <h4 className="text-white font-medium">Communication Skills</h4>
+              <div className="h-2 bg-white/10 rounded-full overflow-hidden">
+                <motion.div 
+                  className="h-full bg-[#fcba28]" 
+                  initial={{ width: "0%" }}
+                  animate={{ width: `${analysis.communicationScore}%` }}
+                  transition={{ duration: 1 }}
+                />
+              </div>
+              <div className="space-y-1">
+                <p className="text-white/60 text-sm">
+                  Speaking Pace: {analysis.speechMetrics.pace.toFixed(0)} words/min
+                </p>
+                <p className="text-white/60 text-sm">
+                  Clarity: {analysis.speechMetrics.clarity.toFixed(0)}%
+                </p>
+                <p className="text-white/60 text-sm">
+                  Filler Words: {analysis.speechMetrics.fillerWords}
+                </p>
+              </div>
+            </div>
+
+            {/* Body Language */}
+            <div className="space-y-3">
+              <h4 className="text-white font-medium">Body Language</h4>
+              <div className="h-2 bg-white/10 rounded-full overflow-hidden">
+                <motion.div 
+                  className="h-full bg-[#fcba28]" 
+                  initial={{ width: "0%" }}
+                  animate={{ width: `${analysis.bodyLanguageScore}%` }}
+                  transition={{ duration: 1 }}
+                />
+              </div>
+              <div className="space-y-1">
+                <p className="text-white/60 text-sm">
+                  Engagement: {(analysis.emotionData.happy * 100).toFixed(0)}%
+                </p>
+                <p className="text-white/60 text-sm">
+                  Confidence: {analysis.speechMetrics.confidence.toFixed(0)}%
+                </p>
+                <p className="text-white/60 text-sm">
+                  Expression: {
+                    analysis.emotionData.neutral > 0.5 ? 'Neutral' :
+                    analysis.emotionData.happy > 0.3 ? 'Positive' :
+                    'Mixed'
+                  }
+                </p>
+              </div>
+            </div>
+
+            {/* Answer Quality */}
+            <div className="space-y-3">
+              <h4 className="text-white font-medium">Answer Quality</h4>
+              <div className="h-2 bg-white/10 rounded-full overflow-hidden">
+                <motion.div 
+                  className="h-full bg-[#fcba28]" 
+                  initial={{ width: "0%" }}
+                  animate={{ width: `${analysis.answerQualityScore}%` }}
+                  transition={{ duration: 1 }}
+                />
+              </div>
+              <div className="space-y-1">
+                <p className="text-white/60 text-sm">
+                  Structure: {analysis.answerQualityScore > 80 ? 'Excellent' :
+                            analysis.answerQualityScore > 60 ? 'Good' : 'Needs Improvement'}
+                </p>
+                <p className="text-white/60 text-sm">
+                  Examples: {analysis.answerQualityScore > 70 ? 'Specific' : 'Generic'}
+                </p>
+                <p className="text-white/60 text-sm">
+                  Relevance: {analysis.answerQualityScore > 75 ? 'High' : 'Moderate'}
+                </p>
+              </div>
+            </div>
+          </div>
+
+          {/* Real-time Tips */}
+          <div className="mt-6 p-4 bg-white/5 rounded-lg border border-white/10">
+            <h4 className="text-white font-medium mb-3">Real-time Tips</h4>
+            <ul className="space-y-2">
+              {analysis.tips.map((tip, index) => (
+                <motion.li 
+                  key={index}
+                  className="text-white/60 flex items-center gap-2"
+                  initial={{ opacity: 0, x: -20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ duration: 0.5, delay: index * 0.2 }}
+                >
+                  <div className="w-1.5 h-1.5 rounded-full bg-[#fcba28]" />
+                  {tip}
+                </motion.li>
+              ))}
+            </ul>
+          </div>
+        </div>
+
+        {/* Live Transcript Section */}
+        <div className="mt-6 p-6 bg-white/5 border border-white/10 rounded-xl backdrop-blur-lg">
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-full bg-emerald-500/20 flex items-center justify-center">
+                <MessageSquare className="w-6 h-6 text-emerald-500" />
+              </div>
+              <h3 className="text-xl font-semibold text-white">Live Transcript</h3>
+            </div>
+          </div>
+
+          <div className="space-y-4">
+            {/* Current Speech */}
+            <div className="min-h-[60px] p-4 bg-white/5 rounded-lg">
+              <p className="text-white/80">
+                {transcript.final}
+                <span className="text-white/50 italic">
+                  {transcript.interim}
+                </span>
+              </p>
+            </div>
+
+            {/* Speech History */}
+            <div className="space-y-3 max-h-[200px] overflow-y-auto">
+              {transcript.segments.slice().reverse().map((segment, index) => (
+                <motion.div
+                  key={segment.timestamp}
+                  className="p-3 bg-white/5 rounded-lg"
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.3, delay: index * 0.1 }}
+                >
+                  <div className="flex items-center justify-between mb-1">
+                    <span className="text-xs text-white/40">
+                      {new Date(segment.timestamp).toLocaleTimeString()}
+                    </span>
+                  </div>
+                  <p className="text-white/70 text-sm">{segment.text}</p>
+                </motion.div>
+              ))}
+            </div>
+          </div>
+        </div>
+
+        {/* Past Recordings */}
+        {recordings.length > 0 && (
+          <div className="mt-8 p-6 bg-white/5 border border-white/10 rounded-xl backdrop-blur-lg">
+            <div className="flex items-center justify-between mb-6">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-full bg-purple-500/20 flex items-center justify-center">
+                  <BarChart className="w-6 h-6 text-purple-500" />
+                </div>
+                <h3 className="text-xl font-semibold text-white">Past Recordings</h3>
+              </div>
+            </div>
+
+            <RecordingsList
+              recordings={recordings}
+              questions={questions}
+              onPlay={(recording) => {
+                // Handle playing the recording
+                const video = document.createElement('video');
+                video.src = recording.url;
+                video.controls = true;
+                video.className = 'w-full';
+                
+                // Create modal for video playback
+                const modal = document.createElement('div');
+                modal.className = 'fixed inset-0 bg-black/80 flex items-center justify-center p-8 z-50';
+                modal.onclick = (e) => {
+                  if (e.target === modal) {
+                    document.body.removeChild(modal);
+                  }
+                };
+                
+                modal.appendChild(video);
+                document.body.appendChild(modal);
+                video.play();
+              }}
+            />
+          </div>
+        )}
 
         {/* Video Preview Section */}
         <div className="mt-8">
