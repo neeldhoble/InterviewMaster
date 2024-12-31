@@ -37,7 +37,8 @@ import {
   FaInfo,
   FaBriefcase,
   FaCube,
-  FaGear
+  FaGear,
+  FaBrain
 } from 'react-icons/fa6';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
@@ -62,7 +63,8 @@ const navigationMenus = [
       { href: '/products/resume-builder', label: 'Resume Builder', icon: FaFile, description: 'Create professional resumes with AI assistance' },
       { href: '/products/mock-interviews', label: 'Mock Interviews', icon: FaUserTie, description: 'Practice with AI-powered interview simulations' },
       { href: '/products/ai-feedback', label: 'AI Feedback', icon: FaRobot, description: 'Get instant feedback on your interview responses' },
-      { href: '/products/skills-analyzer', label: 'Skills Analyzer', icon: FaChartLine, description: 'Analyze and improve your technical skills' },
+      { href: '/products/coding-practice', label: 'Coding Practice', icon: FaCode, description: 'Improve your coding skills with practice problems' },
+      { href: '/products/aptitude', label: 'Aptitude Practice', icon: FaBrain, description: 'Enhance your logical and numerical abilities' },
       { href: '/products/interview-questions', label: 'Interview Questions', icon: FaCircleQuestion, description: 'Access curated interview questions' },
       { href: '/products/Practice-Tests', label: 'Practice Tests', icon: FaClipboard, description: 'Take industry-specific practice tests' },
     ],

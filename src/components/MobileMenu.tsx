@@ -24,10 +24,11 @@ const navigationMenus = [
   {
     title: 'Products',
     links: [
-      { href: '/products/resume-builder', label: 'Resume Builder' },
       { href: '/products/mock-interviews', label: 'Mock Interviews' },
       { href: '/products/ai-feedback', label: 'AI Feedback' },
-      { href: '/products/skills-analyzer', label: 'Skills Analyzer' },
+      { href: '/products/coding-practice', label: 'Coding Practice' },
+      { href: '/products/aptitude', label: 'Aptitude Practice' },
+      { href: '/products/resume-builder', label: 'Resume Builder' },
       { href: '/products/interview-questions', label: 'Interview-Questions' },
       { href: '/products/Practice-Tests', label: 'Practice-Tests' },
     ],
