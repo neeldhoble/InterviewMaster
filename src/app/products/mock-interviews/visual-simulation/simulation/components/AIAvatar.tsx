@@ -1,0 +1,336 @@
+'use client';
+
+import React, { useEffect, useRef, useState } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+
+interface AIAvatarProps {
+  isSpoken: boolean;
+  currentQuestion?: string;
+}
+
+const AIFace = ({ isSpeaking }: { isSpeaking: boolean }) => (
+  <svg
+    viewBox="0 0 200 200"
+    className="w-full h-full"
+  >
+    {/* Face Circle */}
+    <motion.circle
+      cx="100"
+      cy="100"
+      r="90"
+      fill="url(#gradientFace)"
+      stroke="#fcba28"
+      strokeWidth="2"
+      initial={{ scale: 0.9 }}
+      animate={{ scale: 1 }}
+      transition={{ duration: 0.5 }}
+    />
+
+    {/* Eyes */}
+    <motion.g
+      initial={{ scale: 0.9 }}
+      animate={{ scale: 1 }}
+      transition={{ duration: 0.3, repeat: isSpeaking ? Infinity : 0, repeatType: "reverse" }}
+    >
+      {/* Left Eye */}
+      <circle cx="70" cy="85" r="8" fill="#fcba28" />
+      <circle cx="70" cy="85" r="4" fill="#1a1a1a" />
+      <circle cx="72" cy="83" r="2" fill="white" />
+
+      {/* Right Eye */}
+      <circle cx="130" cy="85" r="8" fill="#fcba28" />
+      <circle cx="130" cy="85" r="4" fill="#1a1a1a" />
+      <circle cx="132" cy="83" r="2" fill="white" />
+    </motion.g>
+
+    {/* Mouth */}
+    <motion.path
+      d={isSpeaking 
+        ? "M65,120 Q100,140 135,120" // Speaking mouth
+        : "M65,120 Q100,130 135,120"  // Normal mouth
+      }
+      stroke="#fcba28"
+      strokeWidth="4"
+      fill="none"
+      animate={{
+        d: isSpeaking 
+          ? ["M65,120 Q100,140 135,120", "M65,120 Q100,130 135,120", "M65,120 Q100,140 135,120"]
+          : "M65,120 Q100,130 135,120"
+      }}
+      transition={{
+        duration: 0.5,
+        repeat: isSpeaking ? Infinity : 0,
+        repeatType: "reverse"
+      }}
+    />
+
+    {/* Digital Circuit Lines */}
+    <g stroke="#fcba28" strokeWidth="1" opacity="0.3">
+      <motion.path
+        d="M10,50 L50,50 L70,70"
+        initial={{ pathLength: 0 }}
+        animate={{ pathLength: 1 }}
+        transition={{ duration: 1, repeat: Infinity }}
+      />
+      <motion.path
+        d="M190,50 L150,50 L130,70"
+        initial={{ pathLength: 0 }}
+        animate={{ pathLength: 1 }}
+        transition={{ duration: 1, repeat: Infinity, delay: 0.2 }}
+      />
+      <motion.path
+        d="M10,150 L50,150 L70,130"
+        initial={{ pathLength: 0 }}
+        animate={{ pathLength: 1 }}
+        transition={{ duration: 1, repeat: Infinity, delay: 0.4 }}
+      />
+      <motion.path
+        d="M190,150 L150,150 L130,130"
+        initial={{ pathLength: 0 }}
+        animate={{ pathLength: 1 }}
+        transition={{ duration: 1, repeat: Infinity, delay: 0.6 }}
+      />
+    </g>
+
+    {/* Gradients */}
+    <defs>
+      <radialGradient id="gradientFace" cx="50%" cy="50%" r="50%">
+        <stop offset="0%" stopColor="#2a2a2a" />
+        <stop offset="90%" stopColor="#1a1a1a" />
+        <stop offset="100%" stopColor="#000000" />
+      </radialGradient>
+    </defs>
+  </svg>
+);
+
+export const AIAvatar: React.FC<AIAvatarProps> = ({ isSpoken, currentQuestion }) => {
+  const speechSynthesisRef = useRef<SpeechSynthesisUtterance | null>(null);
+  const [isSpeaking, setIsSpeaking] = useState(false);
+  const [showFullQuestion, setShowFullQuestion] = useState(false);
+  const [isInitialized, setIsInitialized] = useState(false);
+
+  // Initialize speech synthesis
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      // Create a dummy utterance to initialize the speech synthesis
+      const dummy = new SpeechSynthesisUtterance('');
+      window.speechSynthesis.speak(dummy);
+      setIsInitialized(true);
+    }
+    
+    // Cleanup function to cancel any ongoing speech
+    return () => {
+      window.speechSynthesis.cancel();
+    };
+  }, []);
+
+  // Handle speech synthesis
+  useEffect(() => {
+    if (!isInitialized) return;
+
+    const speakQuestion = async () => {
+      try {
+        if (isSpoken && currentQuestion) {
+          // Cancel any ongoing speech
+          window.speechSynthesis.cancel();
+
+          // Create new utterance
+          const utterance = new SpeechSynthesisUtterance(currentQuestion);
+          speechSynthesisRef.current = utterance;
+
+          // Configure voice settings for Indian accent
+          utterance.rate = 0.9;  // Slightly slower for clarity
+          utterance.pitch = 1.1; // Slightly higher pitch
+          utterance.volume = 1.0;
+
+          // Get available voices
+          let voices = window.speechSynthesis.getVoices();
+          
+          // If voices are not loaded yet, wait for them
+          if (voices.length === 0) {
+            await new Promise<void>((resolve) => {
+              window.speechSynthesis.onvoiceschanged = () => {
+                voices = window.speechSynthesis.getVoices();
+                resolve();
+              };
+            });
+          }
+
+          // Try to find an Indian English voice
+          const indianVoice = voices.find(voice => 
+            voice.name.toLowerCase().includes('indian') || 
+            voice.lang.includes('en-IN') ||
+            voice.name.toLowerCase().includes('hindi')
+          );
+
+          if (indianVoice) {
+            utterance.voice = indianVoice;
+          } else {
+            // Fallback to any English voice
+            const englishVoice = voices.find(voice => 
+              voice.lang.startsWith('en-')
+            );
+            if (englishVoice) {
+              utterance.voice = englishVoice;
+            }
+          }
+
+          // Add event listeners
+          utterance.onstart = () => {
+            setIsSpeaking(true);
+            // Ensure the speech synthesis doesn't get interrupted
+            document.addEventListener('visibilitychange', handleVisibilityChange);
+          };
+
+          utterance.onend = () => {
+            setIsSpeaking(false);
+            document.removeEventListener('visibilitychange', handleVisibilityChange);
+          };
+
+          utterance.onerror = (event) => {
+            console.error('Speech synthesis error:', event);
+            setIsSpeaking(false);
+            document.removeEventListener('visibilitychange', handleVisibilityChange);
+          };
+
+          // Split question into chunks if it's too long
+          const chunks = splitTextIntoChunks(currentQuestion);
+          
+          // Speak each chunk in sequence
+          for (const chunk of chunks) {
+            utterance.text = chunk;
+            window.speechSynthesis.speak(utterance);
+            // Wait for the chunk to finish before speaking the next one
+            await new Promise(resolve => {
+              utterance.onend = () => {
+                resolve(null);
+              };
+            });
+          }
+        }
+      } catch (error) {
+        console.error('Speech synthesis error:', error);
+        setIsSpeaking(false);
+      }
+    };
+
+    speakQuestion();
+  }, [isSpoken, currentQuestion, isInitialized]);
+
+  // Handle visibility change to prevent speech from stopping when tab is inactive
+  const handleVisibilityChange = () => {
+    if (document.hidden) {
+      window.speechSynthesis.pause();
+    } else {
+      window.speechSynthesis.resume();
+    }
+  };
+
+  // Split long text into smaller chunks to prevent speech synthesis from cutting off
+  const splitTextIntoChunks = (text: string): string[] => {
+    const maxChunkLength = 200;
+    const chunks: string[] = [];
+    
+    // Split by sentence endings and punctuation
+    const sentences = text.match(/[^.!?]+[.!?]+/g) || [text];
+    
+    let currentChunk = '';
+    
+    for (const sentence of sentences) {
+      if (currentChunk.length + sentence.length <= maxChunkLength) {
+        currentChunk += sentence;
+      } else {
+        if (currentChunk) chunks.push(currentChunk.trim());
+        currentChunk = sentence;
+      }
+    }
+    
+    if (currentChunk) chunks.push(currentChunk.trim());
+    return chunks;
+  };
+
+  return (
+    <div className="relative flex flex-col items-center">
+      {/* Avatar Container */}
+      <div className="relative w-64 h-64 mb-6">
+        {/* Background Glow */}
+        <motion.div
+          className="absolute inset-0 rounded-full bg-gradient-to-r from-[#fcba28]/20 to-[#fcd978]/20"
+          animate={{
+            scale: isSpeaking ? [1, 1.1, 1] : 1,
+            opacity: isSpeaking ? [0.5, 0.8, 0.5] : 0.5
+          }}
+          transition={{
+            duration: 2,
+            repeat: Infinity,
+            repeatType: "reverse"
+          }}
+        />
+        
+        {/* AI Face */}
+        <div className="relative w-full h-full">
+          <AIFace isSpeaking={isSpeaking} />
+        </div>
+
+        {/* Voice Wave Animation */}
+        <AnimatePresence>
+          {isSpeaking && (
+            <motion.div 
+              className="absolute -bottom-4 left-1/2 transform -translate-x-1/2 flex items-center gap-1"
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: 10 }}
+            >
+              {[...Array(5)].map((_, i) => (
+                <motion.div
+                  key={i}
+                  className="w-1 bg-[#fcba28] rounded-full"
+                  animate={{
+                    height: ['16px', '24px', '16px'],
+                  }}
+                  transition={{
+                    duration: 0.5,
+                    repeat: Infinity,
+                    delay: i * 0.1,
+                  }}
+                />
+              ))}
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </div>
+
+      {/* Question Display */}
+      {currentQuestion && (
+        <motion.div
+          className="w-full max-w-xl mx-auto"
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+        >
+          <div 
+            className={`relative bg-white/5 backdrop-blur-lg rounded-xl p-6 transition-all duration-300 ${
+              showFullQuestion ? 'max-h-none' : 'max-h-32 overflow-hidden'
+            }`}
+          >
+            <p className="text-gray-300 text-lg leading-relaxed">
+              {currentQuestion}
+            </p>
+            
+            {!showFullQuestion && (
+              <div className="absolute bottom-0 left-0 right-0 h-12 bg-gradient-to-t from-black/50 to-transparent" />
+            )}
+            
+            <button
+              className="absolute bottom-2 right-2 text-[#fcba28] text-sm hover:text-[#fcd978] transition-colors"
+              onClick={() => setShowFullQuestion(!showFullQuestion)}
+            >
+              {showFullQuestion ? 'Show Less' : 'Show More'}
+            </button>
+          </div>
+        </motion.div>
+      )}
+    </div>
+  );
+};
+
+export default AIAvatar;
