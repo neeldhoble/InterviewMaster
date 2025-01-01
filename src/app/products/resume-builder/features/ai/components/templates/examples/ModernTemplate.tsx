@@ -1,138 +1,496 @@
 "use client";
 
-import { motion } from "framer-motion";
+import { TemplateProps } from "../types";
+import { Phone, Mail, Globe, MapPin, Calendar, Building } from "lucide-react";
 
-interface TemplateProps {
-  scale?: number;
-  isPreview?: boolean;
+interface PersonalInfo {
+  fullName: string;
+  email: string;
+  phone: string;
+  location: string;
+  website: string;
+  summary: string;
+  declaration?: string;
 }
 
-export const ModernTemplate = ({ scale = 1, isPreview = false }: TemplateProps) => {
-  const baseWidth = 800;
-  const baseHeight = 1130;
+interface Experience {
+  id: string;
+  title: string;
+  company: string;
+  location: string;
+  startDate: string;
+  endDate: string;
+  current: boolean;
+  description: string;
+}
+
+interface Education {
+  id: string;
+  school: string;
+  degree: string;
+  field: string;
+  startDate: string;
+  endDate: string;
+  current: boolean;
+  description: string;
+}
+
+interface Skill {
+  id: string;
+  name: string;
+  level: number;
+  category: string;
+}
+
+interface Achievement {
+  id: string;
+  title: string;
+  date: string;
+  description: string;
+}
+
+interface Certification {
+  id: string;
+  name: string;
+  issuer: string;
+  date: string;
+  expiry?: string;
+  description?: string;
+}
+
+interface Language {
+  id: string;
+  name: string;
+  proficiency: string;
+}
+
+interface Project {
+  id: string;
+  title: string;
+  description: string;
+  startDate: string;
+  endDate: string;
+  current: boolean;
+  technologies: string[];
+}
+
+interface Volunteer {
+  id: string;
+  role: string;
+  organization: string;
+  startDate: string;
+  endDate: string;
+  current: boolean;
+  description: string;
+}
+
+interface ResumeData {
+  templateId: number;
+  personalInfo: PersonalInfo;
+  experiences: Experience[];
+  education: Education[];
+  skills: Skill[];
+  achievements: Achievement[];
+  certifications: Certification[];
+  languages: Language[];
+  projects: Project[];
+  volunteer: Volunteer[];
+}
+
+const defaultData: ResumeData = {
+  templateId: 1,
+  personalInfo: {
+    fullName: "John Doe",
+    email: "john@example.com",
+    phone: "+1 (555) 123-4567",
+    location: "San Francisco, CA",
+    website: "www.johndoe.com",
+    summary: "Senior Software Engineer with 5+ years of experience in full-stack development...",
+    declaration: "I hereby declare that all the information stated above is true and correct to the best of my knowledge and belief. I understand that any willful misstatement described herein may lead to disqualification or dismissal.",
+  },
+  experiences: [
+    {
+      id: "1",
+      title: "Senior Software Engineer",
+      company: "Tech Corp",
+      location: "San Francisco, CA",
+      startDate: "2020",
+      endDate: "Present",
+      current: true,
+      description: "Led development of microservices architecture...",
+    }
+  ],
+  education: [
+    {
+      id: "1",
+      school: "University of Technology",
+      degree: "Bachelor's",
+      field: "Computer Science",
+      startDate: "2015",
+      endDate: "2019",
+      current: false,
+      description: "Major in Software Engineering",
+    }
+  ],
+  skills: [
+    {
+      id: "1",
+      name: "JavaScript",
+      level: 5,
+      category: "Programming",
+    },
+    {
+      id: "2",
+      name: "React",
+      level: 5,
+      category: "Frontend",
+    }
+  ],
+  achievements: [
+    {
+      id: "1",
+      title: "Best Developer Award",
+      date: "2022",
+      description: "Awarded for exceptional contributions to project success",
+    }
+  ],
+  certifications: [
+    {
+      id: "1",
+      name: "AWS Certified Solutions Architect",
+      issuer: "Amazon Web Services",
+      date: "2021",
+      expiry: "2024",
+      description: "Professional level certification",
+    }
+  ],
+  languages: [
+    {
+      id: "1",
+      name: "English",
+      proficiency: "Native",
+    },
+    {
+      id: "2",
+      name: "Spanish",
+      proficiency: "Professional",
+    }
+  ],
+  projects: [
+    {
+      id: "1",
+      title: "E-commerce Platform",
+      description: "Built a scalable e-commerce platform using microservices",
+      startDate: "2021",
+      endDate: "2022",
+      current: false,
+      technologies: ["React", "Node.js", "AWS"],
+    }
+  ],
+  volunteer: [
+    {
+      id: "1",
+      role: "Tech Mentor",
+      organization: "Code.org",
+      startDate: "2019",
+      endDate: "Present",
+      current: true,
+      description: "Mentoring students in web development",
+    }
+  ],
+};
+
+export const ModernTemplate = ({ data = defaultData, scale = 1 }: TemplateProps) => {
+  const {
+    personalInfo,
+    experiences,
+    education,
+    skills,
+    achievements,
+    certifications,
+    languages,
+    projects,
+    volunteer,
+  } = data;
 
   return (
-    <motion.div
-      initial={isPreview ? { opacity: 0, scale: 0.9 } : {}}
-      animate={isPreview ? { opacity: 1, scale: 1 } : {}}
-      className="relative"
-      style={{
-        width: baseWidth * scale,
-        height: baseHeight * scale,
+    <div 
+      className="bg-white text-gray-800 min-h-[1056px] w-[816px] shadow-lg"
+      style={{ 
+        fontSize: `${14 * scale}px`,
       }}
     >
-      <svg
-        width={baseWidth * scale}
-        height={baseHeight * scale}
-        viewBox={`0 0 ${baseWidth} ${baseHeight}`}
-        fill="none"
-        xmlns="http://www.w3.org/2000/svg"
-      >
-        {/* Background */}
-        <rect width={baseWidth} height={baseHeight} fill="white" />
-        
-        {/* Modern Geometric Background */}
-        <path
-          d="M0 0 L800 0 L700 200 L0 200 Z"
-          fill="#fcba28"
-          opacity="0.9"
-        />
-        <path
-          d="M800 0 L800 1130 L700 1130 L700 200 L800 0 Z"
-          fill="#fcba28"
-          opacity="0.1"
-        />
-        <circle cx="700" cy="100" r="50" fill="white" opacity="0.1" />
+      {/* Header with Accent Color */}
+      <div className="bg-[#2A4365] text-white px-8 py-12">
+        <h1 className="text-4xl font-bold mb-4">{personalInfo.fullName || "Your Name"}</h1>
+        <div className="grid grid-cols-2 md:grid-cols-3 gap-4 text-sm">
+          {personalInfo.phone && (
+            <div className="flex items-center gap-2">
+              <Phone size={16} className="text-[#90CDF4]" />
+              <span>{personalInfo.phone}</span>
+            </div>
+          )}
+          {personalInfo.email && (
+            <div className="flex items-center gap-2">
+              <Mail size={16} className="text-[#90CDF4]" />
+              <span>{personalInfo.email}</span>
+            </div>
+          )}
+          {personalInfo.website && (
+            <div className="flex items-center gap-2">
+              <Globe size={16} className="text-[#90CDF4]" />
+              <span>{personalInfo.website}</span>
+            </div>
+          )}
+          {personalInfo.location && (
+            <div className="flex items-center gap-2">
+              <MapPin size={16} className="text-[#90CDF4]" />
+              <span>{personalInfo.location}</span>
+            </div>
+          )}
+        </div>
+        {personalInfo.summary && (
+          <p className="mt-6 text-gray-200 leading-relaxed max-w-3xl">
+            {personalInfo.summary}
+          </p>
+        )}
+      </div>
 
-        {/* Header Content */}
-        <foreignObject x="40" y="40" width="620" height="120">
-          <div>
-            <h1 className="text-4xl font-bold text-white mb-2">John Developer</h1>
-            <p className="text-xl text-white/80">Senior Software Engineer</p>
+      {/* Main Content */}
+      <div className="px-8 py-8">
+        <div className="grid grid-cols-3 gap-8">
+          {/* Left Column - Experience & Education */}
+          <div className="col-span-2 space-y-8">
+            {/* Experience Section */}
+            {experiences?.length > 0 && (
+              <section>
+                <h2 className="text-2xl font-bold mb-6 text-[#2A4365] border-b-2 border-[#90CDF4] pb-2">
+                  Professional Experience
+                </h2>
+                <div className="space-y-6">
+                  {experiences.map((exp) => (
+                    <div key={exp.id} className="relative pl-6 border-l-2 border-gray-200">
+                      <div className="absolute left-[-5px] top-1.5 w-2 h-2 rounded-full bg-[#90CDF4]" />
+                      <h3 className="font-bold text-lg text-gray-800">{exp.title}</h3>
+                      <div className="flex items-center text-gray-600 text-sm mb-2">
+                        <Building size={16} className="mr-2 text-[#2A4365]" />
+                        <span className="font-medium">{exp.company}</span>
+                        <span className="mx-2">•</span>
+                        <span>{exp.location}</span>
+                      </div>
+                      <div className="text-sm text-gray-600 mb-2 flex items-center">
+                        <Calendar size={14} className="mr-2 text-[#2A4365]" />
+                        <span>{exp.startDate} - {exp.current ? "Present" : exp.endDate}</span>
+                      </div>
+                      <p className="text-gray-700 leading-relaxed">{exp.description}</p>
+                    </div>
+                  ))}
+                </div>
+              </section>
+            )}
+
+            {/* Education Section */}
+            {education?.length > 0 && (
+              <section>
+                <h2 className="text-2xl font-bold mb-6 text-[#2A4365] border-b-2 border-[#90CDF4] pb-2">
+                  Education
+                </h2>
+                <div className="space-y-6">
+                  {education.map((edu) => (
+                    <div key={edu.id} className="relative pl-6 border-l-2 border-gray-200">
+                      <div className="absolute left-[-5px] top-1.5 w-2 h-2 rounded-full bg-[#90CDF4]" />
+                      <h3 className="font-bold text-lg text-gray-800">
+                        {edu.degree} in {edu.field}
+                      </h3>
+                      <div className="text-gray-700 font-medium">
+                        {edu.school}
+                      </div>
+                      <div className="text-sm text-gray-600 mb-2 flex items-center">
+                        <Calendar size={14} className="mr-2 text-[#2A4365]" />
+                        <span>{edu.startDate} - {edu.current ? "Present" : edu.endDate}</span>
+                      </div>
+                      {edu.description && (
+                        <p className="text-gray-700 leading-relaxed">{edu.description}</p>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </section>
+            )}
           </div>
-        </foreignObject>
 
-        {/* Contact Info */}
-        <foreignObject x="40" y="160" width="620" height="40">
-          <div className="flex flex-wrap gap-4 text-sm">
-            <div className="flex items-center gap-2 text-gray-700">
-              <svg className="w-4 h-4" viewBox="0 0 24 24" fill="currentColor">
-                <path d="M20 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z"/>
-              </svg>
-              john@developer.com
-            </div>
-            <div className="flex items-center gap-2 text-gray-700">
-              <svg className="w-4 h-4" viewBox="0 0 24 24" fill="currentColor">
-                <path d="M6.62 10.79c1.44 2.83 3.76 5.15 6.59 6.59l2.2-2.2c.27-.27.67-.36 1.02-.24 1.12.37 2.33.57 3.57.57.55 0 1 .45 1 1V20c0 .55-.45 1-1 1-9.39 0-17-7.61-17-17 0-.55.45-1 1-1h3.5c.55 0 1 .45 1 1 0 1.25.2 2.45.57 3.57.11.35.03.74-.25 1.02l-2.2 2.2z"/>
-              </svg>
-              +1 (555) 123-4567
-            </div>
-            <div className="flex items-center gap-2 text-gray-700">
-              <svg className="w-4 h-4" viewBox="0 0 24 24" fill="currentColor">
-                <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/>
-              </svg>
-              San Francisco, CA
-            </div>
-          </div>
-        </foreignObject>
-
-        {/* Main Content */}
-        <foreignObject x="40" y="240" width="620" height="850">
+          {/* Right Column - Skills & Other Sections */}
           <div className="space-y-8">
-            {/* Summary */}
-            <div>
-              <h2 className="text-xl font-bold text-[#fcba28] mb-3 flex items-center gap-2">
-                <span className="w-6 h-0.5 bg-[#fcba28]" />
-                Professional Summary
-              </h2>
-              <p className="text-gray-700">
-                Senior Software Engineer with 8+ years of experience in full-stack development,
-                specializing in scalable web applications and cloud architecture.
-              </p>
-            </div>
+            {/* Skills Section */}
+            {skills?.length > 0 && (
+              <section>
+                <h2 className="text-2xl font-bold mb-6 text-[#2A4365] border-b-2 border-[#90CDF4] pb-2">
+                  Skills
+                </h2>
+                <div className="space-y-6">
+                  {Object.entries(
+                    skills.reduce((acc, skill) => {
+                      acc[skill.category] = acc[skill.category] || [];
+                      acc[skill.category].push(skill);
+                      return acc;
+                    }, {} as Record<string, typeof skills>)
+                  ).map(([category, categorySkills]) => (
+                    <div key={category}>
+                      <h3 className="font-bold text-gray-700 mb-3">{category}</h3>
+                      <div className="flex flex-wrap gap-2">
+                        {categorySkills.map((skill) => (
+                          <span
+                            key={skill.id}
+                            className="px-3 py-1 bg-[#EBF8FF] text-[#2A4365] text-sm rounded-full font-medium"
+                          >
+                            {skill.name}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </section>
+            )}
 
-            {/* Experience */}
-            <div>
-              <h2 className="text-xl font-bold text-[#fcba28] mb-3 flex items-center gap-2">
-                <span className="w-6 h-0.5 bg-[#fcba28]" />
-                Experience
+            {/* Languages Section */}
+            {languages?.length > 0 && (
+              <section>
+                <h2 className="text-2xl font-bold mb-6 text-[#2A4365] border-b-2 border-[#90CDF4] pb-2">
+                  Languages
+                </h2>
+                <div className="space-y-3">
+                  {languages.map((lang) => (
+                    <div key={lang.id} className="flex justify-between items-center">
+                      <span className="font-medium text-gray-700">{lang.name}</span>
+                      <span className="text-[#2A4365] bg-[#EBF8FF] px-3 py-1 rounded-full text-sm">
+                        {lang.proficiency}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              </section>
+            )}
+
+            {/* Certifications Section */}
+            {certifications?.length > 0 && (
+              <section>
+                <h2 className="text-2xl font-bold mb-6 text-[#2A4365] border-b-2 border-[#90CDF4] pb-2">
+                  Certifications
+                </h2>
+                <div className="space-y-4">
+                  {certifications.map((cert) => (
+                    <div key={cert.id} className="relative pl-6 border-l-2 border-gray-200">
+                      <div className="absolute left-[-5px] top-1.5 w-2 h-2 rounded-full bg-[#90CDF4]" />
+                      <h3 className="font-bold text-gray-800">{cert.name}</h3>
+                      <div className="text-sm text-gray-600">
+                        {cert.issuer} • {cert.date}
+                        {cert.expiry && ` - ${cert.expiry}`}
+                      </div>
+                      {cert.description && (
+                        <p className="text-gray-700 mt-1 text-sm">{cert.description}</p>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </section>
+            )}
+          </div>
+        </div>
+
+        {/* Additional Sections */}
+        <div className="mt-8 grid grid-cols-2 gap-8">
+          {/* Projects Section */}
+          {projects?.length > 0 && (
+            <section>
+              <h2 className="text-2xl font-bold mb-6 text-[#2A4365] border-b-2 border-[#90CDF4] pb-2">
+                Projects
               </h2>
               <div className="space-y-6">
-                <div>
-                  <div className="flex justify-between mb-1">
-                    <h3 className="font-bold text-gray-800">Senior Software Engineer</h3>
-                    <span className="text-[#fcba28]">2020 - Present</span>
-                  </div>
-                  <div className="text-gray-600 mb-2">Tech Corp, San Francisco</div>
-                  <ul className="list-disc list-inside text-gray-700 space-y-1">
-                    <li>Led development of microservices architecture</li>
-                    <li>Improved system performance by 40%</li>
-                  </ul>
-                </div>
-              </div>
-            </div>
-
-            {/* Skills */}
-            <div>
-              <h2 className="text-xl font-bold text-[#fcba28] mb-3 flex items-center gap-2">
-                <span className="w-6 h-0.5 bg-[#fcba28]" />
-                Skills
-              </h2>
-              <div className="grid grid-cols-2 gap-4">
-                {["JavaScript", "TypeScript", "React", "Node.js", "AWS"].map((skill) => (
-                  <div
-                    key={skill}
-                    className="flex items-center gap-2"
-                  >
-                    <div className="w-2 h-2 rounded-full bg-[#fcba28]" />
-                    <span className="text-gray-700">{skill}</span>
+                {projects.map((project) => (
+                  <div key={project.id} className="relative pl-6 border-l-2 border-gray-200">
+                    <div className="absolute left-[-5px] top-1.5 w-2 h-2 rounded-full bg-[#90CDF4]" />
+                    <h3 className="font-bold text-gray-800">{project.title}</h3>
+                    <div className="text-sm text-gray-600 mb-2">
+                      {project.startDate} - {project.current ? "Present" : project.endDate}
+                    </div>
+                    <p className="text-gray-700 mb-2">{project.description}</p>
+                    {project.technologies.length > 0 && (
+                      <div className="flex flex-wrap gap-2">
+                        {project.technologies.map((tech) => (
+                          <span
+                            key={tech}
+                            className="px-2 py-1 bg-[#EBF8FF] text-[#2A4365] text-xs rounded-full"
+                          >
+                            {tech}
+                          </span>
+                        ))}
+                      </div>
+                    )}
                   </div>
                 ))}
               </div>
+            </section>
+          )}
+
+          {/* Achievements Section */}
+          {achievements?.length > 0 && (
+            <section>
+              <h2 className="text-2xl font-bold mb-6 text-[#2A4365] border-b-2 border-[#90CDF4] pb-2">
+                Achievements
+              </h2>
+              <div className="space-y-4">
+                {achievements.map((achievement) => (
+                  <div key={achievement.id} className="relative pl-6 border-l-2 border-gray-200">
+                    <div className="absolute left-[-5px] top-1.5 w-2 h-2 rounded-full bg-[#90CDF4]" />
+                    <h3 className="font-bold text-gray-800">{achievement.title}</h3>
+                    <div className="text-sm text-gray-600 mb-1">{achievement.date}</div>
+                    <p className="text-gray-700">{achievement.description}</p>
+                  </div>
+                ))}
+              </div>
+            </section>
+          )}
+        </div>
+
+        {/* Volunteer Section */}
+        {volunteer?.length > 0 && (
+          <section className="mt-8">
+            <h2 className="text-2xl font-bold mb-6 text-[#2A4365] border-b-2 border-[#90CDF4] pb-2">
+              Volunteer Experience
+            </h2>
+            <div className="space-y-6">
+              {volunteer.map((vol) => (
+                <div key={vol.id} className="relative pl-6 border-l-2 border-gray-200">
+                  <div className="absolute left-[-5px] top-1.5 w-2 h-2 rounded-full bg-[#90CDF4]" />
+                  <h3 className="font-bold text-gray-800">{vol.role}</h3>
+                  <div className="text-gray-700 font-medium">{vol.organization}</div>
+                  <div className="text-sm text-gray-600 mb-2">
+                    {vol.startDate} - {vol.current ? "Present" : vol.endDate}
+                  </div>
+                  <p className="text-gray-700">{vol.description}</p>
+                </div>
+              ))}
             </div>
-          </div>
-        </foreignObject>
-      </svg>
-    </motion.div>
+          </section>
+        )}
+
+        {/* Declaration Section */}
+        {personalInfo.declaration && (
+          <section className="mt-8 pt-8 border-t-2 border-[#90CDF4]">
+            <h2 className="text-2xl font-bold mb-4 text-[#2A4365] flex items-center">
+              <span className="mr-2">Declaration</span>
+            </h2>
+            <div className="bg-[#EBF8FF] p-6 rounded-lg">
+              <p className="text-gray-700 leading-relaxed italic">{personalInfo.declaration}</p>
+              <div className="mt-4 flex justify-between items-center">
+                <div className="text-sm text-gray-600">Date: {new Date().toLocaleDateString()}</div>
+                <div className="text-sm text-gray-600">Signature: {personalInfo.fullName}</div>
+              </div>
+            </div>
+          </section>
+        )}
+      </div>
+    </div>
   );
 };

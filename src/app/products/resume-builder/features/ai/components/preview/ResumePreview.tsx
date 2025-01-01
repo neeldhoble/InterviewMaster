@@ -215,6 +215,9 @@ export const ResumePreview = ({ data, onBack, onDownload, onShare }: ResumePrevi
           style={{
             transform: `scale(${scale})`,
             transformOrigin: "top center",
+            width: "816px",
+            height: "1056px",
+            margin: "0 auto"
           }}
         >
           <Template data={data} scale={scale} />
