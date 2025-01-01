@@ -206,9 +206,13 @@ const ResumeBuilder = () => {
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="bg-white/5 border border-white/10 rounded-2xl backdrop-blur-xl p-6"
+          className="bg-white/5 border border-white/10 rounded-2xl backdrop-blur-xl p-8 min-h-[600px] w-full max-w-[1200px] mx-auto"
         >
-          {renderStepContent()}
+          <div className="w-full h-full flex items-center justify-center">
+            <div className="w-full max-h-[800px] overflow-y-auto">
+              {renderStepContent()}
+            </div>
+          </div>
         </motion.div>
 
         {/* Navigation Buttons */}

@@ -1,8 +1,8 @@
 "use client";
 
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import { useState } from "react";
-import { Check } from "lucide-react";
+import { Check, X } from "lucide-react";
 import { ProfessionalTemplate } from "./examples/ProfessionalTemplate";
 import { CreativeTemplate } from "./examples/CreativeTemplate";
 import { MinimalTemplate } from "./examples/MinimalTemplate";
@@ -66,6 +66,7 @@ export const TemplateSelector = ({
 }: TemplateSelectorProps) => {
   const [hoveredTemplate, setHoveredTemplate] = useState<number | null>(null);
   const [filter, setFilter] = useState<string>("all");
+  const [previewTemplate, setPreviewTemplate] = useState<Template | null>(null);
 
   const uniqueTags = Array.from(
     new Set(templates.flatMap((template) => template.tags))
@@ -113,10 +114,7 @@ export const TemplateSelector = ({
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: template.id * 0.1 }}
           >
-            <button
-              onClick={() => onSelect(template.id)}
-              onMouseEnter={() => setHoveredTemplate(template.id)}
-              onMouseLeave={() => setHoveredTemplate(null)}
+            <div
               className={`w-full text-left transition-all ${
                 selectedTemplate === template.id
                   ? "scale-[1.02]"
@@ -124,11 +122,12 @@ export const TemplateSelector = ({
               }`}
             >
               <div
-                className={`relative aspect-[1/1.4] rounded-lg overflow-hidden ${
+                className={`relative aspect-[1/1.4] rounded-lg overflow-hidden cursor-pointer ${
                   selectedTemplate === template.id
                     ? "ring-2 ring-[#fcba28]"
                     : "ring-1 ring-white/10"
                 }`}
+                onClick={() => setPreviewTemplate(template)}
               >
                 {/* Template Preview */}
                 <div className="absolute inset-0 transform scale-[0.2] origin-top-left">
@@ -144,23 +143,35 @@ export const TemplateSelector = ({
                   }`}
                 >
                   <div className="absolute inset-0 flex items-center justify-center">
-                    {selectedTemplate === template.id ? (
-                      <div className="flex items-center gap-2 px-4 py-2 bg-[#fcba28] rounded-full text-black font-medium">
-                        <Check className="w-4 h-4" />
-                        Selected
-                      </div>
-                    ) : (
-                      <div className="px-4 py-2 bg-white/20 rounded-full backdrop-blur-sm font-medium">
-                        Preview Template
-                      </div>
-                    )}
+                    <div className="px-4 py-2 bg-white/20 rounded-full backdrop-blur-sm font-medium">
+                      View Template
+                    </div>
                   </div>
                 </div>
               </div>
 
               {/* Template Info */}
               <div className="mt-4 space-y-2">
-                <h3 className="font-medium">{template.name}</h3>
+                <div className="flex items-center justify-between">
+                  <h3 className="font-medium">{template.name}</h3>
+                  <button
+                    onClick={() => onSelect(template.id)}
+                    className={`px-4 py-1 rounded-full text-sm transition-colors ${
+                      selectedTemplate === template.id
+                        ? "bg-[#fcba28] text-black"
+                        : "bg-white/5 hover:bg-white/10"
+                    }`}
+                  >
+                    {selectedTemplate === template.id ? (
+                      <span className="flex items-center gap-1">
+                        <Check className="w-4 h-4" />
+                        Selected
+                      </span>
+                    ) : (
+                      "Select"
+                    )}
+                  </button>
+                </div>
                 <p className="text-sm text-white/60">{template.description}</p>
                 <div className="flex flex-wrap gap-2">
                   {template.tags.map((tag) => (
@@ -173,10 +184,62 @@ export const TemplateSelector = ({
                   ))}
                 </div>
               </div>
-            </button>
+            </div>
           </motion.div>
         ))}
       </div>
+
+      {/* Full Preview Modal */}
+      <AnimatePresence>
+        {previewTemplate && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm"
+          >
+            <motion.div
+              initial={{ scale: 0.9, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.9, opacity: 0 }}
+              className="relative w-full max-w-6xl bg-[#1a1a1a] rounded-xl shadow-xl"
+            >
+              {/* Modal Header */}
+              <div className="flex items-center justify-between p-4 border-b border-white/10">
+                <div>
+                  <h3 className="text-lg font-medium">{previewTemplate.name}</h3>
+                  <p className="text-sm text-white/60">{previewTemplate.description}</p>
+                </div>
+                <div className="flex items-center gap-4">
+                  <button
+                    onClick={() => onSelect(previewTemplate.id)}
+                    className={`px-6 py-2 rounded-lg text-sm transition-colors ${
+                      selectedTemplate === previewTemplate.id
+                        ? "bg-[#fcba28] text-black"
+                        : "bg-white/10 hover:bg-white/20"
+                    }`}
+                  >
+                    {selectedTemplate === previewTemplate.id ? "Selected" : "Use This Template"}
+                  </button>
+                  <button
+                    onClick={() => setPreviewTemplate(null)}
+                    className="p-2 hover:bg-white/10 rounded-lg transition-colors"
+                  >
+                    <X className="w-5 h-5" />
+                  </button>
+                </div>
+              </div>
+
+              {/* Template Preview */}
+              <div className="p-8 max-h-[80vh] overflow-y-auto">
+                <div className="w-full">
+                  <previewTemplate.component />
+                </div>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 };
