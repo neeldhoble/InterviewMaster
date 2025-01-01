@@ -1,215 +1,248 @@
 "use client";
 
-import { useState } from 'react';
-import { PageContainer } from '../../components/ui';
-import { Sparkles, FileText, Brain, ArrowLeft } from 'lucide-react';
-import { Button } from '../../components/ui';
-import { TemplateSelector } from './components/TemplateSelector';
-import { SectionEditor } from './components/SectionEditor';
-import { AIAnalysis } from './components/AIAnalysis';
-import type { ResumeSection, AIAnalysis as AIAnalysisType } from './types';
+import { motion } from "framer-motion";
+import { useState } from "react";
+import { Sparkles, FileText, Download, Edit3, Layout, Share2, GraduationCap, Award } from "lucide-react";
+import { TemplateSelector } from "./components/templates/TemplateSelector";
+import { PersonalInfoForm } from "./components/personal-info/PersonalInfoForm";
+import { ExperienceForm } from "./components/experience/ExperienceForm";
+import { EducationForm } from "./components/education/EducationForm";
+import { SkillsForm } from "./components/skills/SkillsForm";
+import { ResumePreview } from "./components/preview/ResumePreview";
+import { ResumeProvider, useResume } from "./context/ResumeContext";
+import { exportToPdf, shareResume } from "./utils/pdfExport";
 
-const defaultSections: ResumeSection[] = [
-  {
-    id: 'personal',
-    type: 'personal',
-    title: 'Personal Information',
-    content: {
-      name: '',
-      email: '',
-      phone: '',
-      location: '',
-      linkedin: '',
-      github: '',
-      website: ''
-    },
-    order: 0,
-    isVisible: true
-  },
-  {
-    id: 'summary',
-    type: 'summary',
-    title: 'Professional Summary',
-    content: '',
-    order: 1,
-    isVisible: true
-  },
-  {
-    id: 'experience',
-    type: 'experience',
-    title: 'Work Experience',
-    content: [],
-    order: 2,
-    isVisible: true
-  },
-  {
-    id: 'education',
-    type: 'education',
-    title: 'Education',
-    content: [],
-    order: 3,
-    isVisible: true
-  },
-  {
-    id: 'skills',
-    type: 'skills',
-    title: 'Skills',
-    content: [],
-    order: 4,
-    isVisible: true
-  }
-];
+const ResumeBuilder = () => {
+  const {
+    resumeData,
+    updatePersonalInfo,
+    updateExperiences,
+    updateEducation,
+    updateSkills,
+    updateTemplateId,
+  } = useResume();
+  const [currentStep, setCurrentStep] = useState(1);
 
-const mockAnalysis: AIAnalysisType = {
-  score: 85,
-  strengths: [
-    'Strong professional experience section with quantifiable achievements',
-    'Clear and concise summary that highlights key skills',
-    'Well-structured education section with relevant details'
-  ],
-  improvements: [
-    'Consider adding more industry-specific keywords',
-    'Include more technical skills to improve ATS optimization',
-    'Add links to portfolio or project examples'
-  ],
-  keywordMatch: {
-    found: ['project management', 'leadership', 'agile', 'stakeholder management'],
-    missing: ['scrum', 'budget management', 'risk assessment'],
-    relevance: 0.75
-  },
-  suggestions: [
-    {
-      section: 'Professional Summary',
-      priority: 'high',
-      suggestions: [
-        'Start with a strong action verb',
-        'Mention years of experience',
-        'Include key achievements'
-      ]
-    }
-  ],
-  industryFit: {
-    score: 78,
-    targetIndustry: 'Technology',
-    matchingSkills: ['project management', 'leadership', 'agile'],
-    missingSkills: ['cloud computing', 'DevOps']
-  },
-  atsOptimization: {
-    score: 82,
-    format: {
-      issues: ['Inconsistent bullet point formatting'],
-      suggestions: ['Use consistent bullet point symbols']
-    },
-    content: {
-      issues: ['Missing key technical skills'],
-      suggestions: ['Add more industry-specific keywords']
-    }
-  },
-  readability: {
-    score: 90,
-    issues: ['Some sentences are too long'],
-    suggestions: ['Break down complex sentences']
-  },
-  impact: {
-    score: 85,
-    weakPhrases: ['responsible for', 'worked on'],
-    strongPhrases: ['led', 'implemented', 'achieved'],
-    suggestions: ['Replace passive voice with active voice']
-  },
-  lastUpdated: new Date().toISOString(),
-  version: '1.0.0'
-};
+  const steps = [
+    { id: 1, title: "Choose Template", icon: Layout },
+    { id: 2, title: "Personal Info", icon: Edit3 },
+    { id: 3, title: "Experience", icon: FileText },
+    { id: 4, title: "Education", icon: GraduationCap },
+    { id: 5, title: "Skills", icon: Award },
+    { id: 6, title: "Preview & Export", icon: Download },
+  ];
 
-export default function AIResumeBuilder() {
-  const [template, setTemplate] = useState('');
-  const [sections, setSections] = useState(defaultSections);
-  const [step, setStep] = useState<'template' | 'content'>('template');
-  const [isAnalyzing, setIsAnalyzing] = useState(false);
-
-  const handleTemplateSelect = (selectedTemplate: any) => {
-    setTemplate(selectedTemplate.id);
-    setStep('content');
-  };
-
-  const handleSectionUpdate = (updatedSections: ResumeSection[]) => {
-    setSections(updatedSections);
-  };
-
-  const handleAIAssist = async (sectionId: string) => {
-    // TODO: Implement AI assistance for section content
-    console.log('AI Assist requested for section:', sectionId);
-  };
-
-  const handleRefreshAnalysis = async () => {
-    setIsAnalyzing(true);
-    // TODO: Implement real-time resume analysis
-    setTimeout(() => setIsAnalyzing(false), 1500);
+  const handleNext = () => {
+    setCurrentStep((prev) => Math.min(prev + 1, steps.length));
   };
 
   const handleBack = () => {
-    setStep('template');
+    setCurrentStep((prev) => Math.max(prev - 1, 1));
   };
 
-  const renderContent = () => {
-    if (step === 'template') {
-      return (
-        <div className="w-full">
-          <TemplateSelector
-            onSelect={handleTemplateSelect}
-            selectedId={template}
-          />
-        </div>
-      );
+  const handleExport = async () => {
+    const success = await exportToPdf("resume-preview", "my-resume.pdf");
+    if (success) {
+      // Show success notification
+      console.log("PDF exported successfully");
     }
+  };
 
-    return (
-      <div className="w-full">
-        <div className="flex items-center gap-4 mb-8">
-          <Button
-            variant="secondary"
-            onClick={handleBack}
-          >
-            <ArrowLeft className="w-4 h-4" />
-            Back to Templates
-          </Button>
-        </div>
+  const handleShare = async () => {
+    const success = await shareResume("resume-preview");
+    if (success) {
+      // Show success notification
+      console.log("Resume shared successfully");
+    }
+  };
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          <div className="lg:col-span-2">
-            <SectionEditor
-              sections={sections}
-              onUpdate={handleSectionUpdate}
-              onAIAssist={handleAIAssist}
-            />
-          </div>
-          <div className="lg:col-span-1">
-            <AIAnalysis
-              analysis={mockAnalysis}
-              onRefresh={handleRefreshAnalysis}
-              isLoading={isAnalyzing}
-            />
-          </div>
-        </div>
-      </div>
-    );
+  const renderStepContent = () => {
+    switch (currentStep) {
+      case 1:
+        return (
+          <TemplateSelector
+            selectedTemplate={resumeData.templateId}
+            onSelect={(id) => {
+              updateTemplateId(id);
+              handleNext();
+            }}
+          />
+        );
+      case 2:
+        return (
+          <PersonalInfoForm
+            initialData={resumeData.personalInfo}
+            onSave={(data) => {
+              updatePersonalInfo(data);
+              handleNext();
+            }}
+          />
+        );
+      case 3:
+        return (
+          <ExperienceForm
+            initialData={resumeData.experiences}
+            onSave={(data) => {
+              updateExperiences(data);
+              handleNext();
+            }}
+          />
+        );
+      case 4:
+        return (
+          <EducationForm
+            initialData={resumeData.education}
+            onSave={(data) => {
+              updateEducation(data);
+              handleNext();
+            }}
+          />
+        );
+      case 5:
+        return (
+          <SkillsForm
+            initialData={resumeData.skills}
+            onSave={(data) => {
+              updateSkills(data);
+              handleNext();
+            }}
+          />
+        );
+      case 6:
+        return (
+          <ResumePreview
+            data={resumeData}
+            onDownload={handleExport}
+            onShare={handleShare}
+          />
+        );
+      default:
+        return null;
+    }
   };
 
   return (
-    <PageContainer
-      badge={{
-        icon: Sparkles,
-        text: "AI-Powered Resume Builder"
-      }}
-      title={{
-        main: "Create Your",
-        highlight: "Professional Resume",
-        end: "with AI"
-      }}
-      description="Let our AI guide you through creating a powerful, ATS-optimized resume"
-    >
-      <div className="space-y-8">
-        {renderContent()}
+    <div className="min-h-screen bg-background relative">
+      {/* Background Effects */}
+      <div className="absolute inset-0 overflow-hidden">
+        <motion.div
+          animate={{
+            backgroundPosition: ["0% 0%", "100% 100%"],
+          }}
+          transition={{
+            duration: 20,
+            repeat: Infinity,
+            repeatType: "reverse",
+          }}
+          className="absolute inset-0 bg-[radial-gradient(circle_at_center,#fcba2810_0%,transparent_65%)] blur-3xl"
+        />
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_80%_20%,#fcba2815_0%,transparent_50%)]" />
       </div>
-    </PageContainer>
+
+      {/* Content */}
+      <div className="relative z-10 container mx-auto px-4 py-8">
+        {/* Header */}
+        <motion.div
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="text-center mb-12"
+        >
+          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-[#fcba28]/10 border border-[#fcba28]/20 backdrop-blur-sm mb-4">
+            <Sparkles className="w-5 h-5 text-[#fcba28]" />
+            <span className="text-sm font-medium">AI-Powered Resume Builder</span>
+          </div>
+          <h1 className="text-4xl font-bold mb-4">Create Your Professional Resume</h1>
+          <p className="text-white/60 max-w-2xl mx-auto">
+            Use our advanced AI-powered resume builder to create a professional resume that stands out.
+            Pre-designed templates and smart suggestions make it effortless.
+          </p>
+        </motion.div>
+
+        {/* Progress Steps */}
+        <div className="flex justify-center mb-12">
+          <div className="flex items-center space-x-4">
+            {steps.map((step) => {
+              const Icon = step.icon;
+              return (
+                <motion.div
+                  key={step.id}
+                  initial={{ opacity: 0, scale: 0.8 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  transition={{ delay: step.id * 0.1 }}
+                  className={`flex items-center ${
+                    step.id < currentStep
+                      ? "text-[#fcba28]"
+                      : step.id === currentStep
+                      ? "text-white"
+                      : "text-white/40"
+                  }`}
+                >
+                  <div
+                    className={`flex items-center justify-center w-10 h-10 rounded-full ${
+                      step.id <= currentStep
+                        ? "bg-[#fcba28]/20 border-[#fcba28]/40"
+                        : "bg-white/5 border-white/10"
+                    } border backdrop-blur-sm`}
+                  >
+                    <Icon className="w-5 h-5" />
+                  </div>
+                  <span className="ml-2 text-sm font-medium hidden sm:block">
+                    {step.title}
+                  </span>
+                  {step.id !== steps.length && (
+                    <div
+                      className={`w-8 h-px mx-2 ${
+                        step.id < currentStep ? "bg-[#fcba28]/40" : "bg-white/10"
+                      }`}
+                    />
+                  )}
+                </motion.div>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* Main Content Area */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="bg-white/5 border border-white/10 rounded-2xl backdrop-blur-xl p-6"
+        >
+          {renderStepContent()}
+        </motion.div>
+
+        {/* Navigation Buttons */}
+        {currentStep > 1 && currentStep < steps.length && (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="flex justify-between mt-6"
+          >
+            <button
+              onClick={handleBack}
+              className="px-6 py-2 border border-white/10 rounded-lg font-medium hover:bg-white/5 transition-colors"
+            >
+              Back
+            </button>
+            <button
+              onClick={handleNext}
+              className="px-6 py-2 bg-[#fcba28] text-black rounded-lg font-medium hover:bg-[#fcba28]/90 transition-colors"
+            >
+              Next
+            </button>
+          </motion.div>
+        )}
+      </div>
+    </div>
   );
-}
+};
+
+const ResumeBuilderWrapper = () => {
+  return (
+    <ResumeProvider>
+      <ResumeBuilder />
+    </ResumeProvider>
+  );
+};
+
+export default ResumeBuilderWrapper;
