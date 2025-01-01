@@ -1,31 +1,20 @@
 "use client";
 
 import { useResume } from "../../context/ResumeContext";
-import { motion } from "framer-motion";
+import { generatePreviewHtml } from "../../utils/docxTemplates";
+import { motion, AnimatePresence } from "framer-motion";
 import { useState, useRef, useEffect } from "react";
 import {
   Download,
   Share2,
   FileText,
-  Image,
-  FileCode,
-  AlertCircle,
-  CheckCircle2,
-  Sparkles,
-  ArrowLeft,
   ZoomIn,
   ZoomOut,
 } from "lucide-react";
-import { ProfessionalTemplate } from "../templates/examples/ProfessionalTemplate";
-import { CreativeTemplate } from "../templates/examples/CreativeTemplate";
-import { MinimalTemplate } from "../templates/examples/MinimalTemplate";
-import { ModernTemplate } from "../templates/examples/ModernTemplate";
-import { ExecutiveTemplate } from "../templates/examples/ExecutiveTemplate";
 import { Button } from "@/components/ui/button";
 import {
   exportToPdf,
   exportToImage,
-  exportToSvg,
   exportToDocx,
   shareResume,
   ExportFormat,
@@ -33,196 +22,193 @@ import {
 } from "../../utils/exportUtils";
 import { analyzeResume } from "../../services/aiService";
 
-export const ResumePreview = () => {
+export function ResumePreview() {
   const { resumeData } = useResume();
-  const [scale, setScale] = useState(0.8);
-  const [exportFormat, setExportFormat] = useState<ExportFormat>("pdf");
+  const [scale, setScale] = useState(1);
+  const [showExportOptions, setShowExportOptions] = useState(false);
+  const [showAnalysis, setShowAnalysis] = useState(false);
+  const [analysisResult, setAnalysisResult] = useState("");
   const [isAnalyzing, setIsAnalyzing] = useState(false);
-  const [analysis, setAnalysis] = useState<{
-    score: number;
-    suggestions: string[];
-  } | null>(null);
-  const [exportStatus, setExportStatus] = useState<{
-    loading: boolean;
-    error: string | null;
-  }>({
-    loading: false,
-    error: null,
-  });
-
+  const [previewHtml, setPreviewHtml] = useState("");
   const previewRef = useRef<HTMLDivElement>(null);
 
-  const templates = {
-    1: ProfessionalTemplate,
-    2: CreativeTemplate,
-    3: MinimalTemplate,
-    4: ModernTemplate,
-    5: ExecutiveTemplate,
-  };
+  // Update preview HTML when resume data changes
+  useEffect(() => {
+    setPreviewHtml(generatePreviewHtml("modern", resumeData));
+  }, [resumeData]);
 
-  const Template = templates[resumeData.templateId as keyof typeof templates] || ProfessionalTemplate;
-
-  const handleExport = async () => {
+  const handleExport = async (format: ExportFormat) => {
     if (!previewRef.current) return;
+    setShowExportOptions(false);
 
-    setExportStatus({ loading: true, error: null });
     try {
-      let success = false;
-
-      switch (exportFormat) {
+      switch (format) {
         case "pdf":
-          success = await exportToPdf(previewRef.current, "resume.pdf");
+          await exportToPdf(previewRef.current);
           break;
-        case "png":
-          success = await exportToImage(previewRef.current, "resume.png");
-          break;
-        case "svg":
-          success = await exportToSvg(previewRef.current, "resume.svg");
+        case "image":
+          await exportToImage(previewRef.current);
           break;
         case "docx":
-          success = await exportToDocx(previewRef.current, "resume.docx");
+          await exportToDocx(resumeData);
           break;
-      }
-
-      if (success) {
-        setExportStatus({ loading: false, error: null });
-      } else {
-        throw new Error("Export failed");
+        default:
+          console.error("Unsupported format");
       }
     } catch (error) {
-      setExportStatus({
-        loading: false,
-        error: "Failed to export resume. Please try again.",
-      });
+      console.error("Export failed:", error);
     }
   };
 
   const handleShare = async () => {
     if (!previewRef.current) return;
-    
-    setExportStatus({ loading: true, error: null });
-    try {
-      const success = await shareResume(previewRef.current);
-      if (success) {
-        setExportStatus({ loading: false, error: null });
-      } else {
-        throw new Error("Share failed");
-      }
-    } catch (error) {
-      setExportStatus({
-        loading: false,
-        error: "Failed to share resume. Please try again.",
-      });
-    }
+    await shareResume(previewRef.current);
   };
 
   const handleAnalyze = async () => {
     setIsAnalyzing(true);
     try {
       const result = await analyzeResume(resumeData);
-      setAnalysis(result);
+      setAnalysisResult(result);
+      setShowAnalysis(true);
     } catch (error) {
-      console.error("Failed to analyze resume:", error);
-    } finally {
-      setIsAnalyzing(false);
+      console.error("Analysis failed:", error);
     }
+    setIsAnalyzing(false);
   };
 
-  const handleZoomIn = () => {
-    setScale((prev) => Math.min(prev + 0.1, 1.5));
-  };
+  const zoomIn = () => setScale((prev) => Math.min(prev + 0.1, 2));
+  const zoomOut = () => setScale((prev) => Math.max(prev - 0.1, 0.5));
 
-  const handleZoomOut = () => {
-    setScale((prev) => Math.max(prev - 0.1, 0.3));
-  };
+  // Close export options when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (showExportOptions && !event.target?.closest(".export-options")) {
+        setShowExportOptions(false);
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, [showExportOptions]);
 
   return (
-    <div className="flex flex-col h-full">
-      {/* Controls */}
-      <div className="flex justify-between items-center mb-6">
-        <div className="flex items-center gap-4">
-          <div className="flex items-center gap-2">
-            <Button
-              variant="outline"
-              size="icon"
-              onClick={handleZoomOut}
-              className="border-white/10"
-            >
-              <ZoomOut className="h-4 w-4" />
-            </Button>
-            <span className="text-sm text-muted-foreground">
-              {Math.round(scale * 100)}%
-            </span>
-            <Button
-              variant="outline"
-              size="icon"
-              onClick={handleZoomIn}
-              className="border-white/10"
-            >
-              <ZoomIn className="h-4 w-4" />
-            </Button>
-          </div>
-        </div>
-
-        <div className="flex items-center gap-4">
+    <div className="relative h-full flex flex-col">
+      {/* Toolbar */}
+      <div className="flex items-center justify-between p-4 border-b border-gray-200">
+        <div className="flex items-center space-x-2">
           <Button
             variant="outline"
-            className="border-white/10"
+            size="icon"
+            onClick={zoomOut}
+            disabled={scale <= 0.5}
+          >
+            <ZoomOut className="h-4 w-4" />
+          </Button>
+          <span className="text-sm">{Math.round(scale * 100)}%</span>
+          <Button
+            variant="outline"
+            size="icon"
+            onClick={zoomIn}
+            disabled={scale >= 2}
+          >
+            <ZoomIn className="h-4 w-4" />
+          </Button>
+        </div>
+
+        <div className="flex items-center space-x-2">
+          <div className="relative">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setShowExportOptions(!showExportOptions)}
+              className="export-options"
+            >
+              <Download className="h-4 w-4 mr-2" />
+              Export
+            </Button>
+            <AnimatePresence>
+              {showExportOptions && (
+                <motion.div
+                  initial={{ opacity: 0, y: -10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -10 }}
+                  className="absolute top-full right-0 mt-2 bg-white rounded-lg shadow-lg border border-gray-200 p-2 z-10 min-w-[150px] export-options"
+                >
+                  {exportFormats.map((format) => (
+                    <Button
+                      key={format}
+                      variant="ghost"
+                      className="w-full justify-start"
+                      onClick={() => handleExport(format)}
+                    >
+                      Export as {format.toUpperCase()}
+                    </Button>
+                  ))}
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </div>
+          <Button variant="outline" size="sm" onClick={handleShare}>
+            <Share2 className="h-4 w-4 mr-2" />
+            Share
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
             onClick={handleAnalyze}
             disabled={isAnalyzing}
           >
-            <Sparkles className="mr-2 h-4 w-4" />
-            {isAnalyzing ? "Analyzing..." : "Analyze Resume"}
-          </Button>
-          <Button onClick={handleShare} variant="outline" className="border-white/10">
-            <Share2 className="mr-2 h-4 w-4" />
-            Share
-          </Button>
-          <Button onClick={handleExport} className="bg-[#fcba28] text-black hover:bg-[#fcba28]/90">
-            <Download className="mr-2 h-4 w-4" />
-            Export
+            <FileText className="h-4 w-4 mr-2" />
+            {isAnalyzing ? "Analyzing..." : "Analyze"}
           </Button>
         </div>
       </div>
 
       {/* Preview Area */}
-      <div className="flex-1 overflow-auto">
+      <div className="flex-1 overflow-auto bg-gray-100 p-8">
         <div
           ref={previewRef}
           id="resume-preview"
-          className="mx-auto transition-transform duration-200"
+          className="mx-auto bg-white shadow-lg transition-transform duration-200"
           style={{
-            width: "fit-content",
+            transform: `scale(${scale})`,
+            transformOrigin: "top center",
+            width: "21cm",
+            minHeight: "29.7cm",
           }}
         >
-          <Template data={resumeData} scale={scale} isPreview={true} />
+          <div
+            key={resumeData.personalInfo.fullName} // Force re-render on name change
+            className="h-full"
+            dangerouslySetInnerHTML={{ __html: previewHtml }}
+          />
         </div>
       </div>
 
       {/* Analysis Results */}
-      {analysis && (
-        <div className="mt-6 p-4 bg-white/5 rounded-lg border border-white/10">
-          <h3 className="text-lg font-semibold mb-2 flex items-center gap-2">
-            <CheckCircle2 className="text-green-500" />
-            Resume Analysis Score: {analysis.score}/100
-          </h3>
-          <div className="space-y-2">
-            {analysis.suggestions.map((suggestion, index) => (
-              <p key={index} className="text-sm text-muted-foreground flex items-start gap-2">
-                <AlertCircle className="h-4 w-4 mt-0.5 text-[#fcba28]" />
-                {suggestion}
-              </p>
-            ))}
-          </div>
-        </div>
-      )}
-
-      {/* Export Status */}
-      {exportStatus.error && (
-        <div className="mt-4 p-4 bg-red-500/10 border border-red-500/20 rounded-lg text-red-500">
-          {exportStatus.error}
-        </div>
-      )}
+      <AnimatePresence>
+        {showAnalysis && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="absolute inset-0 bg-white/95 backdrop-blur-sm p-6 overflow-auto"
+          >
+            <Button
+              variant="ghost"
+              className="absolute top-4 right-4"
+              onClick={() => setShowAnalysis(false)}
+            >
+              Close
+            </Button>
+            <div className="prose prose-sm max-w-none">
+              <h2>Resume Analysis</h2>
+              <div dangerouslySetInnerHTML={{ __html: analysisResult }} />
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
-};
+}
