@@ -1,40 +1,60 @@
 "use client";
 
-import { useResumeContext } from "../../context/ResumeContext";
+import { useResume } from "../../context/ResumeContext";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { motion } from "framer-motion";
 import { FileSignature } from "lucide-react";
 
 export function Declaration() {
-  const { resumeData, updatePersonalInfo } = useResumeContext();
-  const [declaration, setDeclaration] = useState(
-    resumeData.personalInfo.declaration || ""
-  );
+  const { resumeData, updatePersonalInfo } = useResume();
+  const [declaration, setDeclaration] = useState(resumeData.personalInfo?.declaration || "");
 
   const handleSave = () => {
+    if (!resumeData.personalInfo) return;
     updatePersonalInfo({
       ...resumeData.personalInfo,
       declaration,
     });
   };
 
-  // Save declaration when component unmounts or when declaration changes
-  useEffect(() => {
-    return () => {
-      if (declaration !== resumeData.personalInfo.declaration) {
-        handleSave();
-      }
-    };
-  }, [declaration]);
+  const handleDeclarationChange = (value: string) => {
+    setDeclaration(value);
+    // Debounced save
+    const timeoutId = setTimeout(() => {
+      if (!resumeData.personalInfo) return;
+      updatePersonalInfo({
+        ...resumeData.personalInfo,
+        declaration: value,
+      });
+    }, 500);
+
+    return () => clearTimeout(timeoutId);
+  };
+
+  const sampleDeclarations = [
+    {
+      title: "Professional Standard",
+      text: "I hereby declare that all the information stated above is true and correct to the best of my knowledge and belief. I understand that any willful misstatement described herein may lead to disqualification or dismissal."
+    },
+    {
+      title: "Detailed Version",
+      text: "I declare that the information provided in this resume is accurate and truthful. I am aware that any false statements may result in the rejection of my application or termination of employment if discovered after hiring."
+    },
+    {
+      title: "Simple Version",
+      text: "I confirm that all information presented in this resume is true and accurate to the best of my knowledge. I understand the importance of honesty in the application process."
+    }
+  ];
 
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
+      exit={{ opacity: 0, y: -20 }}
       className="space-y-8"
     >
       {/* Header */}
@@ -61,7 +81,7 @@ export function Declaration() {
               id="declaration"
               placeholder="I hereby declare that all the information stated above is true and correct to the best of my knowledge and belief..."
               value={declaration}
-              onChange={(e) => setDeclaration(e.target.value)}
+              onChange={(e) => handleDeclarationChange(e.target.value)}
               className="min-h-[150px] bg-white/5 border border-white/10"
             />
           </div>
@@ -76,15 +96,6 @@ export function Declaration() {
                 <li>The date and your name will be automatically added to the declaration in the resume</li>
               </ul>
             </div>
-
-            <div className="flex justify-end">
-              <Button
-                onClick={handleSave}
-                className="bg-[#fcba28] text-black hover:bg-[#fcba28]/90"
-              >
-                Save Declaration
-              </Button>
-            </div>
           </div>
         </CardContent>
       </Card>
@@ -95,24 +106,16 @@ export function Declaration() {
           <CardTitle>Sample Declarations</CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
-          <div
-            className="p-4 rounded-lg border border-white/10 cursor-pointer hover:bg-white/5 transition-colors"
-            onClick={() => setDeclaration("I hereby declare that all the information stated above is true and correct to the best of my knowledge and belief. I understand that any willful misstatement described herein may lead to disqualification or dismissal.")}
-          >
-            <p className="text-sm">Professional Standard</p>
-          </div>
-          <div
-            className="p-4 rounded-lg border border-white/10 cursor-pointer hover:bg-white/5 transition-colors"
-            onClick={() => setDeclaration("I declare that the information provided in this resume is accurate and truthful. I am aware that any false statements may result in the rejection of my application or termination of employment if discovered after hiring.")}
-          >
-            <p className="text-sm">Detailed Version</p>
-          </div>
-          <div
-            className="p-4 rounded-lg border border-white/10 cursor-pointer hover:bg-white/5 transition-colors"
-            onClick={() => setDeclaration("I confirm that all information presented in this resume is true and accurate to the best of my knowledge. I understand the importance of honesty in the application process.")}
-          >
-            <p className="text-sm">Simple Version</p>
-          </div>
+          {sampleDeclarations.map((sample, index) => (
+            <button
+              key={index}
+              className="w-full p-4 rounded-lg border border-white/10 cursor-pointer hover:bg-white/5 transition-colors text-left"
+              onClick={() => handleDeclarationChange(sample.text)}
+            >
+              <p className="text-sm font-medium mb-2">{sample.title}</p>
+              <p className="text-sm text-muted-foreground">{sample.text}</p>
+            </button>
+          ))}
         </CardContent>
       </Card>
     </motion.div>

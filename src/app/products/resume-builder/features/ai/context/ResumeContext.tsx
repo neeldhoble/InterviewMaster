@@ -1,14 +1,19 @@
 "use client";
 
-import React, { createContext, useContext, useState } from "react";
+import { createContext, useContext, useState } from "react";
 
 interface PersonalInfo {
-  fullName: string;
+  firstName: string;
+  lastName: string;
   email: string;
   phone: string;
-  location: string;
-  website: string;
-  summary: string;
+  address: string;
+  city: string;
+  country: string;
+  postalCode: string;
+  linkedIn?: string;
+  website?: string;
+  summary?: string;
   declaration?: string;
 }
 
@@ -25,9 +30,9 @@ interface Experience {
 
 interface Education {
   id: string;
-  school: string;
   degree: string;
-  field: string;
+  school: string;
+  location: string;
   startDate: string;
   endDate: string;
   current: boolean;
@@ -38,19 +43,16 @@ interface Skill {
   id: string;
   name: string;
   level: number;
-  category: string;
 }
 
 interface Project {
   id: string;
-  title: string;
+  name: string;
   description: string;
+  technologies: string[];
+  link?: string;
   startDate: string;
   endDate: string;
-  current: boolean;
-  technologies: string[];
-  githubUrl?: string;
-  liveUrl?: string;
 }
 
 interface Achievement {
@@ -63,10 +65,10 @@ interface Achievement {
 interface Certification {
   id: string;
   name: string;
-  issuer: string;
+  organization: string;
   date: string;
-  expiry?: string;
-  description?: string;
+  expiryDate?: string;
+  credentialId?: string;
 }
 
 interface Language {
@@ -77,8 +79,8 @@ interface Language {
 
 interface Volunteer {
   id: string;
-  role: string;
   organization: string;
+  role: string;
   startDate: string;
   endDate: string;
   current: boolean;
@@ -100,27 +102,29 @@ interface ResumeData {
 
 interface ResumeContextType {
   resumeData: ResumeData;
-  updatePersonalInfo: (data: PersonalInfo) => void;
-  updateExperiences: (data: Experience[]) => void;
-  updateEducation: (data: Education[]) => void;
-  updateSkills: (data: Skill[]) => void;
-  updateProjects: (data: Project[]) => void;
-  updateAchievements: (data: Achievement[]) => void;
-  updateCertifications: (data: Certification[]) => void;
-  updateLanguages: (data: Language[]) => void;
-  updateVolunteer: (data: Volunteer[]) => void;
-  updateTemplateId: (id: number) => void;
+  updateTemplateId: (templateId: number) => void;
+  updatePersonalInfo: (personalInfo: PersonalInfo) => void;
+  updateExperiences: (experiences: Experience[]) => void;
+  updateEducation: (education: Education[]) => void;
+  updateSkills: (skills: Skill[]) => void;
+  updateProjects: (projects: Project[]) => void;
+  updateAchievements: (achievements: Achievement[]) => void;
+  updateCertifications: (certifications: Certification[]) => void;
+  updateLanguages: (languages: Language[]) => void;
+  updateVolunteer: (volunteer: Volunteer[]) => void;
 }
 
-const defaultResumeData: ResumeData = {
-  templateId: 1,
+const initialResumeData: ResumeData = {
+  templateId: 1, // Default template
   personalInfo: {
-    fullName: "",
+    firstName: "",
+    lastName: "",
     email: "",
     phone: "",
-    location: "",
-    website: "",
-    summary: "",
+    address: "",
+    city: "",
+    country: "",
+    postalCode: "",
   },
   experiences: [],
   education: [],
@@ -134,53 +138,54 @@ const defaultResumeData: ResumeData = {
 
 const ResumeContext = createContext<ResumeContextType | undefined>(undefined);
 
-export const ResumeProvider = ({ children }: { children: React.ReactNode }) => {
-  const [resumeData, setResumeData] = useState<ResumeData>(defaultResumeData);
+export function ResumeProvider({ children }: { children: React.ReactNode }) {
+  const [resumeData, setResumeData] = useState<ResumeData>(initialResumeData);
 
-  const updatePersonalInfo = (data: PersonalInfo) => {
-    setResumeData((prev) => ({ ...prev, personalInfo: data }));
+  const updateTemplateId = (templateId: number) => {
+    setResumeData((prev) => ({ ...prev, templateId }));
   };
 
-  const updateExperiences = (data: Experience[]) => {
-    setResumeData((prev) => ({ ...prev, experiences: data }));
+  const updatePersonalInfo = (personalInfo: PersonalInfo) => {
+    setResumeData((prev) => ({ ...prev, personalInfo }));
   };
 
-  const updateEducation = (data: Education[]) => {
-    setResumeData((prev) => ({ ...prev, education: data }));
+  const updateExperiences = (experiences: Experience[]) => {
+    setResumeData((prev) => ({ ...prev, experiences }));
   };
 
-  const updateSkills = (data: Skill[]) => {
-    setResumeData((prev) => ({ ...prev, skills: data }));
+  const updateEducation = (education: Education[]) => {
+    setResumeData((prev) => ({ ...prev, education }));
   };
 
-  const updateProjects = (data: Project[]) => {
-    setResumeData((prev) => ({ ...prev, projects: data }));
+  const updateSkills = (skills: Skill[]) => {
+    setResumeData((prev) => ({ ...prev, skills }));
   };
 
-  const updateAchievements = (data: Achievement[]) => {
-    setResumeData((prev) => ({ ...prev, achievements: data }));
+  const updateProjects = (projects: Project[]) => {
+    setResumeData((prev) => ({ ...prev, projects }));
   };
 
-  const updateCertifications = (data: Certification[]) => {
-    setResumeData((prev) => ({ ...prev, certifications: data }));
+  const updateAchievements = (achievements: Achievement[]) => {
+    setResumeData((prev) => ({ ...prev, achievements }));
   };
 
-  const updateLanguages = (data: Language[]) => {
-    setResumeData((prev) => ({ ...prev, languages: data }));
+  const updateCertifications = (certifications: Certification[]) => {
+    setResumeData((prev) => ({ ...prev, certifications }));
   };
 
-  const updateVolunteer = (data: Volunteer[]) => {
-    setResumeData((prev) => ({ ...prev, volunteer: data }));
+  const updateLanguages = (languages: Language[]) => {
+    setResumeData((prev) => ({ ...prev, languages }));
   };
 
-  const updateTemplateId = (id: number) => {
-    setResumeData((prev) => ({ ...prev, templateId: id }));
+  const updateVolunteer = (volunteer: Volunteer[]) => {
+    setResumeData((prev) => ({ ...prev, volunteer }));
   };
 
   return (
     <ResumeContext.Provider
       value={{
         resumeData,
+        updateTemplateId,
         updatePersonalInfo,
         updateExperiences,
         updateEducation,
@@ -190,18 +195,17 @@ export const ResumeProvider = ({ children }: { children: React.ReactNode }) => {
         updateCertifications,
         updateLanguages,
         updateVolunteer,
-        updateTemplateId,
       }}
     >
       {children}
     </ResumeContext.Provider>
   );
-};
+}
 
-export const useResume = () => {
+export function useResume() {
   const context = useContext(ResumeContext);
   if (context === undefined) {
     throw new Error("useResume must be used within a ResumeProvider");
   }
   return context;
-};
+}

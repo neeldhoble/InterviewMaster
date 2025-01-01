@@ -1,5 +1,6 @@
 "use client";
 
+import { useResume } from "../../context/ResumeContext";
 import { motion } from "framer-motion";
 import { useState, useRef } from "react";
 import {
@@ -62,6 +63,8 @@ export const ResumePreview = ({ data, onBack, onDownload, onShare }: ResumePrevi
 
   const previewRef = useRef<HTMLDivElement>(null);
 
+  const templateId = data?.templateId || 1; // Default to ProfessionalTemplate if no template selected
+
   const templates = {
     1: ProfessionalTemplate,
     2: CreativeTemplate,
@@ -70,7 +73,7 @@ export const ResumePreview = ({ data, onBack, onDownload, onShare }: ResumePrevi
     5: ExecutiveTemplate,
   };
 
-  const Template = templates[data.templateId as keyof typeof templates] || templates[1];
+  const Template = templates[templateId as keyof typeof templates] || ProfessionalTemplate;
 
   const handleExport = async () => {
     if (!previewRef.current) return;
