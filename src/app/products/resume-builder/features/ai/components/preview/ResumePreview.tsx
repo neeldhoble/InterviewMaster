@@ -1,7 +1,7 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { useState } from "react";
+import { useState, useRef } from "react";
 import {
   Download,
   Share2,
@@ -11,6 +11,7 @@ import {
   AlertCircle,
   CheckCircle2,
   Sparkles,
+  ArrowLeft,
 } from "lucide-react";
 import { ProfessionalTemplate } from "../templates/examples/ProfessionalTemplate";
 import { CreativeTemplate } from "../templates/examples/CreativeTemplate";
@@ -38,9 +39,12 @@ interface ResumeData {
 
 interface ResumePreviewProps {
   data: ResumeData;
+  onBack?: () => void;
+  onDownload?: () => void;
+  onShare?: () => void;
 }
 
-export const ResumePreview = ({ data }: ResumePreviewProps) => {
+export const ResumePreview = ({ data, onBack, onDownload, onShare }: ResumePreviewProps) => {
   const [scale, setScale] = useState(0.8);
   const [exportFormat, setExportFormat] = useState<ExportFormat>("pdf");
   const [isAnalyzing, setIsAnalyzing] = useState(false);
@@ -56,6 +60,8 @@ export const ResumePreview = ({ data }: ResumePreviewProps) => {
     error: null,
   });
 
+  const previewRef = useRef<HTMLDivElement>(null);
+
   const templates = {
     1: ProfessionalTemplate,
     2: CreativeTemplate,
@@ -64,12 +70,32 @@ export const ResumePreview = ({ data }: ResumePreviewProps) => {
     5: ExecutiveTemplate,
   };
 
-  const Template = templates[data.templateId as keyof typeof templates];
+  const Template = templates[data.templateId as keyof typeof templates] || templates[1];
 
   const handleExport = async () => {
+    if (!previewRef.current) return;
+
     setExportStatus({ loading: true, error: null });
     try {
       let success = false;
+
+      // For DOCX export, we need to ensure proper styling
+      if (exportFormat === "docx") {
+        // Add print-specific styles
+        const style = document.createElement("style");
+        style.textContent = `
+          @media print {
+            #resume-preview {
+              transform: none !important;
+              zoom: 100% !important;
+              width: 100% !important;
+              height: auto !important;
+            }
+          }
+        `;
+        style.setAttribute("data-print-styles", "true");
+        document.head.appendChild(style);
+      }
 
       switch (exportFormat) {
         case "pdf":
@@ -99,21 +125,36 @@ export const ResumePreview = ({ data }: ResumePreviewProps) => {
           break;
       }
 
-      if (!success) throw new Error("Export failed");
-      setExportStatus({ loading: false, error: null });
+      if (success) {
+        setExportStatus({ loading: false, error: null });
+      } else {
+        throw new Error("Export failed");
+      }
     } catch (error) {
       setExportStatus({
         loading: false,
-        error: "Failed to export resume. Please try again.",
+        error: `Failed to export resume: ${error.message}`,
       });
+    }
+
+    // Clean up print styles if they were added
+    if (exportFormat === "docx") {
+      const printStyle = document.querySelector("style[data-print-styles]");
+      if (printStyle) {
+        document.head.removeChild(printStyle);
+      }
     }
   };
 
   const handleShare = async () => {
+    if (!previewRef.current) return;
+
     setExportStatus({ loading: true, error: null });
     try {
       const success = await shareResume("resume-preview");
-      if (!success) throw new Error("Share failed");
+      if (!success) {
+        throw new Error("Share failed");
+      }
       setExportStatus({ loading: false, error: null });
     } catch (error) {
       setExportStatus({
@@ -136,7 +177,22 @@ export const ResumePreview = ({ data }: ResumePreviewProps) => {
   };
 
   return (
-    <div className="flex flex-col lg:flex-row gap-8">
+    <div className="flex flex-col h-full">
+      {/* Top Bar with Controls */}
+      <div className="flex items-center justify-between p-4 border-b">
+        <div className="flex items-center space-x-4">
+          {onBack && (
+            <button
+              onClick={onBack}
+              className="flex items-center px-3 py-2 text-sm text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors"
+            >
+              <ArrowLeft className="w-4 h-4 mr-2" />
+              Back to Skills
+            </button>
+          )}
+        </div>
+      </div>
+
       {/* Preview */}
       <div className="flex-1 flex flex-col items-center">
         <div className="mb-4 flex items-center gap-2">
@@ -153,10 +209,15 @@ export const ResumePreview = ({ data }: ResumePreviewProps) => {
         </div>
 
         <div
+          ref={previewRef}
           id="resume-preview"
           className="bg-white rounded-lg shadow-2xl overflow-hidden"
+          style={{
+            transform: `scale(${scale})`,
+            transformOrigin: "top center",
+          }}
         >
-          <Template scale={scale} />
+          <Template data={data} scale={scale} />
         </div>
       </div>
 
@@ -167,9 +228,9 @@ export const ResumePreview = ({ data }: ResumePreviewProps) => {
           <h3 className="text-lg font-medium mb-4">Export Options</h3>
           <div className="space-y-4">
             <div className="grid grid-cols-2 gap-2">
-              {Object.entries(exportFormats).map(([key, value]) => (
+              {Object.entries(exportFormats).map(([format, value]) => (
                 <button
-                  key={value}
+                  key={format}
                   onClick={() => setExportFormat(value)}
                   className={`p-2 rounded-lg flex items-center justify-center gap-2 transition-colors ${
                     exportFormat === value
@@ -183,7 +244,7 @@ export const ResumePreview = ({ data }: ResumePreviewProps) => {
                   )}
                   {value === "svg" && <FileCode className="w-4 h-4" />}
                   <span className="text-sm font-medium">
-                    {key.toUpperCase()}
+                    {format.toUpperCase()}
                   </span>
                 </button>
               ))}
@@ -193,15 +254,24 @@ export const ResumePreview = ({ data }: ResumePreviewProps) => {
               <button
                 onClick={handleExport}
                 disabled={exportStatus.loading}
-                className="flex-1 py-2 bg-[#fcba28] text-black rounded-lg font-medium hover:bg-[#fcba28]/90 transition-colors flex items-center justify-center gap-2"
+                className="flex-1 py-2 bg-[#fcba28] text-black rounded-lg font-medium hover:bg-[#fcba28]/90 transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
               >
-                <Download className="w-4 h-4" />
-                Export
+                {exportStatus.loading ? (
+                  <>
+                    <div className="w-4 h-4 border-2 border-black/20 border-t-black rounded-full animate-spin" />
+                    Exporting...
+                  </>
+                ) : (
+                  <>
+                    <Download className="w-4 h-4" />
+                    Export
+                  </>
+                )}
               </button>
               <button
                 onClick={handleShare}
                 disabled={exportStatus.loading}
-                className="px-4 py-2 bg-white/5 hover:bg-white/10 rounded-lg transition-colors"
+                className="px-4 py-2 bg-white/5 hover:bg-white/10 rounded-lg transition-colors disabled:opacity-50"
               >
                 <Share2 className="w-4 h-4" />
               </button>

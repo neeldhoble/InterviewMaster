@@ -1,6 +1,7 @@
 import html2canvas from 'html2canvas';
 import jsPDF from 'jspdf';
 import dynamic from 'next/dynamic';
+import { asBlob } from 'html-docx-js-typescript';
 
 // Dynamically import html-to-image
 const htmlToImage = {
@@ -141,9 +142,29 @@ export const exportToDocx = async (
     const element = document.getElementById(elementId);
     if (!element) throw new Error('Element not found');
 
-    // Convert HTML to DOCX format
-    // Note: This is a placeholder. You'll need to implement actual HTML to DOCX conversion
-    // Consider using libraries like mammoth or html-docx-js
+    // Get the HTML content
+    const htmlContent = element.outerHTML;
+
+    // Convert HTML to DOCX format using html-docx-js-typescript
+    const docxBlob = await asBlob(htmlContent, {
+      orientation: 'portrait',
+      margins: {
+        top: '1in',
+        right: '1in',
+        bottom: '1in',
+        left: '1in',
+      },
+    });
+
+    // Create a download link
+    const url = window.URL.createObjectURL(docxBlob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `${options.fileName || 'resume'}.docx`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    window.URL.revokeObjectURL(url);
 
     return true;
   } catch (error) {

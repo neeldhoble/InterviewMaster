@@ -114,6 +114,7 @@ const ResumeBuilder = () => {
             data={resumeData}
             onDownload={handleExport}
             onShare={handleShare}
+            onBack={handleBack}
           />
         );
       default:
