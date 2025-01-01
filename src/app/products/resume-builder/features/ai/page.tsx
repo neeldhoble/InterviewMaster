@@ -247,16 +247,90 @@ const ResumeBuilder = () => {
                 onSelect={handleTemplateSelect}
               />
             )}
-            {currentStep === 2 && <PersonalInfoForm />}
-            {currentStep === 3 && <ExperienceForm />}
-            {currentStep === 4 && <EducationForm />}
-            {currentStep === 5 && <SkillsForm />}
-            {currentStep === 6 && <ProjectsForm />}
-            {currentStep === 7 && <AchievementsForm />}
-            {currentStep === 8 && <CertificationsForm />}
-            {currentStep === 9 && <LanguagesForm />}
-            {currentStep === 10 && <VolunteerForm />}
-            {currentStep === 11 && <Declaration />}
+            {currentStep === 2 && (
+              <PersonalInfoForm
+                initialData={resumeData.personalInfo}
+                onSave={(data) => {
+                  updatePersonalInfo(data);
+                  handleNext();
+                }}
+              />
+            )}
+            {currentStep === 3 && (
+              <ExperienceForm
+                initialData={resumeData.experiences}
+                onSave={(data) => {
+                  updateExperiences(data);
+                  handleNext();
+                }}
+              />
+            )}
+            {currentStep === 4 && (
+              <EducationForm
+                initialData={resumeData.education}
+                onSave={(data) => {
+                  updateEducation(data);
+                  handleNext();
+                }}
+              />
+            )}
+            {currentStep === 5 && (
+              <SkillsForm
+                initialData={resumeData.skills}
+                onSave={(data) => {
+                  updateSkills(data);
+                  handleNext();
+                }}
+              />
+            )}
+            {currentStep === 6 && (
+              <ProjectsForm
+                initialData={resumeData.projects}
+                onSave={(data) => {
+                  updateProjects(data);
+                  handleNext();
+                }}
+              />
+            )}
+            {currentStep === 7 && (
+              <AchievementsForm
+                initialData={resumeData.achievements}
+                onSave={(data) => {
+                  updateAchievements(data);
+                  handleNext();
+                }}
+              />
+            )}
+            {currentStep === 8 && (
+              <CertificationsForm
+                initialData={resumeData.certifications}
+                onSave={(data) => {
+                  updateCertifications(data);
+                  handleNext();
+                }}
+              />
+            )}
+            {currentStep === 9 && (
+              <LanguagesForm
+                initialData={resumeData.languages}
+                onSave={(data) => {
+                  updateLanguages(data);
+                  handleNext();
+                }}
+              />
+            )}
+            {currentStep === 10 && (
+              <VolunteerForm
+                initialData={resumeData.volunteer}
+                onSave={(data) => {
+                  updateVolunteer(data);
+                  handleNext();
+                }}
+              />
+            )}
+            {currentStep === 11 && (
+              <Declaration onNext={handleNext} />
+            )}
             {currentStep === 12 && (
               <div className="space-y-8">
                 <ResumePreview />

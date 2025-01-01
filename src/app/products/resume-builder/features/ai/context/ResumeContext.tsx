@@ -1,89 +1,66 @@
 "use client";
 
-import { createContext, useContext, useState } from "react";
+import React, { createContext, useContext, useState, useEffect } from "react";
 
 interface PersonalInfo {
-  firstName: string;
-  lastName: string;
+  fullName: string;
   email: string;
   phone: string;
-  address: string;
-  city: string;
-  country: string;
-  postalCode: string;
-  linkedIn?: string;
-  website?: string;
-  summary?: string;
-  declaration?: string;
+  location: string;
+  website: string;
+  summary: string;
 }
 
 interface Experience {
-  id: string;
-  title: string;
   company: string;
-  location: string;
+  position: string;
   startDate: string;
   endDate: string;
-  current: boolean;
   description: string;
+  highlights: string[];
 }
 
 interface Education {
-  id: string;
+  institution: string;
   degree: string;
-  school: string;
-  location: string;
+  field: string;
   startDate: string;
   endDate: string;
-  current: boolean;
-  description: string;
-}
-
-interface Skill {
-  id: string;
-  name: string;
-  level: number;
+  gpa?: string;
+  highlights: string[];
 }
 
 interface Project {
-  id: string;
   name: string;
   description: string;
   technologies: string[];
   link?: string;
-  startDate: string;
-  endDate: string;
+  highlights: string[];
 }
 
 interface Achievement {
-  id: string;
   title: string;
   date: string;
   description: string;
 }
 
 interface Certification {
-  id: string;
   name: string;
-  organization: string;
+  issuer: string;
   date: string;
-  expiryDate?: string;
-  credentialId?: string;
+  link?: string;
 }
 
 interface Language {
-  id: string;
   name: string;
   proficiency: string;
 }
 
 interface Volunteer {
-  id: string;
   organization: string;
-  role: string;
+  position: string;
   startDate: string;
   endDate: string;
-  current: boolean;
   description: string;
 }
 
@@ -92,39 +69,40 @@ interface ResumeData {
   personalInfo: PersonalInfo;
   experiences: Experience[];
   education: Education[];
-  skills: Skill[];
+  skills: string[];
   projects: Project[];
   achievements: Achievement[];
   certifications: Certification[];
   languages: Language[];
   volunteer: Volunteer[];
+  declaration?: string;
 }
 
 interface ResumeContextType {
   resumeData: ResumeData;
-  updateTemplateId: (templateId: number) => void;
-  updatePersonalInfo: (personalInfo: PersonalInfo) => void;
+  updateTemplateId: (id: number) => void;
+  updatePersonalInfo: (info: PersonalInfo) => void;
   updateExperiences: (experiences: Experience[]) => void;
   updateEducation: (education: Education[]) => void;
-  updateSkills: (skills: Skill[]) => void;
+  updateSkills: (skills: string[]) => void;
   updateProjects: (projects: Project[]) => void;
   updateAchievements: (achievements: Achievement[]) => void;
   updateCertifications: (certifications: Certification[]) => void;
   updateLanguages: (languages: Language[]) => void;
   updateVolunteer: (volunteer: Volunteer[]) => void;
+  updateDeclaration: (declaration: string) => void;
+  resetResume: () => void;
 }
 
-const initialResumeData: ResumeData = {
-  templateId: 1, // Default template
+const defaultResumeData: ResumeData = {
+  templateId: 1,
   personalInfo: {
-    firstName: "",
-    lastName: "",
+    fullName: "",
     email: "",
     phone: "",
-    address: "",
-    city: "",
-    country: "",
-    postalCode: "",
+    location: "",
+    website: "",
+    summary: "",
   },
   experiences: [],
   education: [],
@@ -134,19 +112,32 @@ const initialResumeData: ResumeData = {
   certifications: [],
   languages: [],
   volunteer: [],
+  declaration: "",
 };
 
 const ResumeContext = createContext<ResumeContextType | undefined>(undefined);
 
-export function ResumeProvider({ children }: { children: React.ReactNode }) {
-  const [resumeData, setResumeData] = useState<ResumeData>(initialResumeData);
+export const ResumeProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const [resumeData, setResumeData] = useState<ResumeData>(() => {
+    if (typeof window !== "undefined") {
+      const savedData = localStorage.getItem("resumeData");
+      return savedData ? JSON.parse(savedData) : defaultResumeData;
+    }
+    return defaultResumeData;
+  });
 
-  const updateTemplateId = (templateId: number) => {
-    setResumeData((prev) => ({ ...prev, templateId }));
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      localStorage.setItem("resumeData", JSON.stringify(resumeData));
+    }
+  }, [resumeData]);
+
+  const updateTemplateId = (id: number) => {
+    setResumeData((prev) => ({ ...prev, templateId: id }));
   };
 
-  const updatePersonalInfo = (personalInfo: PersonalInfo) => {
-    setResumeData((prev) => ({ ...prev, personalInfo }));
+  const updatePersonalInfo = (info: PersonalInfo) => {
+    setResumeData((prev) => ({ ...prev, personalInfo: info }));
   };
 
   const updateExperiences = (experiences: Experience[]) => {
@@ -157,7 +148,7 @@ export function ResumeProvider({ children }: { children: React.ReactNode }) {
     setResumeData((prev) => ({ ...prev, education }));
   };
 
-  const updateSkills = (skills: Skill[]) => {
+  const updateSkills = (skills: string[]) => {
     setResumeData((prev) => ({ ...prev, skills }));
   };
 
@@ -181,6 +172,15 @@ export function ResumeProvider({ children }: { children: React.ReactNode }) {
     setResumeData((prev) => ({ ...prev, volunteer }));
   };
 
+  const updateDeclaration = (declaration: string) => {
+    setResumeData((prev) => ({ ...prev, declaration }));
+  };
+
+  const resetResume = () => {
+    setResumeData(defaultResumeData);
+    localStorage.removeItem("resumeData");
+  };
+
   return (
     <ResumeContext.Provider
       value={{
@@ -195,17 +195,19 @@ export function ResumeProvider({ children }: { children: React.ReactNode }) {
         updateCertifications,
         updateLanguages,
         updateVolunteer,
+        updateDeclaration,
+        resetResume,
       }}
     >
       {children}
     </ResumeContext.Provider>
   );
-}
+};
 
-export function useResume() {
+export const useResume = () => {
   const context = useContext(ResumeContext);
   if (context === undefined) {
     throw new Error("useResume must be used within a ResumeProvider");
   }
   return context;
-}
+};
