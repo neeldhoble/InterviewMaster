@@ -3,6 +3,13 @@
 import React from 'react';
 import { useParams } from 'next/navigation';
 import { EditorLayout } from '../components/editor/EditorLayout';
+import { executionService } from '../services/executionService';
+import { aiService } from '../services/aiService';
+import { progressService } from '../services/progressService';
+import { discussionService } from '../services/discussionService';
+import type { CodeExecutionResult } from '../types';
+import type { AISuggestion } from '../services/aiService';
+import type { Discussion } from '../services/discussionService';
 
 // Example problem data (in real app, fetch from API)
 const problem = {
@@ -54,7 +61,26 @@ export default function ProblemPage() {
   const [executionTime, setExecutionTime] = React.useState(0);
   const [memoryUsage, setMemoryUsage] = React.useState(0);
   const [testResults, setTestResults] = React.useState([]);
-  const [aiSuggestions, setAiSuggestions] = React.useState([]);
+  const [aiSuggestions, setAiSuggestions] = React.useState<AISuggestion[]>([]);
+  const [discussions, setDiscussions] = React.useState<Discussion[]>([]);
+  const [isExecuting, setIsExecuting] = React.useState(false);
+  const [userProgress, setUserProgress] = React.useState<UserProgress | null>(null);
+
+  React.useEffect(() => {
+    const loadData = async () => {
+      try {
+        const [progressData, discussionsData] = await Promise.all([
+          progressService.getUserProgress(),
+          discussionService.getDiscussions(params.id as string),
+        ]);
+        setUserProgress(progressData);
+        setDiscussions(discussionsData);
+      } catch (error) {
+        console.error('Failed to load data:', error);
+      }
+    };
+    loadData();
+  }, [params.id]);
 
   const handleCodeChange = (newCode: string) => {
     setCode(newCode);
@@ -62,41 +88,83 @@ export default function ProblemPage() {
 
   const handleRun = async () => {
     try {
-      // In real app, call your code execution service
+      setIsExecuting(true);
       setOutput('Running code...');
       setError(null);
-      // Simulate execution
-      setTimeout(() => {
-        setOutput('[0, 1]');
-        setExecutionTime(125);
-        setMemoryUsage(5.2 * 1024 * 1024);
-      }, 1000);
+
+      const result = await executionService.executeCode(code, language as SupportedLanguage);
+      
+      setOutput(result.output || '');
+      setExecutionTime(result.executionTime || 0);
+      setMemoryUsage(result.memoryUsed || 0);
+      
+      if (result.error) {
+        setError(result.error);
+      }
     } catch (err) {
-      setError(err.message);
+      setError(err instanceof Error ? err.message : 'An error occurred');
+    } finally {
+      setIsExecuting(false);
     }
   };
 
   const handleTest = async () => {
-    // In real app, run test cases
-    setTestResults([
-      { passed: true, message: 'Test case 1 passed' },
-      { passed: true, message: 'Test case 2 passed' },
-      { passed: false, message: 'Test case 3 failed: Expected [1,2] but got [2,1]' }
-    ]);
+    try {
+      setIsExecuting(true);
+      const result = await executionService.runTestCases(
+        code,
+        language as SupportedLanguage,
+        problem.testCases
+      );
+      
+      setTestResults(
+        result.testCasesPassed !== undefined
+          ? [
+              {
+                passed: result.testCasesPassed === problem.testCases.length,
+                message: `${result.testCasesPassed}/${problem.testCases.length} test cases passed`,
+              },
+            ]
+          : []
+      );
+
+      if (result.error) {
+        setError(result.error);
+      }
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'An error occurred');
+    } finally {
+      setIsExecuting(false);
+    }
   };
 
   const handleSubmit = async () => {
-    // In real app, submit solution
-    setAiSuggestions([
-      {
-        type: 'optimization',
-        message: 'Consider using a hash map to improve time complexity from O(n²) to O(n).'
-      },
-      {
-        type: 'improvement',
-        message: 'Add input validation to handle edge cases like empty arrays.'
+    try {
+      setIsExecuting(true);
+      const [executionResult, aiReview] = await Promise.all([
+        executionService.submit(code, language as SupportedLanguage, params.id as string),
+        aiService.getCodeReview(code, language, params.id as string),
+      ]);
+
+      if (executionResult.status === 'success') {
+        await progressService.updateSubmission({
+          problemId: params.id as string,
+          code,
+          language: language as SupportedLanguage,
+          status: 'accepted',
+          executionTime: executionResult.executionTime || 0,
+          memoryUsed: executionResult.memoryUsed || 0,
+        });
+
+        setAiSuggestions(aiReview.suggestions);
+      } else {
+        setError(executionResult.error || 'Submission failed');
       }
-    ]);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'An error occurred');
+    } finally {
+      setIsExecuting(false);
+    }
   };
 
   return (
@@ -111,6 +179,9 @@ export default function ProblemPage() {
         memoryUsage={memoryUsage}
         testResults={testResults}
         aiSuggestions={aiSuggestions}
+        discussions={discussions}
+        userProgress={userProgress}
+        isExecuting={isExecuting}
         onCodeChange={handleCodeChange}
         onRun={handleRun}
         onTest={handleTest}

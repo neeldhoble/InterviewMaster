@@ -2,49 +2,69 @@
 
 import React from 'react';
 import { motion } from 'framer-motion';
-import { Code2, CheckCircle, Timer, Database, GitBranch, Terminal, Zap, Users } from 'lucide-react';
+import { Code2, CheckCircle, Timer, Database, GitBranch, Terminal, Zap, Users, Brain, Target, Trophy, Sparkles, BookOpen, MessageSquare, LineChart, Rocket } from 'lucide-react';
 
 export function Features() {
   const features = [
     {
+      icon: <Brain className="w-6 h-6" />,
+      title: 'AI-Powered Learning',
+      description: 'Get personalized guidance, code reviews, and optimization suggestions from our AI assistant.'
+    },
+    {
+      icon: <BookOpen className="w-6 h-6" />,
+      title: 'Learning Paths',
+      description: 'Follow structured learning paths tailored to your skill level and interview goals.'
+    },
+    {
+      icon: <Target className="w-6 h-6" />,
+      title: 'Mock Interviews',
+      description: 'Practice with our AI interviewer that simulates real technical interviews.'
+    },
+    {
       icon: <Code2 className="w-6 h-6" />,
-      title: 'Multiple Languages',
-      description: 'Practice in Python, JavaScript, Java, and more. Choose your preferred programming language.'
+      title: 'Multi-Language Support',
+      description: 'Code in Python, JavaScript, Java, C++, and more with language-specific optimizations.'
     },
     {
       icon: <Terminal className="w-6 h-6" />,
-      title: 'Interactive Console',
-      description: 'Run and debug your code in real-time with our built-in interactive console.'
+      title: 'Advanced Code Editor',
+      description: 'Feature-rich editor with syntax highlighting, auto-completion, and debugging tools.'
     },
     {
-      icon: <CheckCircle className="w-6 h-6" />,
-      title: 'Test Cases',
-      description: 'Verify your solution with comprehensive test cases and edge case scenarios.'
+      icon: <Trophy className="w-6 h-6" />,
+      title: 'Weekly Contests',
+      description: 'Participate in coding competitions and climb the global leaderboard.'
     },
     {
-      icon: <Timer className="w-6 h-6" />,
-      title: 'Time Tracking',
-      description: 'Monitor your solving speed and efficiency with built-in time tracking.'
+      icon: <Sparkles className="w-6 h-6" />,
+      title: 'Smart Assessment',
+      description: 'Get detailed feedback on code quality, complexity, and performance.'
+    },
+    {
+      icon: <MessageSquare className="w-6 h-6" />,
+      title: 'Community Hub',
+      description: 'Discuss solutions, share knowledge, and learn from peer developers.'
+    },
+    {
+      icon: <LineChart className="w-6 h-6" />,
+      title: 'Progress Analytics',
+      description: 'Track your improvement with detailed performance metrics and insights.'
     },
     {
       icon: <Database className="w-6 h-6" />,
-      title: 'Problem Database',
-      description: 'Access a vast collection of coding challenges from easy to hard difficulty.'
+      title: 'Company Questions',
+      description: 'Practice with real interview questions from top tech companies.'
     },
     {
-      icon: <GitBranch className="w-6 h-6" />,
-      title: 'Version Control',
-      description: 'Save and track your solution history with integrated version control.'
+      icon: <Rocket className="w-6 h-6" />,
+      title: 'Interview Prep',
+      description: 'Comprehensive guides and tips for technical interview success.'
     },
     {
       icon: <Zap className="w-6 h-6" />,
-      title: 'Performance Analysis',
-      description: 'Get detailed analysis of your code performance and complexity.'
-    },
-    {
-      icon: <Users className="w-6 h-6" />,
-      title: 'Community Solutions',
-      description: 'Learn from others by viewing and comparing different approaches.'
+      title: 'Real-time Collaboration',
+      description: 'Work on problems together with peers or mentors in real-time.'
     }
   ];
 
@@ -63,29 +83,31 @@ export function Features() {
           viewport={{ once: true }}
           transition={{ duration: 0.5 }}
         >
-          <h2 className="text-3xl md:text-4xl font-bold text-white mb-6">
-            Everything You Need to Excel
+          <h2 className="text-3xl md:text-4xl font-bold mb-4">
+            <span className="bg-clip-text text-transparent bg-gradient-to-r from-[#fcba28] to-[#ff8f71]">
+              Powerful Features
+            </span>
           </h2>
-          <p className="text-white/60">
-            Our platform provides all the tools and features you need to prepare for technical interviews and improve your coding skills.
+          <p className="text-lg text-white/60 mb-8">
+            Everything you need to master coding interviews and advance your programming skills
           </p>
         </motion.div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
           {features.map((feature, index) => (
             <motion.div
               key={index}
-              className="p-6 bg-white/5 rounded-xl border border-white/10 backdrop-blur-sm hover:bg-white/10 transition-colors"
+              className="group p-6 bg-white/5 rounded-xl border border-white/10 backdrop-blur-sm hover:bg-white/10 transition-all hover:scale-105 cursor-pointer"
               initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
               transition={{ duration: 0.5, delay: index * 0.1 }}
             >
-              <div className="w-12 h-12 rounded-lg bg-[#fcba28]/20 flex items-center justify-center mb-4">
+              <div className="w-12 h-12 rounded-lg bg-[#fcba28]/20 flex items-center justify-center mb-4 group-hover:bg-[#fcba28]/30 transition-colors">
                 {React.cloneElement(feature.icon, { className: 'w-6 h-6 text-[#fcba28]' })}
               </div>
               <h3 className="text-lg font-semibold text-white mb-2">{feature.title}</h3>
-              <p className="text-white/60">{feature.description}</p>
+              <p className="text-white/60 text-sm">{feature.description}</p>
             </motion.div>
           ))}
         </div>

@@ -8,8 +8,28 @@ export interface Problem {
   likes: number;
   submissions: number;
   successRate: number;
+  acceptanceRate: number;
+  popularity: number;
   tags: string[];
+  companies?: string[];
+  premium?: boolean;
+  solved?: boolean;
+  bookmarked?: boolean;
+  contestProblem?: boolean;
 }
+
+export const companies = [
+  'Google',
+  'Amazon',
+  'Microsoft',
+  'Meta',
+  'Apple',
+  'Netflix',
+  'Uber',
+  'Twitter',
+  'LinkedIn',
+  'Airbnb'
+];
 
 export const categories = [
   'Arrays & Hashing',
@@ -42,7 +62,11 @@ export const problems: Problem[] = [
     likes: 45678,
     submissions: 89012,
     successRate: 85,
-    tags: ['Array', 'Hash Table']
+    acceptanceRate: 88,
+    popularity: 98,
+    tags: ['Array', 'Hash Table'],
+    companies: ['Google', 'Amazon', 'Microsoft', 'Apple'],
+    solved: true
   },
   {
     id: 'valid-anagram',
@@ -51,10 +75,14 @@ export const problems: Problem[] = [
     category: 'Arrays & Hashing',
     timeLimit: '25 minutes',
     description: 'Given two strings s and t, return true if t is an anagram of s, and false otherwise.',
-    likes: 23456,
-    submissions: 45678,
+    likes: 32145,
+    submissions: 65432,
     successRate: 82,
-    tags: ['String', 'Hash Table', 'Sorting']
+    acceptanceRate: 85,
+    popularity: 92,
+    tags: ['String', 'Hash Table', 'Sorting'],
+    companies: ['Microsoft', 'Amazon'],
+    bookmarked: true
   },
   {
     id: 'contains-duplicate',
@@ -63,12 +91,14 @@ export const problems: Problem[] = [
     category: 'Arrays & Hashing',
     timeLimit: '20 minutes',
     description: 'Given an integer array nums, return true if any value appears at least twice in the array.',
-    likes: 34567,
-    submissions: 67890,
-    successRate: 88,
-    tags: ['Array', 'Hash Table']
+    likes: 28976,
+    submissions: 58741,
+    successRate: 89,
+    acceptanceRate: 91,
+    popularity: 95,
+    tags: ['Array', 'Hash Table', 'Sorting'],
+    companies: ['Apple', 'Meta', 'Amazon']
   },
-
   // Two Pointers
   {
     id: 'valid-palindrome',
@@ -80,6 +110,8 @@ export const problems: Problem[] = [
     likes: 21345,
     submissions: 43210,
     successRate: 80,
+    acceptanceRate: 83,
+    popularity: 90,
     tags: ['Two Pointers', 'String']
   },
   {
@@ -92,6 +124,8 @@ export const problems: Problem[] = [
     likes: 32456,
     submissions: 65432,
     successRate: 72,
+    acceptanceRate: 75,
+    popularity: 85,
     tags: ['Array', 'Two Pointers', 'Sorting']
   },
 
@@ -106,6 +140,8 @@ export const problems: Problem[] = [
     likes: 28765,
     submissions: 54321,
     successRate: 83,
+    acceptanceRate: 86,
+    popularity: 92,
     tags: ['String', 'Stack']
   },
   {
@@ -118,6 +154,8 @@ export const problems: Problem[] = [
     likes: 19876,
     submissions: 39752,
     successRate: 75,
+    acceptanceRate: 78,
+    popularity: 85,
     tags: ['Stack', 'Design']
   },
 
@@ -132,6 +170,8 @@ export const problems: Problem[] = [
     likes: 25678,
     submissions: 51234,
     successRate: 86,
+    acceptanceRate: 89,
+    popularity: 95,
     tags: ['Array', 'Binary Search']
   },
   {
@@ -144,7 +184,25 @@ export const problems: Problem[] = [
     likes: 31245,
     submissions: 62490,
     successRate: 70,
+    acceptanceRate: 73,
+    popularity: 80,
     tags: ['Array', 'Binary Search']
+  },
+  {
+    id: 'median-of-two-sorted-arrays',
+    title: 'Median of Two Sorted Arrays',
+    difficulty: 'Hard',
+    category: 'Binary Search',
+    timeLimit: '45 minutes',
+    description: 'Given two sorted arrays nums1 and nums2 of size m and n respectively, return the median of the two sorted arrays.',
+    likes: 25678,
+    submissions: 45678,
+    successRate: 65,
+    acceptanceRate: 68,
+    popularity: 88,
+    tags: ['Array', 'Binary Search', 'Divide and Conquer'],
+    companies: ['Google', 'Amazon', 'Microsoft'],
+    premium: true
   },
 
   // Trees
@@ -158,6 +216,8 @@ export const problems: Problem[] = [
     likes: 27654,
     submissions: 55308,
     successRate: 85,
+    acceptanceRate: 88,
+    popularity: 95,
     tags: ['Tree', 'DFS', 'BFS']
   },
   {
@@ -170,6 +230,8 @@ export const problems: Problem[] = [
     likes: 24567,
     submissions: 49134,
     successRate: 82,
+    acceptanceRate: 85,
+    popularity: 90,
     tags: ['Tree', 'DFS', 'BFS']
   },
 
@@ -184,6 +246,8 @@ export const problems: Problem[] = [
     likes: 29876,
     submissions: 59752,
     successRate: 80,
+    acceptanceRate: 83,
+    popularity: 90,
     tags: ['Math', 'Dynamic Programming']
   },
   {
@@ -196,30 +260,44 @@ export const problems: Problem[] = [
     likes: 33456,
     submissions: 66912,
     successRate: 75,
+    acceptanceRate: 78,
+    popularity: 85,
     tags: ['Array', 'Dynamic Programming']
+  },
+  {
+    id: 'weekly-contest-1',
+    title: 'Maximum Sum Subarray',
+    difficulty: 'Medium',
+    category: 'Dynamic Programming',
+    timeLimit: '60 minutes',
+    description: 'Find the contiguous subarray with the largest sum.',
+    likes: 15678,
+    submissions: 25678,
+    successRate: 75,
+    acceptanceRate: 78,
+    popularity: 85,
+    tags: ['Array', 'Dynamic Programming', 'Divide and Conquer'],
+    contestProblem: true
   }
 ];
 
-// Add more problems for each category...
-// This is a starter set, you can expand it with more problems
+export function getProblemsForCategory(category: string): Problem[] {
+  return problems.filter(p => p.category === category);
+}
 
-export const getProblemsForCategory = (category: string): Problem[] => {
-  return problems.filter(problem => problem.category === category);
-};
+export function getProblemById(id: string): Problem | undefined {
+  return problems.find(p => p.id === id);
+}
 
-export const getProblemById = (id: string): Problem | undefined => {
-  return problems.find(problem => problem.id === id);
-};
-
-export const getDifficultyColor = (difficulty: string): string => {
-  switch (difficulty) {
-    case 'Easy':
-      return 'text-green-400 bg-green-500/20';
-    case 'Medium':
-      return 'text-yellow-400 bg-yellow-500/20';
-    case 'Hard':
-      return 'text-red-400 bg-red-500/20';
+export function getDifficultyColor(difficulty: string): string {
+  switch (difficulty.toLowerCase()) {
+    case 'easy':
+      return 'bg-green-500/10 text-green-500';
+    case 'medium':
+      return 'bg-yellow-500/10 text-yellow-500';
+    case 'hard':
+      return 'bg-red-500/10 text-red-500';
     default:
-      return 'text-white bg-white/20';
+      return 'bg-gray-500/10 text-gray-500';
   }
-};
+}
