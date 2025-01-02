@@ -2,7 +2,7 @@
 
 import React from 'react';
 import { motion } from 'framer-motion';
-import { Code2, Sparkles, Brain, Rocket, Trophy, Target, Users, Zap, BookOpen, Star } from 'lucide-react';
+import { Code2, Brain, BookOpen, Target } from 'lucide-react';
 import Image from 'next/image';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -74,21 +74,23 @@ export function Hero() {
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.5, delay: 0.4 }}
             >
-              <Button
-                size="lg"
-                className="bg-gradient-to-r from-[#fcba28] to-[#ff8f71] text-black hover:opacity-90"
-                onClick={() => router.push('/products/coding-practice/problems')}
-              >
-                Start Practicing
-              </Button>
-              <Button
-                size="lg"
-                variant="outline"
-                className="border-white/10 hover:bg-white/5"
-                onClick={() => router.push('/products/coding-practice/learn')}
-              >
-                Learning Paths
-              </Button>
+              <div className="flex items-center gap-4">
+                <Button
+                  size="lg"
+                  className="bg-gradient-to-r from-[#fcba28] to-[#ff8f71] text-black hover:opacity-90"
+                  onClick={() => router.push('/products/coding-practice/problems')}
+                >
+                  Start Practicing
+                </Button>
+                <Button
+                  size="lg"
+                  variant="outline"
+                  className="border-white/10 hover:bg-white/5"
+                  onClick={() => router.push('/products/coding-practice/learning-paths')}
+                >
+                  Learning Paths
+                </Button>
+              </div>
             </motion.div>
 
             {/* Stats Grid */}
@@ -98,87 +100,22 @@ export function Hero() {
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.5, delay: 0.5 }}
             >
-              {[
-                {
-                  label: 'Problems',
-                  value: stats.totalProblems.toLocaleString(),
-                  icon: <Target className="w-4 h-4 text-[#fcba28]" />
-                },
-                {
-                  label: 'Active Users',
-                  value: stats.activeUsers.toLocaleString(),
-                  icon: <Users className="w-4 h-4 text-[#fcba28]" />
-                },
-                {
-                  label: 'Solutions',
-                  value: stats.problemsSolved.toLocaleString(),
-                  icon: <Zap className="w-4 h-4 text-[#fcba28]" />
-                },
-                {
-                  label: 'Success Rate',
-                  value: `${stats.successRate}%`,
-                  icon: <Star className="w-4 h-4 text-[#fcba28]" />
-                }
-              ].map((stat, index) => (
-                <motion.div
-                  key={index}
-                  className="p-4 rounded-xl bg-white/5 border border-white/10 backdrop-blur-sm text-center"
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.3, delay: 0.6 + index * 0.1 }}
-                >
-                  <div className="flex items-center justify-center gap-2 mb-1">
-                    {stat.icon}
-                    <span className="font-semibold text-white">{stat.value}</span>
-                  </div>
-                  <p className="text-sm text-white/60">{stat.label}</p>
-                </motion.div>
-              ))}
-            </motion.div>
-
-            {/* Features Grid */}
-            <motion.div
-              className="grid grid-cols-2 gap-4 pt-6"
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5, delay: 0.7 }}
-            >
-              {[
-                {
-                  icon: <BookOpen className="w-5 h-5 text-[#fcba28]" />,
-                  title: 'Learning Paths',
-                  description: 'Structured curriculum for all levels'
-                },
-                {
-                  icon: <Brain className="w-5 h-5 text-[#fcba28]" />,
-                  title: 'AI Assistant',
-                  description: 'Get personalized guidance'
-                },
-                {
-                  icon: <Sparkles className="w-5 h-5 text-[#fcba28]" />,
-                  title: 'Mock Interviews',
-                  description: 'Practice with AI interviewer'
-                },
-                {
-                  icon: <Trophy className="w-5 h-5 text-[#fcba28]" />,
-                  title: 'Competitions',
-                  description: 'Weekly coding contests'
-                }
-              ].map((feature, index) => (
-                <motion.div
-                  key={index}
-                  className="p-4 rounded-xl bg-white/5 border border-white/10 backdrop-blur-sm"
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.3, delay: 0.8 + index * 0.1 }}
-                >
-                  <div className="flex items-center gap-3 mb-2">
-                    {feature.icon}
-                    <h3 className="font-semibold text-white">{feature.title}</h3>
-                  </div>
-                  <p className="text-sm text-white/60">{feature.description}</p>
-                </motion.div>
-              ))}
+              <div className="p-4 rounded-xl bg-white/5 border border-white/10 backdrop-blur-sm text-center">
+                <div className="text-2xl font-bold text-white">{stats.totalProblems.toLocaleString()}+</div>
+                <p className="text-sm text-white/60">Problems</p>
+              </div>
+              <div className="p-4 rounded-xl bg-white/5 border border-white/10 backdrop-blur-sm text-center">
+                <div className="text-2xl font-bold text-white">{stats.activeUsers.toLocaleString()}+</div>
+                <p className="text-sm text-white/60">Active Users</p>
+              </div>
+              <div className="p-4 rounded-xl bg-white/5 border border-white/10 backdrop-blur-sm text-center">
+                <div className="text-2xl font-bold text-white">{stats.problemsSolved.toLocaleString()}+</div>
+                <p className="text-sm text-white/60">Solutions</p>
+              </div>
+              <div className="p-4 rounded-xl bg-white/5 border border-white/10 backdrop-blur-sm text-center">
+                <div className="text-2xl font-bold text-white">{stats.successRate}%</div>
+                <p className="text-sm text-white/60">Success Rate</p>
+              </div>
             </motion.div>
           </motion.div>
 

@@ -1,0 +1,34 @@
+{
+  "paths": [
+    {
+      "id": "data-structures",
+      "title": "Data Structures",
+      "description": "Learn fundamental data structures used in computer programming",
+      "icon": "Database",
+      "level": "beginner",
+      "timeToComplete": "20 hours",
+      "topics": ["arrays", "linked-lists", "trees", "graphs"],
+      "prerequisites": []
+    },
+    {
+      "id": "algorithms",
+      "title": "Algorithms",
+      "description": "Master essential algorithms and problem-solving techniques",
+      "icon": "Code2",
+      "level": "intermediate",
+      "timeToComplete": "25 hours",
+      "topics": ["sorting", "searching", "dynamic-programming", "greedy"],
+      "prerequisites": ["data-structures"]
+    },
+    {
+      "id": "system-design",
+      "title": "System Design",
+      "description": "Learn how to design scalable systems and architectures",
+      "icon": "Network",
+      "level": "advanced",
+      "timeToComplete": "30 hours",
+      "topics": ["scalability", "databases", "caching", "load-balancing"],
+      "prerequisites": ["data-structures", "algorithms"]
+    }
+  ]
+}
