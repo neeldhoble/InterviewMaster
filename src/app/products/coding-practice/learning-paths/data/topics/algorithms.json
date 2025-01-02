@@ -1,0 +1,147 @@
+{
+  "id": "algorithms",
+  "title": "Algorithms",
+  "description": "Data Structures and Algorithms",
+  "subtopics": [
+    {
+      "id": "sorting",
+      "title": "Sorting Algorithms",
+      "description": "Common sorting algorithms and their implementations, helping to arrange data in a specific order, which is essential for optimizing various computational tasks.",
+      "content": {
+        "introduction": "Sorting algorithms are methods for organizing data in a particular sequence, either in ascending or descending order. Efficient sorting is crucial for various computer science applications, such as search optimization, data analysis, and problem-solving.",
+        "sections": [
+          {
+            "title": "Quick Sort",
+            "content": "QuickSort is a divide-and-conquer algorithm that works by selecting a pivot element and partitioning the array into two subarrays: one with elements smaller than the pivot and the other with elements greater than the pivot. It recursively sorts the subarrays.",
+            "code": {
+              "example": "function quickSort(arr: number[]): number[] {\n  if (arr.length <= 1) return arr;\n\n  const pivot = arr[0];\n  const left = arr.slice(1).filter(x => x <= pivot);\n  const right = arr.slice(1).filter(x => x > pivot);\n\n  return [...quickSort(left), pivot, ...quickSort(right)];\n}\n\n// Usage\nconst arr = [64, 34, 25, 12, 22, 11, 90];\nconsole.log(quickSort(arr));",
+              "language": "typescript",
+              "output": "[11, 12, 22, 25, 34, 64, 90]"
+            },
+            "complexity": {
+              "bestCase": "O(n log n)",
+              "averageCase": "O(n log n)",
+              "worstCase": "O(n^2)",
+              "spaceComplexity": "O(log n)"
+            }
+          },
+          {
+            "title": "Merge Sort",
+            "content": "MergeSort is another divide-and-conquer algorithm that divides the array into two halves, recursively sorts them, and then merges the sorted halves to produce the final sorted array. It guarantees O(n log n) time complexity in all cases.",
+            "code": {
+              "example": "function mergeSort(arr: number[]): number[] {\n  if (arr.length <= 1) return arr;\n\n  const mid = Math.floor(arr.length / 2);\n  const left = mergeSort(arr.slice(0, mid));\n  const right = mergeSort(arr.slice(mid));\n\n  return merge(left, right);\n}\n\nfunction merge(left: number[], right: number[]): number[] {\n  let result: number[] = [];\n  let i = 0, j = 0;\n  while (i < left.length && j < right.length) {\n    if (left[i] < right[j]) {\n      result.push(left[i]);\n      i++;\n    } else {\n      result.push(right[j]);\n      j++;\n    }\n  }\n  return result.concat(left.slice(i), right.slice(j));\n}\n\n// Usage\nconst arr = [64, 34, 25, 12, 22, 11, 90];\nconsole.log(mergeSort(arr));",
+              "language": "typescript",
+              "output": "[11, 12, 22, 25, 34, 64, 90]"
+            },
+            "complexity": {
+              "bestCase": "O(n log n)",
+              "averageCase": "O(n log n)",
+              "worstCase": "O(n log n)",
+              "spaceComplexity": "O(n)"
+            }
+          },
+          {
+            "title": "Bubble Sort",
+            "content": "BubbleSort is a simple comparison-based algorithm where adjacent elements are repeatedly swapped if they are in the wrong order. Despite its simplicity, it is inefficient for large datasets, with a worst-case time complexity of O(n^2).",
+            "code": {
+              "example": "function bubbleSort(arr: number[]): number[] {\n  let n = arr.length;\n  for (let i = 0; i < n - 1; i++) {\n    for (let j = 0; j < n - 1 - i; j++) {\n      if (arr[j] > arr[j + 1]) {\n        [arr[j], arr[j + 1]] = [arr[j + 1], arr[j]];\n      }\n    }\n  }\n  return arr;\n}\n\n// Usage\nconst arr = [64, 34, 25, 12, 22, 11, 90];\nconsole.log(bubbleSort(arr));",
+              "language": "typescript",
+              "output": "[11, 12, 22, 25, 34, 64, 90]"
+            },
+            "complexity": {
+              "bestCase": "O(n)",
+              "averageCase": "O(n^2)",
+              "worstCase": "O(n^2)",
+              "spaceComplexity": "O(1)"
+            }
+          },
+          {
+            "title": "Insertion Sort",
+            "content": "Insertion Sort builds the final sorted array one item at a time. It is much like sorting playing cards in your hands, where each new card is inserted into the correct position in the already sorted portion of the array.",
+            "code": {
+              "example": "function insertionSort(arr: number[]): number[] {\n  for (let i = 1; i < arr.length; i++) {\n    let key = arr[i];\n    let j = i - 1;\n    while (j >= 0 && arr[j] > key) {\n      arr[j + 1] = arr[j];\n      j = j - 1;\n    }\n    arr[j + 1] = key;\n  }\n  return arr;\n}\n\n// Usage\nconst arr = [64, 34, 25, 12, 22, 11, 90];\nconsole.log(insertionSort(arr));",
+              "language": "typescript",
+              "output": "[11, 12, 22, 25, 34, 64, 90]"
+            },
+            "complexity": {
+              "bestCase": "O(n)",
+              "averageCase": "O(n^2)",
+              "worstCase": "O(n^2)",
+              "spaceComplexity": "O(1)"
+            }
+          },
+          {
+            "title": "Selection Sort",
+            "content": "Selection Sort improves on the Bubble Sort by selecting the smallest (or largest) element from the unsorted part and swapping it with the first unsorted element. It's efficient for small datasets but still has a time complexity of O(n^2).",
+            "code": {
+              "example": "function selectionSort(arr: number[]): number[] {\n  let n = arr.length;\n  for (let i = 0; i < n - 1; i++) {\n    let minIndex = i;\n    for (let j = i + 1; j < n; j++) {\n      if (arr[j] < arr[minIndex]) {\n        minIndex = j;\n      }\n    }\n    [arr[i], arr[minIndex]] = [arr[minIndex], arr[i]];\n  }\n  return arr;\n}\n\n// Usage\nconst arr = [64, 34, 25, 12, 22, 11, 90];\nconsole.log(selectionSort(arr));",
+              "language": "typescript",
+              "output": "[11, 12, 22, 25, 34, 64, 90]"
+            },
+            "complexity": {
+              "bestCase": "O(n^2)",
+              "averageCase": "O(n^2)",
+              "worstCase": "O(n^2)",
+              "spaceComplexity": "O(1)"
+            }
+          },
+          {
+            "title": "Radix Sort",
+            "content": "Radix Sort is a non-comparative sorting algorithm that processes the individual digits of the numbers from the least significant digit (LSD) to the most significant digit (MSD). It can be more efficient than comparison-based algorithms for large datasets with a small range of digits.",
+            "code": {
+              "example": "function radixSort(arr: number[]): number[] {\n  const getMax = (arr: number[]) => Math.max(...arr);\n  let max = getMax(arr);\n  let exp = 1;\n  while (max / exp >= 1) {\n    arr = countingSort(arr, exp);\n    exp *= 10;\n  }\n  return arr;\n}\n\nfunction countingSort(arr: number[], exp: number): number[] {\n  let n = arr.length;\n  let output: number[] = new Array(n);\n  let count: number[] = new Array(10).fill(0);\n  for (let i = 0; i < n; i++) {\n    count[Math.floor(arr[i] / exp) % 10]++;\n  }\n  for (let i = 1; i < 10; i++) {\n    count[i] += count[i - 1];\n  }\n  for (let i = n - 1; i >= 0; i--) {\n    output[count[Math.floor(arr[i] / exp) % 10] - 1] = arr[i];\n    count[Math.floor(arr[i] / exp) % 10]--;\n  }\n  return output;\n}\n\n// Usage\nconst arr = [64, 34, 25, 12, 22, 11, 90];\nconsole.log(radixSort(arr));",
+              "language": "typescript",
+              "output": "[11, 12, 22, 25, 34, 64, 90]"
+            },
+            "complexity": {
+              "bestCase": "O(nk)",
+              "averageCase": "O(nk)",
+              "worstCase": "O(nk)",
+              "spaceComplexity": "O(n + k)"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "id": "searching",
+      "title": "Searching Algorithms",
+      "description": "Algorithms used to find specific elements within a data set, with different methods depending on the structure and the size of the data.",
+      "content": {
+        "introduction": "Searching algorithms are essential in computing to retrieve a specific item from a collection. Efficient search strategies make a significant difference in the performance of applications, especially when dealing with large datasets.",
+        "sections": [
+          {
+            "title": "Binary Search",
+            "content": "Binary Search is an efficient algorithm that works on sorted arrays. By repeatedly dividing the search interval in half, it checks if the target element is less than, greater than, or equal to the middle element of the array.",
+            "code": {
+              "example": "function binarySearch(arr: number[], target: number): number {\n  let left = 0, right = arr.length - 1;\n  while (left <= right) {\n    const mid = Math.floor((left + right) / 2);\n    if (arr[mid] === target) return mid;\n    if (arr[mid] < target) left = mid + 1;\n    else right = mid - 1;\n  }\n  return -1;\n}\n\n// Usage\nconst arr = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];\nconsole.log(binarySearch(arr, 5));",
+              "language": "typescript",
+              "output": "4"
+            },
+            "complexity": {
+              "bestCase": "O(1)",
+              "averageCase": "O(log n)",
+              "worstCase": "O(log n)",
+              "spaceComplexity": "O(1)"
+            }
+          },
+          {
+            "title": "Linear Search",
+            "content": "Linear Search is a simple search algorithm that checks every element in the list sequentially until it finds the target or reaches the end of the list. It is inefficient for large datasets compared to Binary Search.",
+            "code": {
+              "example": "function linearSearch(arr: number[], target: number): number {\n  for (let i = 0; i < arr.length; i++) {\n    if (arr[i] === target) return i;\n  }\n  return -1;\n}\n\n// Usage\nconst arr = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];\nconsole.log(linearSearch(arr, 5));",
+              "language": "typescript",
+              "output": "4"
+            },
+            "complexity": {
+              "bestCase": "O(1)",
+              "averageCase": "O(n)",
+              "worstCase": "O(n)",
+              "spaceComplexity": "O(1)"
+            }
+          }
+        ]
+      }
+    }
+  ]
+}

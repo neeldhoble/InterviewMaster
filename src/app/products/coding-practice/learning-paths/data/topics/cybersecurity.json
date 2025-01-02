@@ -1,0 +1,94 @@
+{
+  "id": "cybersecurity",
+  "title": "Cybersecurity",
+  "description": "Learn security best practices and techniques to protect digital assets, applications, and networks.",
+  "subtopics": [
+    {
+      "id": "web-security",
+      "title": "Web Security",
+      "description": "Secure web applications from common threats like XSS, CSRF, and SQL Injection.",
+      "content": {
+        "introduction": "Web security is crucial for protecting applications from various attacks that compromise data integrity, confidentiality, and availability. It involves implementing best practices and security mechanisms to mitigate threats.",
+        "sections": [
+          {
+            "title": "XSS Prevention",
+            "content": "Cross-Site Scripting (XSS) attacks inject malicious scripts into web applications. These scripts can steal user data or manipulate the application's behavior. Mitigation strategies include input sanitization, output encoding, and using secure libraries.",
+            "code": {
+              "example": "// React - Safe HTML rendering\nconst sanitizeHTML = (html) => {\n  const temp = document.createElement('div');\n  temp.textContent = html;\n  return temp.innerHTML;\n};\n\n// Express - Security Headers\napp.use(helmet());\napp.use(cors());\napp.use(xssFilter());\n\n// Content Security Policy\napp.use(helmet.contentSecurityPolicy({\n  directives: {\n    defaultSrc: ['self'],\n    scriptSrc: ['self', 'unsafe-inline']\n  }\n}));",
+              "language": "javascript"
+            }
+          },
+          {
+            "title": "CSRF Mitigation",
+            "content": "Cross-Site Request Forgery (CSRF) attacks trick authenticated users into executing unintended actions. Prevention measures include using anti-CSRF tokens, SameSite cookies, and verifying request headers.",
+            "code": {
+              "example": "// Implementing CSRF protection in Express\nconst csrf = require('csurf');\nconst csrfProtection = csrf({ cookie: true });\napp.use(csrfProtection);\n\n// Adding SameSite attribute to cookies\napp.use(cookieParser());\napp.use((req, res, next) => {\n  res.cookie('csrfToken', req.csrfToken(), {\n    httpOnly: true,\n    sameSite: 'Strict'\n  });\n  next();\n});",
+              "language": "javascript"
+            }
+          },
+          {
+            "title": "SQL Injection Prevention",
+            "content": "SQL Injection attacks manipulate SQL queries to access or modify unauthorized data. Using parameterized queries, ORM libraries, and input validation helps mitigate these risks.",
+            "code": {
+              "example": "// Using parameterized queries in Node.js\nconst query = 'SELECT * FROM users WHERE username = ?';\nconnection.query(query, [username], (err, results) => {\n  if (err) throw err;\n  console.log(results);\n});\n\n// With Sequelize ORM\nconst user = await User.findOne({ where: { username: req.body.username } });",
+              "language": "javascript"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "id": "network-security",
+      "title": "Network Security",
+      "description": "Safeguard networks from unauthorized access, breaches, and attacks.",
+      "content": {
+        "introduction": "Network security ensures the confidentiality, integrity, and availability of data within a network. It involves firewalls, intrusion detection systems, and secure communication protocols.",
+        "sections": [
+          {
+            "title": "Firewall Configuration",
+            "content": "Firewalls filter traffic based on predetermined security rules. Properly configuring firewalls helps block unauthorized access while allowing legitimate traffic.",
+            "code": {
+              "example": "// Configuring a UFW Firewall\nsudo ufw allow 22/tcp\nsudo ufw allow 80/tcp\nsudo ufw enable\nsudo ufw status",
+              "language": "bash"
+            }
+          },
+          {
+            "title": "VPN Setup",
+            "content": "Virtual Private Networks (VPNs) encrypt data and provide secure access to resources. Setting up a VPN ensures data confidentiality over public networks.",
+            "code": {
+              "example": "# OpenVPN Server Setup\nsudo apt-get update\nsudo apt-get install openvpn\nopenvpn --genkey --secret static.key\nsudo openvpn --config /etc/openvpn/server.conf",
+              "language": "bash"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "id": "application-security",
+      "title": "Application Security",
+      "description": "Secure applications through secure coding practices and regular testing.",
+      "content": {
+        "introduction": "Application security involves integrating security practices into the software development lifecycle to protect applications from vulnerabilities.",
+        "sections": [
+          {
+            "title": "Secure Coding",
+            "content": "Secure coding practices ensure the development of robust and secure software. Principles include avoiding hardcoded credentials, validating inputs, and managing dependencies.",
+            "code": {
+              "example": "// Using environment variables for sensitive data\nrequire('dotenv').config();\nconst dbPassword = process.env.DB_PASSWORD;\n\n// Input validation with Joi\nconst schema = Joi.object({\n  username: Joi.string().alphanum().min(3).max(30).required(),\n  password: Joi.string().pattern(new RegExp('^[a-zA-Z0-9]{3,30}$')).required()\n});\nconst validation = schema.validate({ username: req.body.username, password: req.body.password });",
+              "language": "javascript"
+            }
+          },
+          {
+            "title": "Security Testing",
+            "content": "Regular security testing, including penetration testing and code analysis, identifies vulnerabilities and ensures compliance with security standards.",
+            "code": {
+              "example": "# Running OWASP ZAP for automated security scanning\nzap-cli start\nzap-cli open-url http://example.com\nzap-cli active-scan http://example.com\nzap-cli report -o report.html",
+              "language": "bash"
+            }
+          }
+        ]
+      }
+    }
+  ]
+}
+

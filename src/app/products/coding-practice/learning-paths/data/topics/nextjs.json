@@ -1,0 +1,25 @@
+{
+  "id": "nextjs",
+  "title": "Next.js",
+  "description": "Build production-ready React applications with Next.js",
+  "subtopics": [
+    {
+      "id": "nextjs-routing",
+      "title": "App Router & Routing",
+      "description": "Learn Next.js 13+ App Router and file-based routing",
+      "content": {
+        "introduction": "Next.js introduces a new App Router built on React Server Components...",
+        "sections": [
+          {
+            "title": "File-based Routing",
+            "content": "Next.js has a file-system based router built on the concept of pages...",
+            "code": {
+              "example": "// app/page.tsx\nexport default function Home() {\n  return (\n    <main>\n      <h1>Welcome to Next.js!</h1>\n    </main>\n  );\n}\n\n// app/blog/[slug]/page.tsx\nexport default function BlogPost({ params }: { params: { slug: string } }) {\n  return (\n    <article>\n      <h1>Post: {params.slug}</h1>\n    </article>\n  );\n}",
+              "language": "typescript"
+            }
+          }
+        ]
+      }
+    }
+  ]
+}

@@ -1,0 +1,119 @@
+{
+  "id": "sql",
+  "title": "SQL",
+  "description": "Master SQL (Structured Query Language) - The standard language for relational database management",
+  "subtopics": [
+    {
+      "id": "sql-basics",
+      "title": "SQL Fundamentals",
+      "description": "Core concepts and basic operations in SQL",
+      "content": {
+        "introduction": "SQL (Structured Query Language) is the standard language for managing and manipulating relational databases. It provides a powerful set of tools for data definition, manipulation, and control.",
+        "sections": [
+          {
+            "title": "Basic Queries",
+            "content": "Understanding basic SQL queries is fundamental to working with relational databases. This includes SELECT statements, filtering, sorting, and basic joins.",
+            "code": {
+              "example": "-- Basic SELECT queries\nSELECT first_name, last_name, email\nFROM users\nWHERE age >= 18\nORDER BY last_name ASC;\n\n-- Aggregation functions\nSELECT \n  department,\n  COUNT(*) as employee_count,\n  AVG(salary) as avg_salary,\n  MAX(salary) as highest_salary\nFROM employees\nGROUP BY department\nHAVING COUNT(*) > 5\nORDER BY avg_salary DESC;\n\n-- JOINS\nSELECT \n  o.order_id,\n  c.customer_name,\n  p.product_name,\n  o.order_date\nFROM orders o\nINNER JOIN customers c ON o.customer_id = c.customer_id\nINNER JOIN products p ON o.product_id = p.product_id\nWHERE o.order_date >= DATE_SUB(CURDATE(), INTERVAL 30 DAY);\n\n-- Subqueries\nSELECT product_name, price\nFROM products\nWHERE price > (\n  SELECT AVG(price)\n  FROM products\n);\n\n-- Common Table Expressions (CTE)\nWITH MonthlyStats AS (\n  SELECT \n    DATE_FORMAT(order_date, '%Y-%m') as month,\n    SUM(total_amount) as monthly_revenue\n  FROM orders\n  GROUP BY DATE_FORMAT(order_date, '%Y-%m')\n)\nSELECT \n  month,\n  monthly_revenue,\n  LAG(monthly_revenue) OVER (ORDER BY month) as prev_month_revenue,\n  ROUND((\n    monthly_revenue - LAG(monthly_revenue) OVER (ORDER BY month)\n  ) / LAG(monthly_revenue) OVER (ORDER BY month) * 100, 2) as growth_rate\nFROM MonthlyStats\nORDER BY month;",
+              "language": "sql",
+              "explanation": "This example demonstrates various SQL queries from basic SELECT statements to more complex queries using joins, subqueries, and CTEs."
+            }
+          }
+        ]
+      }
+    },
+    {
+      "id": "sql-advanced",
+      "title": "Advanced SQL",
+      "description": "Advanced SQL concepts and techniques",
+      "content": {
+        "introduction": "Advanced SQL features enable complex data analysis, optimization, and management. Understanding these concepts is crucial for building efficient database applications.",
+        "sections": [
+          {
+            "title": "Window Functions",
+            "content": "Window functions perform calculations across a set of table rows related to the current row. They're powerful tools for advanced data analysis.",
+            "code": {
+              "example": "-- Window Functions Examples\n\n-- Row numbers within partitions\nSELECT \n  department,\n  employee_name,\n  salary,\n  ROW_NUMBER() OVER (PARTITION BY department ORDER BY salary DESC) as salary_rank,\n  DENSE_RANK() OVER (PARTITION BY department ORDER BY salary DESC) as dense_rank,\n  RANK() OVER (PARTITION BY department ORDER BY salary DESC) as rank\nFROM employees;\n\n-- Running totals and moving averages\nSELECT \n  order_date,\n  amount,\n  SUM(amount) OVER (ORDER BY order_date) as running_total,\n  AVG(amount) OVER (\n    ORDER BY order_date\n    ROWS BETWEEN 6 PRECEDING AND CURRENT ROW\n  ) as moving_7day_avg\nFROM orders;\n\n-- Percentiles and distributions\nSELECT \n  department,\n  salary,\n  NTILE(4) OVER (ORDER BY salary) as salary_quartile,\n  PERCENT_RANK() OVER (ORDER BY salary) as salary_percentile,\n  FIRST_VALUE(salary) OVER (ORDER BY salary) as lowest_salary,\n  LAST_VALUE(salary) OVER (\n    ORDER BY salary\n    RANGE BETWEEN UNBOUNDED PRECEDING AND UNBOUNDED FOLLOWING\n  ) as highest_salary\nFROM employees;\n\n-- Lead and Lag for time-series analysis\nSELECT \n  product_id,\n  date,\n  price,\n  LAG(price) OVER (PARTITION BY product_id ORDER BY date) as previous_price,\n  LEAD(price) OVER (PARTITION BY product_id ORDER BY date) as next_price,\n  ROUND((\n    price - LAG(price) OVER (PARTITION BY product_id ORDER BY date)\n  ) / LAG(price) OVER (PARTITION BY product_id ORDER BY date) * 100, 2\n  ) as price_change_percent\nFROM product_prices;",
+              "language": "sql",
+              "explanation": "This example shows various window functions for advanced data analysis, including ranking, running totals, and time-series analysis."
+            }
+          },
+          {
+            "title": "Performance Optimization",
+            "content": "Query optimization is crucial for database performance. This includes proper indexing, query planning, and understanding execution plans.",
+            "code": {
+              "example": "-- Creating indexes\nCREATE INDEX idx_users_email ON users(email);\nCREATE INDEX idx_orders_customer_date ON orders(customer_id, order_date);\n\n-- Composite index for covering queries\nCREATE INDEX idx_products_category_price ON products(category_id, price)\nINCLUDE (product_name, stock_status);\n\n-- Analyzing query performance\nEXPLAIN ANALYZE\nSELECT \n  c.customer_name,\n  COUNT(o.order_id) as order_count,\n  SUM(o.total_amount) as total_spent\nFROM customers c\nLEFT JOIN orders o ON c.customer_id = o.customer_id\nWHERE o.order_date >= DATE_SUB(CURDATE(), INTERVAL 1 YEAR)\nGROUP BY c.customer_id, c.customer_name\nHAVING total_spent > 1000\nORDER BY total_spent DESC;\n\n-- Table partitioning\nCREATE TABLE sales (\n  sale_id INT,\n  sale_date DATE,\n  amount DECIMAL(10,2)\n)\nPARTITION BY RANGE (YEAR(sale_date)) (\n  PARTITION p2023 VALUES LESS THAN (2024),\n  PARTITION p2024 VALUES LESS THAN (2025),\n  PARTITION p2025 VALUES LESS THAN (2026)\n);\n\n-- Materialized views (in PostgreSQL)\nCREATE MATERIALIZED VIEW monthly_sales AS\nSELECT \n  DATE_TRUNC('month', sale_date) as month,\n  product_category,\n  SUM(amount) as total_sales,\n  COUNT(DISTINCT customer_id) as unique_customers\nFROM sales\nGROUP BY \n  DATE_TRUNC('month', sale_date),\n  product_category\nWITH DATA;\n\n-- Refresh materialized view\nREFRESH MATERIALIZED VIEW monthly_sales;",
+              "language": "sql",
+              "explanation": "This example demonstrates various performance optimization techniques including indexing, query analysis, and materialized views."
+            }
+          }
+        ]
+      }
+    },
+    {
+      "id": "sql-data-modeling",
+      "title": "Data Modeling",
+      "description": "Database design and normalization",
+      "content": {
+        "introduction": "Proper data modeling is crucial for building efficient and maintainable databases. This includes understanding normalization, relationships, and constraints.",
+        "sections": [
+          {
+            "title": "Database Design",
+            "content": "Creating an efficient database schema involves proper table design, relationships, and constraints.",
+            "code": {
+              "example": "-- Create tables with relationships and constraints\nCREATE TABLE customers (\n  customer_id INT PRIMARY KEY AUTO_INCREMENT,\n  first_name VARCHAR(50) NOT NULL,\n  last_name VARCHAR(50) NOT NULL,\n  email VARCHAR(100) UNIQUE NOT NULL,\n  phone VARCHAR(20),\n  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,\n  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,\n  CONSTRAINT chk_email CHECK (email LIKE '%@%.%')\n);\n\nCREATE TABLE addresses (\n  address_id INT PRIMARY KEY AUTO_INCREMENT,\n  customer_id INT NOT NULL,\n  address_type ENUM('billing', 'shipping') NOT NULL,\n  street VARCHAR(100) NOT NULL,\n  city VARCHAR(50) NOT NULL,\n  state VARCHAR(50) NOT NULL,\n  postal_code VARCHAR(20) NOT NULL,\n  country VARCHAR(50) NOT NULL,\n  is_default BOOLEAN DEFAULT FALSE,\n  FOREIGN KEY (customer_id) REFERENCES customers(customer_id)\n    ON DELETE CASCADE\n    ON UPDATE CASCADE,\n  UNIQUE KEY unique_customer_address_type (customer_id, address_type)\n);\n\nCREATE TABLE products (\n  product_id INT PRIMARY KEY AUTO_INCREMENT,\n  sku VARCHAR(50) UNIQUE NOT NULL,\n  name VARCHAR(100) NOT NULL,\n  description TEXT,\n  price DECIMAL(10,2) NOT NULL,\n  stock_quantity INT NOT NULL DEFAULT 0,\n  category_id INT,\n  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,\n  FOREIGN KEY (category_id) REFERENCES categories(category_id),\n  CONSTRAINT chk_price CHECK (price >= 0),\n  CONSTRAINT chk_stock CHECK (stock_quantity >= 0)\n);\n\nCREATE TABLE orders (\n  order_id INT PRIMARY KEY AUTO_INCREMENT,\n  customer_id INT NOT NULL,\n  order_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,\n  status ENUM('pending', 'processing', 'shipped', 'delivered', 'cancelled') NOT NULL,\n  shipping_address_id INT NOT NULL,\n  billing_address_id INT NOT NULL,\n  total_amount DECIMAL(10,2) NOT NULL,\n  FOREIGN KEY (customer_id) REFERENCES customers(customer_id),\n  FOREIGN KEY (shipping_address_id) REFERENCES addresses(address_id),\n  FOREIGN KEY (billing_address_id) REFERENCES addresses(address_id)\n);\n\nCREATE TABLE order_items (\n  order_id INT NOT NULL,\n  product_id INT NOT NULL,\n  quantity INT NOT NULL,\n  unit_price DECIMAL(10,2) NOT NULL,\n  PRIMARY KEY (order_id, product_id),\n  FOREIGN KEY (order_id) REFERENCES orders(order_id),\n  FOREIGN KEY (product_id) REFERENCES products(product_id),\n  CONSTRAINT chk_quantity CHECK (quantity > 0)\n);",
+              "language": "sql",
+              "explanation": "This example shows a complete database schema design with relationships, constraints, and proper data types."
+            }
+          }
+        ]
+      }
+    }
+  ],
+  "resources": {
+    "documentation": [
+      {
+        "title": "PostgreSQL Documentation",
+        "url": "https://www.postgresql.org/docs/"
+      },
+      {
+        "title": "MySQL Documentation",
+        "url": "https://dev.mysql.com/doc/"
+      }
+    ],
+    "tutorials": [
+      {
+        "title": "SQL Tutorial - W3Schools",
+        "url": "https://www.w3schools.com/sql/"
+      },
+      {
+        "title": "Mode SQL Tutorial",
+        "url": "https://mode.com/sql-tutorial/"
+      }
+    ],
+    "books": [
+      {
+        "title": "SQL Performance Explained",
+        "author": "Markus Winand",
+        "url": "https://sql-performance-explained.com/"
+      },
+      {
+        "title": "Database Design for Mere Mortals",
+        "author": "Michael J. Hernandez",
+        "url": "https://www.informit.com/store/database-design-for-mere-mortals-a-hands-on-guide-to-relational-9780136788041"
+      }
+    ],
+    "tools": [
+      {
+        "title": "DBeaver",
+        "description": "Universal database tool",
+        "url": "https://dbeaver.io/"
+      },
+      {
+        "title": "DataGrip",
+        "description": "Database IDE by JetBrains",
+        "url": "https://www.jetbrains.com/datagrip/"
+      }
+    ]
+  }
+}

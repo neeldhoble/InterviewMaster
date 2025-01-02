@@ -1,0 +1,106 @@
+{
+  "id": "aws",
+  "title": "AWS",
+  "description": "Amazon Web Services Cloud Computing",
+  "subtopics": [
+    {
+      "id": "aws-basics",
+      "title": "AWS Fundamentals",
+      "description": "Core AWS services and concepts",
+      "content": {
+        "introduction": "Amazon Web Services (AWS) is a comprehensive cloud platform that provides on-demand computing resources, storage solutions, and other services to help individuals and businesses scale and innovate rapidly. It offers a pay-as-you-go pricing model, which means you only pay for the services you use.",
+        "sections": [
+          {
+            "title": "EC2 Instances",
+            "content": "Amazon Elastic Compute Cloud (EC2) provides scalable computing capacity in the cloud. EC2 instances allow you to deploy virtual servers with customizable CPU, memory, storage, and network configurations. They are ideal for running applications, testing environments, and hosting websites.",
+            "code": {
+              "example": "# AWS CLI commands for EC2\naws ec2 run-instances \\\n  --image-id ami-0c55b159cbfafe1f0 \\\n  --instance-type t2.micro \\\n  --key-name MyKeyPair \\\n  --security-group-ids sg-903004f8\n\n# List instances\naws ec2 describe-instances\n\n# Stop instance\naws ec2 stop-instances --instance-ids i-1234567890abcdef0",
+              "language": "bash"
+            },
+            "bestPractices": [
+              "Use security groups to control inbound and outbound traffic.",
+              "Regularly update your instance's AMIs to ensure they have the latest security patches.",
+              "Tag your instances for easier management."
+            ]
+          },
+          {
+            "title": "S3 Storage",
+            "content": "Amazon Simple Storage Service (S3) is a scalable object storage service. It is used for storing and retrieving any amount of data at any time. S3 offers durability, availability, and security for data storage needs.",
+            "code": {
+              "example": "# Create a new S3 bucket\naws s3 mb s3://my-new-bucket\n\n# Upload a file\naws s3 cp myfile.txt s3://my-new-bucket/myfile.txt\n\n# List bucket contents\naws s3 ls s3://my-new-bucket",
+              "language": "bash"
+            },
+            "bestPractices": [
+              "Enable versioning on buckets to recover from accidental data deletions.",
+              "Use lifecycle policies to transition data to cost-effective storage tiers.",
+              "Enable server-side encryption for sensitive data."
+            ]
+          },
+          {
+            "title": "RDS Databases",
+            "content": "Amazon Relational Database Service (RDS) simplifies the setup, operation, and scaling of a relational database in the cloud. It supports several database engines including MySQL, PostgreSQL, MariaDB, Oracle, and SQL Server.",
+            "code": {
+              "example": "# Create an RDS instance\naws rds create-db-instance \\\n  --db-instance-identifier mydbinstance \\\n  --db-instance-class db.t3.micro \\\n  --engine mysql \\\n  --allocated-storage 20 \\\n  --master-username admin \\\n  --master-user-password mypassword\n\n# Describe RDS instances\naws rds describe-db-instances",
+              "language": "bash"
+            },
+            "bestPractices": [
+              "Enable automatic backups to ensure data recovery options.",
+              "Use Multi-AZ deployments for high availability.",
+              "Regularly monitor performance metrics using Amazon CloudWatch."
+            ]
+          },
+          {
+            "title": "CloudWatch Monitoring",
+            "content": "Amazon CloudWatch provides monitoring and management services for AWS resources and applications. It collects and tracks metrics, sets alarms, and helps automate actions based on specified thresholds.",
+            "code": {
+              "example": "# Create an alarm for high CPU utilization\naws cloudwatch put-metric-alarm \\\n  --alarm-name HighCPUUtilization \\\n  --metric-name CPUUtilization \\\n  --namespace AWS/EC2 \\\n  --statistic Average \\\n  --period 300 \\\n  --threshold 80 \\\n  --comparison-operator GreaterThanThreshold \\\n  --dimensions Name=InstanceId,Value=i-1234567890abcdef0 \\\n  --evaluation-periods 1 \\\n  --alarm-actions arn:aws:sns:us-west-2:123456789012:MySNSTopic",
+              "language": "bash"
+            },
+            "bestPractices": [
+              "Use detailed monitoring for critical instances.",
+              "Set up alarms to proactively address resource bottlenecks.",
+              "Integrate with AWS Lambda for automated responses to alarms."
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "aws-security",
+      "title": "AWS Security",
+      "description": "Ensuring data and resource protection in AWS.",
+      "content": {
+        "introduction": "Security is a shared responsibility in AWS, split between AWS and the customer. AWS manages the security of the cloud, while customers manage security in the cloud.",
+        "sections": [
+          {
+            "title": "IAM Roles and Policies",
+            "content": "AWS Identity and Access Management (IAM) enables you to securely control access to AWS services and resources. IAM roles and policies define permissions for users and applications.",
+            "code": {
+              "example": "# Create a new IAM user\naws iam create-user --user-name MyNewUser\n\n# Attach a policy to the user\naws iam attach-user-policy \\\n  --user-name MyNewUser \\\n  --policy-arn arn:aws:iam::aws:policy/AmazonS3FullAccess",
+              "language": "bash"
+            },
+            "bestPractices": [
+              "Use least privilege principles when creating policies.",
+              "Enable MFA for all user accounts.",
+              "Regularly rotate access keys."
+            ]
+          },
+          {
+            "title": "AWS WAF and Shield",
+            "content": "AWS Web Application Firewall (WAF) helps protect web applications from common exploits, while AWS Shield provides DDoS protection for applications hosted in AWS.",
+            "code": {
+              "example": "# Create a WAF WebACL\naws wafv2 create-web-acl \\\n  --name MyWebACL \\\n  --scope REGIONAL \\\n  --default-action Allow \\\n  --visibility-config SampledRequestsEnabled=true,CloudWatchMetricsEnabled=true,MetricName=MyWebACL",
+              "language": "bash"
+            },
+            "bestPractices": [
+              "Regularly update WAF rules to address new threats.",
+              "Use AWS Shield Advanced for additional DDoS mitigation.",
+              "Enable logging for WAF to monitor blocked requests."
+            ]
+          }
+        ]
+      }
+    }
+  ]
+}
+

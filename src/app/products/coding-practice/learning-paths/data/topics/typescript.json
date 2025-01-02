@@ -1,0 +1,123 @@
+{
+  "id": "typescript",
+  "title": "TypeScript",
+  "description": "Master TypeScript - A typed superset of JavaScript that compiles to plain JavaScript",
+  "subtopics": [
+    {
+      "id": "ts-basics",
+      "title": "TypeScript Fundamentals",
+      "description": "Core concepts and type system basics",
+      "content": {
+        "introduction": "TypeScript extends JavaScript by adding static types. This helps catch errors early in development, improves code documentation, and enhances IDE support. TypeScript is particularly valuable in large-scale JavaScript applications where type safety becomes crucial for maintainability.",
+        "sections": [
+          {
+            "title": "Basic Types",
+            "content": "TypeScript includes all JavaScript types and adds several additional types for enhanced type safety. Understanding these types is fundamental to writing type-safe code.",
+            "code": {
+              "example": "// Basic Types\nlet isDone: boolean = false;\nlet decimal: number = 6;\nlet color: string = \"blue\";\nlet list: number[] = [1, 2, 3];\nlet tuple: [string, number] = [\"hello\", 10];\n\n// Object Types\ninterface Person {\n  name: string;\n  age: number;\n  email?: string; // Optional property\n}\n\nlet person: Person = {\n  name: \"John\",\n  age: 30\n};\n\n// Union Types\ntype Status = \"active\" | \"inactive\" | \"pending\";\nlet userStatus: Status = \"active\";\n\n// Type Assertions\nlet someValue: unknown = \"this is a string\";\nlet strLength: number = (someValue as string).length;",
+              "language": "typescript",
+              "explanation": "This example shows various TypeScript types and their usage, including interfaces, union types, and type assertions."
+            },
+            "keyPoints": [
+              "TypeScript is a superset of JavaScript",
+              "All JavaScript code is valid TypeScript code",
+              "Types are optional but recommended",
+              "TypeScript adds static type checking",
+              "Types are erased during compilation"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "ts-advanced",
+      "title": "Advanced Types",
+      "description": "Advanced type system features and patterns",
+      "content": {
+        "introduction": "TypeScript's advanced type system provides powerful tools for expressing complex type relationships and patterns. These features enable you to create more precise and flexible type definitions.",
+        "sections": [
+          {
+            "title": "Generics",
+            "content": "Generics allow you to write flexible, reusable code that works with multiple types while maintaining type safety. They are particularly useful for collections, functions, and classes that work with various data types.",
+            "code": {
+              "example": "// Generic Function\nfunction identity<T>(arg: T): T {\n  return arg;\n}\n\n// Generic Interface\ninterface Box<T> {\n  value: T;\n}\n\n// Generic Class\nclass Queue<T> {\n  private data: T[] = [];\n\n  push(item: T) {\n    this.data.push(item);\n  }\n\n  pop(): T | undefined {\n    return this.data.shift();\n  }\n}\n\n// Generic Constraints\ninterface Lengthwise {\n  length: number;\n}\n\nfunction loggingIdentity<T extends Lengthwise>(arg: T): T {\n  console.log(arg.length);\n  return arg;\n}\n\n// Usage Examples\nconst numberQueue = new Queue<number>();\nnumberQueue.push(1);\nnumberQueue.push(2);\n\nconst stringBox: Box<string> = { value: \"Hello TypeScript\" };\n\nloggingIdentity(\"Hello\"); // Works\n// loggingIdentity(123); // Error: number doesn't have length",
+              "language": "typescript",
+              "explanation": "This example demonstrates generic types, constraints, and their practical applications."
+            }
+          },
+          {
+            "title": "Utility Types",
+            "content": "TypeScript provides several utility types that help you transform existing types into new types. These are particularly useful for type manipulation and transformation.",
+            "code": {
+              "example": "interface Todo {\n  title: string;\n  description: string;\n  completed: boolean;\n  createdAt: Date;\n}\n\n// Partial - All properties become optional\ntype PartialTodo = Partial<Todo>;\n\n// Pick - Select specific properties\ntype TodoPreview = Pick<Todo, \"title\" | \"completed\">;\n\n// Omit - Remove specific properties\ntype TodoWithoutDates = Omit<Todo, \"createdAt\">;\n\n// Record - Create a type with specified properties\ntype PageInfo = {\n  title: string;\n  url: string;\n};\n\ntype Pages = Record<\"home\" | \"about\" | \"contact\", PageInfo>;\n\n// Readonly - Make all properties readonly\ntype ReadonlyTodo = Readonly<Todo>;\n\n// Usage Examples\nconst updateTodo = (todo: Todo, fieldsToUpdate: Partial<Todo>) => {\n  return { ...todo, ...fieldsToUpdate };\n};\n\nconst todo: Todo = {\n  title: \"Learn TypeScript\",\n  description: \"Study advanced types\",\n  completed: false,\n  createdAt: new Date()\n};\n\nconst updatedTodo = updateTodo(todo, {\n  completed: true\n});",
+              "language": "typescript",
+              "explanation": "This example shows various utility types and their practical applications in real-world scenarios."
+            }
+          }
+        ]
+      }
+    },
+    {
+      "id": "ts-patterns",
+      "title": "TypeScript Patterns",
+      "description": "Common patterns and best practices",
+      "content": {
+        "introduction": "TypeScript patterns help you write more maintainable and type-safe code. These patterns leverage TypeScript's type system to create robust and scalable applications.",
+        "sections": [
+          {
+            "title": "Builder Pattern",
+            "content": "The Builder pattern in TypeScript allows you to construct complex objects step by step. TypeScript's type system helps ensure type safety throughout the building process.",
+            "code": {
+              "example": "class Pizza {\n  constructor(\n    public size: string,\n    public cheese?: boolean,\n    public pepperoni?: boolean,\n    public mushrooms?: boolean\n  ) {}\n}\n\nclass PizzaBuilder {\n  private size: string;\n  private cheese: boolean = false;\n  private pepperoni: boolean = false;\n  private mushrooms: boolean = false;\n\n  constructor(size: string) {\n    this.size = size;\n  }\n\n  addCheese(): PizzaBuilder {\n    this.cheese = true;\n    return this;\n  }\n\n  addPepperoni(): PizzaBuilder {\n    this.pepperoni = true;\n    return this;\n  }\n\n  addMushrooms(): PizzaBuilder {\n    this.mushrooms = true;\n    return this;\n  }\n\n  build(): Pizza {\n    return new Pizza(\n      this.size,\n      this.cheese,\n      this.pepperoni,\n      this.mushrooms\n    );\n  }\n}\n\n// Usage\nconst pizza = new PizzaBuilder(\"large\")\n  .addCheese()\n  .addPepperoni()\n  .build();",
+              "language": "typescript",
+              "explanation": "This example demonstrates the Builder pattern with TypeScript, showing how to create complex objects with a fluent interface."
+            }
+          }
+        ]
+      }
+    }
+  ],
+  "resources": {
+    "documentation": [
+      {
+        "title": "TypeScript Handbook",
+        "url": "https://www.typescriptlang.org/docs/"
+      },
+      {
+        "title": "TypeScript Deep Dive",
+        "url": "https://basarat.gitbook.io/typescript/"
+      }
+    ],
+    "tutorials": [
+      {
+        "title": "TypeScript Playground",
+        "description": "Interactive TypeScript environment",
+        "url": "https://www.typescriptlang.org/play"
+      },
+      {
+        "title": "Type Challenges",
+        "description": "Collection of TypeScript type challenges",
+        "url": "https://github.com/type-challenges/type-challenges"
+      }
+    ],
+    "books": [
+      {
+        "title": "Programming TypeScript",
+        "author": "Boris Cherny",
+        "url": "https://www.oreilly.com/library/view/programming-typescript/9781492037644/"
+      }
+    ],
+    "tools": [
+      {
+        "title": "TSLint",
+        "description": "TypeScript linter",
+        "url": "https://palantir.github.io/tslint/"
+      },
+      {
+        "title": "TypeScript ESLint",
+        "description": "ESLint plugin for TypeScript",
+        "url": "https://github.com/typescript-eslint/typescript-eslint"
+      }
+    ]
+  }
+}

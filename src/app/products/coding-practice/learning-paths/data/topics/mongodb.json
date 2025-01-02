@@ -1,0 +1,148 @@
+{
+  "id": "mongodb",
+  "title": "MongoDB",
+  "description": "Master MongoDB - A powerful NoSQL database for modern applications",
+  "subtopics": [
+    {
+      "id": "mongodb-basics",
+      "title": "MongoDB Fundamentals",
+      "description": "Core concepts and basics of MongoDB",
+      "content": {
+        "introduction": "MongoDB is a document database designed for ease of development and scaling. Unlike traditional relational databases, MongoDB uses a flexible, JSON-like document model, making it ideal for modern application development. Documents can contain sub-documents and arrays, allowing you to represent complex hierarchical relationships.",
+        "sections": [
+          {
+            "title": "CRUD Operations",
+            "content": "MongoDB provides powerful operations for Creating, Reading, Updating, and Deleting documents. Understanding these operations is fundamental to working with MongoDB effectively.",
+            "code": {
+              "example": "// Creating documents\ndb.users.insertOne({\n  name: \"John Doe\",\n  email: \"john@example.com\",\n  age: 30,\n  address: {\n    street: \"123 Main St\",\n    city: \"New York\",\n    country: \"USA\"\n  },\n  interests: [\"programming\", \"reading\", \"music\"]\n});\n\n// Bulk insert\ndb.users.insertMany([\n  {\n    name: \"Jane Smith\",\n    email: \"jane@example.com\",\n    age: 25\n  },\n  {\n    name: \"Bob Johnson\",\n    email: \"bob@example.com\",\n    age: 35\n  }\n]);\n\n// Reading documents\n// Find all users\ndb.users.find({})\n\n// Find with conditions\ndb.users.find({\n  age: { $gt: 25 },\n  interests: \"programming\"\n})\n\n// Projection (select specific fields)\ndb.users.find(\n  { age: { $gt: 25 } },\n  { name: 1, email: 1, _id: 0 }\n)\n\n// Updating documents\n// Update one document\ndb.users.updateOne(\n  { email: \"john@example.com\" },\n  {\n    $set: { age: 31 },\n    $push: { interests: \"photography\" }\n  }\n)\n\n// Update many documents\ndb.users.updateMany(\n  { age: { $lt: 30 } },\n  { $inc: { age: 1 } }\n)\n\n// Deleting documents\n// Delete one document\ndb.users.deleteOne({ email: \"john@example.com\" })\n\n// Delete many documents\ndb.users.deleteMany({ age: { $lt: 25 } })",
+              "language": "javascript",
+              "explanation": "This example demonstrates basic CRUD operations in MongoDB, including different ways to insert, query, update, and delete documents."
+            }
+          },
+          {
+            "title": "Aggregation Pipeline",
+            "content": "The aggregation pipeline is a powerful feature for data processing and analysis in MongoDB. It allows you to transform and combine documents in various ways.",
+            "code": {
+              "example": "// Complex aggregation pipeline example\ndb.orders.aggregate([\n  // Match stage - filter documents\n  {\n    $match: {\n      status: \"completed\",\n      orderDate: {\n        $gte: new Date(\"2024-01-01\"),\n        $lt: new Date(\"2025-01-01\")\n      }\n    }\n  },\n  \n  // Unwind stage - deconstruct array\n  {\n    $unwind: \"$items\"\n  },\n  \n  // Group stage - group and calculate\n  {\n    $group: {\n      _id: {\n        month: { $month: \"$orderDate\" },\n        year: { $year: \"$orderDate\" },\n        category: \"$items.category\"\n      },\n      totalSales: { $sum: \"$items.price\" },\n      averageOrderValue: { $avg: \"$items.price\" },\n      totalItems: { $sum: 1 },\n      uniqueCustomers: { $addToSet: \"$customerId\" }\n    }\n  },\n  \n  // Project stage - reshape output\n  {\n    $project: {\n      _id: 0,\n      month: \"$_id.month\",\n      year: \"$_id.year\",\n      category: \"$_id.category\",\n      totalSales: { $round: [\"$totalSales\", 2] },\n      averageOrderValue: { $round: [\"$averageOrderValue\", 2] },\n      totalItems: 1,\n      uniqueCustomerCount: { $size: \"$uniqueCustomers\" }\n    }\n  },\n  \n  // Sort stage\n  {\n    $sort: {\n      year: 1,\n      month: 1,\n      totalSales: -1\n    }\n  }\n])",
+              "language": "javascript",
+              "explanation": "This example shows a complex aggregation pipeline that processes order data to generate sales analytics by month, year, and category."
+            }
+          }
+        ]
+      }
+    },
+    {
+      "id": "mongodb-indexing",
+      "title": "Indexing and Performance",
+      "description": "Optimizing MongoDB performance through proper indexing",
+      "content": {
+        "introduction": "Indexes are crucial for improving query performance in MongoDB. Understanding how to create and use indexes effectively is essential for building scalable applications.",
+        "sections": [
+          {
+            "title": "Index Types and Creation",
+            "content": "MongoDB supports various types of indexes to optimize different types of queries. Choosing the right index type is crucial for performance.",
+            "code": {
+              "example": "// Single field index\ndb.users.createIndex({ email: 1 })\n\n// Compound index\ndb.users.createIndex(\n  { age: -1, name: 1 },\n  { background: true }\n)\n\n// Text index for full-text search\ndb.articles.createIndex(\n  { title: \"text\", content: \"text\" },\n  {\n    weights: {\n      title: 10,\n      content: 5\n    },\n    default_language: \"english\"\n  }\n)\n\n// Geospatial index\ndb.locations.createIndex(\n  { coordinates: \"2dsphere\" }\n)\n\n// Unique index\ndb.users.createIndex(\n  { email: 1 },\n  { unique: true }\n)\n\n// Partial index\ndb.orders.createIndex(\n  { orderDate: 1 },\n  {\n    partialFilterExpression: {\n      status: \"active\"\n    }\n  }\n)\n\n// TTL index\ndb.sessions.createIndex(\n  { lastModified: 1 },\n  { expireAfterSeconds: 3600 }\n)",
+              "language": "javascript",
+              "explanation": "This example demonstrates various types of indexes in MongoDB and their creation options."
+            },
+            "bestPractices": [
+              "Create indexes to support your queries",
+              "Use compound indexes for multiple field queries",
+              "Consider the impact of indexes on write performance",
+              "Monitor index usage and size",
+              "Use covered queries when possible"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "mongodb-schema-design",
+      "title": "Schema Design Patterns",
+      "description": "Best practices for MongoDB schema design",
+      "content": {
+        "introduction": "Schema design in MongoDB requires different approaches compared to relational databases. Understanding these patterns helps in building efficient and scalable applications.",
+        "sections": [
+          {
+            "title": "Data Modeling Patterns",
+            "content": "MongoDB provides flexible schema design patterns that can be adapted to various use cases. Here are common patterns and their implementations.",
+            "code": {
+              "example": "// Embedded Documents Pattern\n// Use when data is mostly accessed together\ndb.orders.insertOne({\n  _id: ObjectId(),\n  customer: {\n    name: \"John Doe\",\n    email: \"john@example.com\",\n    address: {\n      street: \"123 Main St\",\n      city: \"New York\"\n    }\n  },\n  items: [\n    {\n      product: \"Laptop\",\n      price: 999.99,\n      quantity: 1\n    },\n    {\n      product: \"Mouse\",\n      price: 24.99,\n      quantity: 2\n    }\n  ],\n  total: 1049.97,\n  status: \"pending\"\n})\n\n// References Pattern\n// Use when data is accessed independently\ndb.products.insertOne({\n  _id: ObjectId(),\n  name: \"Laptop\",\n  price: 999.99,\n  specifications: {\n    cpu: \"Intel i7\",\n    ram: \"16GB\",\n    storage: \"512GB SSD\"\n  }\n})\n\ndb.inventory.insertOne({\n  _id: ObjectId(),\n  productId: ObjectId(\"product_id\"),\n  warehouse: \"NYC\",\n  quantity: 100,\n  lastUpdated: new Date()\n})\n\n// Bucket Pattern\n// Use for time-series data\ndb.metrics.insertOne({\n  _id: ObjectId(),\n  deviceId: \"device123\",\n  hour: ISODate(\"2025-01-01T00:00:00Z\"),\n  measurements: [\n    { timestamp: ISODate(\"2025-01-01T00:01:00Z\"), value: 22.5 },\n    { timestamp: ISODate(\"2025-01-01T00:02:00Z\"), value: 23.1 },\n    { timestamp: ISODate(\"2025-01-01T00:03:00Z\"), value: 22.8 }\n  ],\n  metadata: {\n    type: \"temperature\",\n    unit: \"celsius\"\n  }\n})",
+              "language": "javascript",
+              "explanation": "This example shows different schema design patterns including embedded documents, references, and the bucket pattern for time-series data."
+            }
+          }
+        ]
+      }
+    }
+  ],
+  "resources": {
+    "documentation": [
+      {
+        "title": "MongoDB Manual",
+        "url": "https://docs.mongodb.com/manual/"
+      },
+      {
+        "title": "MongoDB University",
+        "url": "https://university.mongodb.com/"
+      }
+    ],
+    "tutorials": [
+      {
+        "title": "MongoDB Atlas Tutorials",
+        "description": "Learn to use MongoDB Atlas cloud service",
+        "url": "https://docs.atlas.mongodb.com/getting-started/"
+      }
+    ],
+    "books": [
+      {
+        "title": "MongoDB: The Definitive Guide",
+        "author": "Shannon Bradshaw",
+        "url": "https://www.oreilly.com/library/view/mongodb-the-definitive/9781491954454/"
+      },
+      {
+        "title": "MongoDB Applied Design Patterns",
+        "author": "Rick Copeland",
+        "url": "https://www.oreilly.com/library/view/mongodb-applied-design/9781449340056/"
+      }
+    ],
+    "tools": [
+      {
+        "title": "MongoDB Compass",
+        "description": "GUI for MongoDB",
+        "url": "https://www.mongodb.com/products/compass"
+      },
+      {
+        "title": "Studio 3T",
+        "description": "Professional IDE for MongoDB",
+        "url": "https://studio3t.com/"
+      },
+      {
+        "title": "Mongoose",
+        "description": "MongoDB object modeling for Node.js",
+        "url": "https://mongoosejs.com/"
+      }
+    ],
+    "bestPractices": [
+      {
+        "title": "MongoDB Performance Best Practices",
+        "url": "https://docs.mongodb.com/manual/core/performance-best-practices/"
+      },
+      {
+        "title": "MongoDB Security Checklist",
+        "url": "https://docs.mongodb.com/manual/administration/security-checklist/"
+      }
+    ],
+    "community": [
+      {
+        "title": "MongoDB Community Forums",
+        "url": "https://community.mongodb.com/"
+      },
+      {
+        "title": "MongoDB Developer Hub",
+        "url": "https://developer.mongodb.com/"
+      }
+    ]
+  }
+}

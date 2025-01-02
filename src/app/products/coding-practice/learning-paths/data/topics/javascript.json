@@ -1,0 +1,162 @@
+{
+  "id": "javascript",
+  "title": "JavaScript",
+  "description": "A comprehensive guide to JavaScript programming from basics to advanced concepts",
+  "subtopics": [
+    {
+      "id": "js-introduction",
+      "title": "Introduction to JavaScript",
+      "description": "Learn the fundamentals of JavaScript programming",
+      "content": {
+        "introduction": "JavaScript is a lightweight, interpreted programming language designed for creating network-centric applications. It is complimentary to and integrated with HTML and is open and cross-platform.",
+        "sections": [
+          {
+            "title": "What is JavaScript?",
+            "content": "JavaScript is a dynamic computer programming language. It is lightweight and most commonly used as a part of web pages, whose implementations allow client-side script to interact with the user and make dynamic pages. It is an interpreted programming language with object-oriented capabilities.",
+            "list": [
+              "Client-side scripting language",
+              "Dynamic typing",
+              "Object-oriented programming support",
+              "Functional programming support",
+              "Prototype-based programming"
+            ]
+          },
+          {
+            "title": "Basic Syntax",
+            "content": "Let's start with basic JavaScript syntax and statements.",
+            "code": {
+              "example": "// Variables and Data Types\nlet name = 'John';           // String\nconst age = 25;             // Number\nlet isStudent = true;       // Boolean\nlet skills = ['HTML', 'CSS']; // Array\nlet person = {              // Object\n  name: 'John',\n  age: 25\n};\n\n// Functions\nfunction greet(name) {\n  return `Hello, ${name}!`;\n}\n\n// Arrow Functions\nconst add = (a, b) => a + b;\n\n// Conditional Statements\nif (age >= 18) {\n  console.log('Adult');\n} else {\n  console.log('Minor');\n}",
+              "language": "javascript",
+              "explanation": "This example shows basic JavaScript syntax including variables, functions, and control structures."
+            }
+          }
+        ]
+      }
+    },
+    {
+      "id": "js-dom",
+      "title": "DOM Manipulation",
+      "description": "Learn how to interact with the Document Object Model",
+      "content": {
+        "introduction": "The Document Object Model (DOM) is a programming interface for HTML and XML documents. It represents the page so that programs can change the document structure, style, and content.",
+        "sections": [
+          {
+            "title": "Selecting Elements",
+            "content": "JavaScript provides several ways to select DOM elements.",
+            "code": {
+              "example": "// Selecting elements\nconst element = document.getElementById('myId');\nconst elements = document.getElementsByClassName('myClass');\nconst elementsByTag = document.getElementsByTagName('div');\n\n// Modern selectors\nconst oneElement = document.querySelector('.myClass');\nconst allElements = document.querySelectorAll('.myClass');\n\n// Modifying elements\nelement.textContent = 'New text';\nelement.innerHTML = '<span>HTML content</span>';\nelement.setAttribute('class', 'newClass');\n\n// Styling\nelement.style.backgroundColor = 'blue';\nelement.classList.add('active');\nelement.classList.remove('inactive');",
+              "language": "javascript",
+              "explanation": "These examples show different ways to select and modify DOM elements."
+            }
+          }
+        ]
+      }
+    },
+    {
+      "id": "js-async",
+      "title": "Asynchronous JavaScript",
+      "description": "Master asynchronous programming in JavaScript",
+      "content": {
+        "introduction": "Asynchronous programming is a crucial part of JavaScript, allowing operations to run in parallel without blocking the main thread.",
+        "sections": [
+          {
+            "title": "Promises",
+            "content": "Promises are objects representing the eventual completion (or failure) of an asynchronous operation.",
+            "code": {
+              "example": "// Creating a Promise\nconst myPromise = new Promise((resolve, reject) => {\n  // Async operation\n  setTimeout(() => {\n    const success = true;\n    if (success) {\n      resolve('Operation completed!');\n    } else {\n      reject('Operation failed!');\n    }\n  }, 1000);\n});\n\n// Using Promises\nmyPromise\n  .then(result => console.log(result))\n  .catch(error => console.error(error));\n\n// Async/Await\nasync function fetchData() {\n  try {\n    const response = await fetch('https://api.example.com/data');\n    const data = await response.json();\n    return data;\n  } catch (error) {\n    console.error('Error:', error);\n  }\n}",
+              "language": "javascript",
+              "explanation": "This example demonstrates Promises and async/await syntax for handling asynchronous operations."
+            }
+          }
+        ]
+      }
+    },
+    {
+      "id": "js-es6",
+      "title": "Modern JavaScript (ES6+)",
+      "description": "Learn modern JavaScript features and syntax",
+      "content": {
+        "introduction": "ECMAScript 2015 (ES6) and later versions introduced many new features that make JavaScript more powerful and expressive.",
+        "sections": [
+          {
+            "title": "ES6 Features",
+            "content": "Key features introduced in ES6 and beyond.",
+            "code": {
+              "example": "// Destructuring\nconst { name, age } = person;\nconst [first, second] = array;\n\n// Spread operator\nconst newArray = [...oldArray];\nconst newObject = { ...oldObject };\n\n// Template literals\nconst greeting = `Hello, ${name}!`;\n\n// Classes\nclass Person {\n  constructor(name, age) {\n    this.name = name;\n    this.age = age;\n  }\n\n  greet() {\n    return `Hello, I'm ${this.name}`;\n  }\n}\n\n// Modules\nexport const helper = () => {};\nimport { helper } from './module';",
+              "language": "javascript",
+              "explanation": "Modern JavaScript features that improve code organization and readability."
+            }
+          }
+        ]
+      }
+    },
+    {
+      "id": "js-advanced",
+      "title": "Advanced Concepts",
+      "description": "Deep dive into advanced JavaScript concepts",
+      "content": {
+        "introduction": "Advanced JavaScript concepts that every developer should understand.",
+        "sections": [
+          {
+            "title": "Closures",
+            "content": "A closure is the combination of a function and the lexical environment within which that function was declared.",
+            "code": {
+              "example": "// Closure example\nfunction createCounter() {\n  let count = 0;\n  return {\n    increment: () => ++count,\n    decrement: () => --count,\n    getCount: () => count\n  };\n}\n\nconst counter = createCounter();\nconsole.log(counter.increment()); // 1\nconsole.log(counter.increment()); // 2\nconsole.log(counter.getCount()); // 2",
+              "language": "javascript",
+              "explanation": "This example demonstrates closures in JavaScript, showing how functions retain access to their outer scope."
+            }
+          },
+          {
+            "title": "Prototypes",
+            "content": "JavaScript uses a prototype-based inheritance model.",
+            "code": {
+              "example": "// Prototypal inheritance\nfunction Animal(name) {\n  this.name = name;\n}\n\nAnimal.prototype.speak = function() {\n  return `${this.name} makes a sound.`;\n};\n\nfunction Dog(name) {\n  Animal.call(this, name);\n}\n\nDog.prototype = Object.create(Animal.prototype);\nDog.prototype.constructor = Dog;\n\nDog.prototype.speak = function() {\n  return `${this.name} barks.`;\n};\n\nconst dog = new Dog('Rex');\nconsole.log(dog.speak()); // 'Rex barks.'",
+              "language": "javascript",
+              "explanation": "Understanding prototype-based inheritance in JavaScript."
+            }
+          }
+        ]
+      }
+    }
+  ],
+  "resources": {
+    "documentation": [
+      {
+        "title": "MDN Web Docs",
+        "url": "https://developer.mozilla.org/en-US/docs/Web/JavaScript"
+      },
+      {
+        "title": "W3Schools JavaScript Tutorial",
+        "url": "https://www.w3schools.com/js/"
+      },
+      {
+        "title": "JavaScript.info",
+        "url": "https://javascript.info/"
+      }
+    ],
+    "books": [
+      {
+        "title": "Eloquent JavaScript",
+        "author": "Marijn Haverbeke",
+        "url": "https://eloquentjavascript.net/"
+      },
+      {
+        "title": "You Don't Know JS",
+        "author": "Kyle Simpson",
+        "url": "https://github.com/getify/You-Dont-Know-JS"
+      }
+    ],
+    "practice": [
+      {
+        "title": "JavaScript30",
+        "description": "30 Day Vanilla JS Coding Challenge",
+        "url": "https://javascript30.com/"
+      },
+      {
+        "title": "CodeWars",
+        "description": "Practice JavaScript with coding challenges",
+        "url": "https://www.codewars.com/"
+      }
+    ]
+  }
+}

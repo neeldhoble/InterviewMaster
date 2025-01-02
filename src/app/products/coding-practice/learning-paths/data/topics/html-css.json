@@ -1,0 +1,249 @@
+{
+  "id": "html-css",
+  "title": "HTML & CSS",
+  "description": "Master modern web development with HTML5 and CSS3, from basics to advanced responsive design",
+  "subtopics": [
+    {
+      "id": "html-fundamentals",
+      "title": "HTML Fundamentals",
+      "description": "Learn the building blocks of web pages with HTML5",
+      "content": {
+        "introduction": "HTML (HyperText Markup Language) is the standard markup language for documents designed to be displayed in a web browser. It defines the structure and layout of a web document. HTML5 is the latest version, introducing semantic elements, multimedia support, and enhanced form controls.",
+        "sections": [
+          {
+            "title": "HTML Document Structure",
+            "content": "Every HTML document follows a basic structure that includes several required elements. The DOCTYPE declaration, html element, head section, and body section form the foundation of any HTML document. Understanding this structure is crucial for web development.",
+            "code": {
+              "example": "<!DOCTYPE html>\n<html lang=\"en\">\n<head>\n    <meta charset=\"UTF-8\">\n    <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">\n    <title>My First Web Page</title>\n</head>\n<body>\n    <header>\n        <h1>Welcome to My Website</h1>\n        <nav>\n            <ul>\n                <li><a href=\"#home\">Home</a></li>\n                <li><a href=\"#about\">About</a></li>\n            </ul>\n        </nav>\n    </header>\n    <main>\n        <article>\n            <h2>About Us</h2>\n            <p>This is a sample paragraph.</p>\n        </article>\n    </main>\n    <footer>\n        <p>&copy; 2025 My Website</p>\n    </footer>\n</body>\n</html>",
+              "language": "html",
+              "explanation": "This example shows a complete HTML5 document structure with semantic elements like header, nav, main, article, and footer."
+            },
+            "details": [
+              "DOCTYPE declaration tells browsers to use HTML5",
+              "html element is the root element of the page",
+              "head contains metadata and document information",
+              "body contains the visible content",
+              "Semantic elements provide meaning to the structure"
+            ]
+          },
+          {
+            "title": "HTML Semantic Elements",
+            "content": "Semantic elements clearly describe their meaning to both the browser and the developer. They provide information about their content, making the HTML more comprehensible. Semantic elements also help with SEO and accessibility.",
+            "list": [
+              "<header> - Container for introductory content or navigation",
+              "<nav> - Container for navigation links",
+              "<main> - Main content of the document",
+              "<article> - Independent, self-contained content",
+              "<section> - Thematic grouping of content",
+              "<aside> - Content indirectly related to main content",
+              "<footer> - Footer for document or section"
+            ],
+            "bestPractices": [
+              "Use semantic elements instead of generic div elements when possible",
+              "Ensure proper nesting of elements",
+              "Include appropriate ARIA labels for accessibility",
+              "Keep the structure clean and logical",
+              "Use comments to explain complex structures"
+            ]
+          },
+          {
+            "title": "HTML Forms and Input Elements",
+            "content": "HTML forms are essential for collecting user input. They can contain various types of input elements, each serving a specific purpose.",
+            "code": {
+              "example": "<form action=\"/submit\" method=\"POST\">\n  <!-- Text inputs -->\n  <div class=\"form-group\">\n    <label for=\"username\">Username:</label>\n    <input type=\"text\" id=\"username\" name=\"username\" required>\n  </div>\n\n  <!-- Email input with validation -->\n  <div class=\"form-group\">\n    <label for=\"email\">Email:</label>\n    <input type=\"email\" id=\"email\" name=\"email\" \n           pattern=\"[a-z0-9._%+-]+@[a-z0-9.-]+\\.[a-z]{2,}$\"\n           required>\n  </div>\n\n  <!-- Select dropdown -->\n  <div class=\"form-group\">\n    <label for=\"country\">Country:</label>\n    <select id=\"country\" name=\"country\">\n      <option value=\"\">Choose a country</option>\n      <option value=\"us\">United States</option>\n      <option value=\"uk\">United Kingdom</option>\n    </select>\n  </div>\n\n  <!-- Radio buttons -->\n  <div class=\"form-group\">\n    <fieldset>\n      <legend>Subscription Type:</legend>\n      <input type=\"radio\" id=\"basic\" name=\"plan\" value=\"basic\">\n      <label for=\"basic\">Basic</label>\n      <input type=\"radio\" id=\"pro\" name=\"plan\" value=\"pro\">\n      <label for=\"pro\">Pro</label>\n    </fieldset>\n  </div>\n\n  <!-- Checkbox -->\n  <div class=\"form-group\">\n    <input type=\"checkbox\" id=\"terms\" name=\"terms\" required>\n    <label for=\"terms\">I agree to the terms</label>\n  </div>\n\n  <!-- Submit button -->\n  <button type=\"submit\">Submit</button>\n</form>",
+              "language": "html",
+              "explanation": "This example demonstrates various form elements and their proper usage with labels and validation."
+            }
+          }
+        ]
+      }
+    },
+    {
+      "id": "css-fundamentals",
+      "title": "CSS Fundamentals",
+      "description": "Master the basics of styling with CSS3",
+      "content": {
+        "introduction": "CSS (Cascading Style Sheets) is a style sheet language used for describing the presentation of a document written in HTML. CSS3 is the latest evolution of the CSS specification, bringing powerful styling capabilities including flexbox, grid, animations, and more.",
+        "sections": [
+          {
+            "title": "CSS Selectors and Specificity",
+            "content": "CSS selectors are patterns used to select and style HTML elements. Understanding selector specificity is crucial for writing maintainable CSS. Specificity determines which styles are applied when multiple rules target the same element.",
+            "code": {
+              "example": "/* Basic Selectors */\n* { margin: 0; padding: 0; }           /* Universal selector */\nh1 { color: blue; }                    /* Element selector */\n.highlight { background: yellow; }      /* Class selector */\n#header { position: fixed; }           /* ID selector */\n\n/* Combinators */\ndiv > p { margin: 10px; }              /* Direct child */\nli + li { border-top: 1px solid #eee; } /* Adjacent sibling */\n\n/* Pseudo-classes */\na:hover { text-decoration: underline; } /* State-based */\nli:first-child { font-weight: bold; }   /* Structural */\n\n/* Attribute Selectors */\ninput[type=\"text\"] { border: 1px solid gray; }",
+              "language": "css",
+              "explanation": "This example demonstrates various CSS selectors and their specificity levels."
+            },
+            "specificity": [
+              "!important declarations (highest)",
+              "Inline styles",
+              "ID selectors (#)",
+              "Class selectors (.), attribute selectors, and pseudo-classes",
+              "Element selectors and pseudo-elements (lowest)"
+            ]
+          },
+          {
+            "title": "CSS Variables (Custom Properties)",
+            "content": "CSS Variables allow you to store values that you can reuse throughout your stylesheets. They help maintain consistency and make it easier to update styles globally.",
+            "code": {
+              "example": ":root {\n  /* Color palette */\n  --primary-color: #fcba28;\n  --secondary-color: #2c3e50;\n  --text-color: #333;\n  --background-color: #f8f9fa;\n\n  /* Typography */\n  --font-heading: 'Poppins', sans-serif;\n  --font-body: 'Inter', sans-serif;\n  --base-size: 16px;\n  --scale-ratio: 1.25;\n\n  /* Spacing */\n  --spacing-unit: 8px;\n  --spacing-small: calc(var(--spacing-unit) * 2);\n  --spacing-medium: calc(var(--spacing-unit) * 3);\n  --spacing-large: calc(var(--spacing-unit) * 5);\n\n  /* Breakpoints */\n  --breakpoint-tablet: 768px;\n  --breakpoint-desktop: 1024px;\n}\n\n/* Using CSS Variables */\n.header {\n  font-family: var(--font-heading);\n  color: var(--primary-color);\n  margin-bottom: var(--spacing-medium);\n}\n\n.card {\n  background-color: var(--background-color);\n  padding: var(--spacing-medium);\n  border-radius: calc(var(--spacing-unit) / 2);\n}\n\n/* Media Queries with Variables */\n@media (min-width: var(--breakpoint-tablet)) {\n  :root {\n    --base-size: 18px;\n  }\n}",
+              "language": "css",
+              "explanation": "This example shows how to define and use CSS Variables for consistent styling across your website."
+            }
+          }
+        ]
+      }
+    },
+    {
+      "id": "css-animations",
+      "title": "CSS Animations and Transitions",
+      "description": "Create engaging animations and smooth transitions",
+      "content": {
+        "introduction": "CSS provides powerful tools for creating animations and transitions. These can enhance user experience by providing visual feedback and making interfaces more engaging.",
+        "sections": [
+          {
+            "title": "CSS Transitions",
+            "content": "Transitions allow you to define the transition between two states of an element. They provide a way to control animation speed when changing CSS properties.",
+            "code": {
+              "example": "/* Basic transition */\n.button {\n  background-color: #fcba28;\n  padding: 10px 20px;\n  border-radius: 4px;\n  transition: all 0.3s ease;\n}\n\n.button:hover {\n  background-color: #e5a722;\n  transform: translateY(-2px);\n  box-shadow: 0 2px 8px rgba(0,0,0,0.2);\n}\n\n/* Multiple transitions */\n.card {\n  transition:\n    transform 0.3s ease-in-out,\n    box-shadow 0.3s ease-in-out,\n    opacity 0.2s linear;\n}\n\n/* Transition with delay */\n.menu-item {\n  opacity: 0;\n  transform: translateX(-20px);\n  transition: all 0.3s ease-out;\n}\n\n.menu-open .menu-item {\n  opacity: 1;\n  transform: translateX(0);\n}\n\n.menu-item:nth-child(1) { transition-delay: 0.1s; }\n.menu-item:nth-child(2) { transition-delay: 0.2s; }\n.menu-item:nth-child(3) { transition-delay: 0.3s; }",
+              "language": "css",
+              "explanation": "This example shows various transition effects and their properties."
+            }
+          },
+          {
+            "title": "CSS Keyframe Animations",
+            "content": "CSS animations allow you to create complex animations with keyframes. You can define multiple states and have fine-grained control over the animation sequence.",
+            "code": {
+              "example": "/* Pulse animation */\n@keyframes pulse {\n  0% {\n    transform: scale(1);\n    opacity: 1;\n  }\n  50% {\n    transform: scale(1.1);\n    opacity: 0.8;\n  }\n  100% {\n    transform: scale(1);\n    opacity: 1;\n  }\n}\n\n.pulse-button {\n  animation: pulse 2s infinite;\n}\n\n/* Loading spinner */\n@keyframes spin {\n  from { transform: rotate(0deg); }\n  to { transform: rotate(360deg); }\n}\n\n.loading-spinner {\n  width: 40px;\n  height: 40px;\n  border: 4px solid #f3f3f3;\n  border-top: 4px solid #fcba28;\n  border-radius: 50%;\n  animation: spin 1s linear infinite;\n}\n\n/* Fade in animation */\n@keyframes fadeIn {\n  from { opacity: 0; transform: translateY(20px); }\n  to { opacity: 1; transform: translateY(0); }\n}\n\n.fade-in {\n  animation: fadeIn 0.5s ease-out forwards;\n}",
+              "language": "css",
+              "explanation": "This example demonstrates various keyframe animations for common use cases."
+            }
+          }
+        ]
+      }
+    }
+  ],
+  "resources": {
+    "documentation": [
+      {
+        "title": "MDN Web Docs - HTML",
+        "url": "https://developer.mozilla.org/en-US/docs/Web/HTML"
+      },
+      {
+        "title": "MDN Web Docs - CSS",
+        "url": "https://developer.mozilla.org/en-US/docs/Web/CSS"
+      },
+      {
+        "title": "W3Schools HTML Tutorial",
+        "url": "https://www.w3schools.com/html/"
+      },
+      {
+        "title": "W3Schools CSS Tutorial",
+        "url": "https://www.w3schools.com/css/"
+      },
+      {
+        "title": "HTML Living Standard",
+        "url": "https://html.spec.whatwg.org/"
+      }
+    ],
+    "tools": [
+      {
+        "title": "Can I Use",
+        "description": "Browser support tables for HTML5, CSS3, etc.",
+        "url": "https://caniuse.com/"
+      },
+      {
+        "title": "CSS Grid Generator",
+        "description": "Visual tool for creating CSS Grid layouts",
+        "url": "https://cssgrid-generator.netlify.app/"
+      },
+      {
+        "title": "Flexbox Froggy",
+        "description": "Game for learning Flexbox",
+        "url": "https://flexboxfroggy.com/"
+      },
+      {
+        "title": "CSS Gradient Generator",
+        "description": "Create beautiful gradients",
+        "url": "https://cssgradient.io/"
+      },
+      {
+        "title": "Animista",
+        "description": "CSS animations on demand",
+        "url": "https://animista.net/"
+      }
+    ],
+    "learning": [
+      {
+        "title": "HTML & CSS Is Hard",
+        "description": "A friendly web development tutorial",
+        "url": "https://www.internetingishard.com/html-and-css/"
+      },
+      {
+        "title": "CSS Tricks",
+        "description": "Tips, Tricks, and Techniques",
+        "url": "https://css-tricks.com/"
+      },
+      {
+        "title": "Smashing Magazine",
+        "description": "In-depth CSS tutorials and articles",
+        "url": "https://www.smashingmagazine.com/category/css/"
+      },
+      {
+        "title": "Grid by Example",
+        "description": "Learn CSS Grid with examples",
+        "url": "https://gridbyexample.com/"
+      }
+    ],
+    "frameworks": [
+      {
+        "title": "Tailwind CSS",
+        "description": "Utility-first CSS framework",
+        "url": "https://tailwindcss.com/"
+      },
+      {
+        "title": "Bootstrap",
+        "description": "Popular CSS framework",
+        "url": "https://getbootstrap.com/"
+      },
+      {
+        "title": "Bulma",
+        "description": "Modern CSS framework",
+        "url": "https://bulma.io/"
+      },
+      {
+        "title": "Foundation",
+        "description": "Responsive front-end framework",
+        "url": "https://get.foundation/"
+      }
+    ],
+    "design": [
+      {
+        "title": "Coolors",
+        "description": "Color schemes generator",
+        "url": "https://coolors.co/"
+      },
+      {
+        "title": "Google Fonts",
+        "description": "Free web fonts",
+        "url": "https://fonts.google.com/"
+      },
+      {
+        "title": "Font Awesome",
+        "description": "Icon library",
+        "url": "https://fontawesome.com/"
+      }
+    ],
+    "accessibility": [
+      {
+        "title": "WAVE Web Accessibility Tool",
+        "description": "Evaluate web accessibility",
+        "url": "https://wave.webaim.org/"
+      },
+      {
+        "title": "A11Y Project",
+        "description": "Community-driven accessibility resources",
+        "url": "https://www.a11yproject.com/"
+      }
+    ]
+  }
+}

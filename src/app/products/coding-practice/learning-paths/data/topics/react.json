@@ -1,0 +1,163 @@
+{
+  "id": "react",
+  "title": "React",
+  "description": "Master modern React development with hooks, patterns, and best practices",
+  "subtopics": [
+    {
+      "id": "react-fundamentals",
+      "title": "React Fundamentals",
+      "description": "Core concepts and principles of React",
+      "content": {
+        "introduction": "React is a JavaScript library for building user interfaces, particularly single-page applications. It's used for handling the view layer and provides an efficient, flexible way to build reusable UI components. React's core philosophy includes component-based architecture, unidirectional data flow, and virtual DOM for optimal rendering performance.",
+        "sections": [
+          {
+            "title": "Understanding Components",
+            "content": "Components are the building blocks of React applications. They encapsulate functionality and UI elements into reusable pieces. React components can be either function components (modern approach) or class components (legacy approach). Function components, combined with hooks, are now the recommended way to write React code.",
+            "code": {
+              "example": "// Function Component\nimport React from 'react';\n\nfunction Welcome({ name, role }) {\n  return (\n    <div className=\"welcome-card\">\n      <h1>Welcome, {name}!</h1>\n      <p>Role: {role}</p>\n    </div>\n  );\n}\n\n// Using the component\nfunction App() {\n  return (\n    <div>\n      <Welcome name=\"John\" role=\"Developer\" />\n      <Welcome name=\"Sarah\" role=\"Designer\" />\n    </div>\n  );\n}",
+              "language": "jsx",
+              "explanation": "This example shows a basic function component with props and its usage. Components should be pure functions with respect to their props."
+            },
+            "keyPoints": [
+              "Components must start with a capital letter",
+              "Props are read-only and should not be modified",
+              "Components can be nested inside other components",
+              "Keep components focused and single-responsibility",
+              "Use TypeScript for better type safety"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "react-hooks",
+      "title": "React Hooks",
+      "description": "Modern state and lifecycle management with hooks",
+      "content": {
+        "introduction": "Hooks are functions that allow you to 'hook into' React state and lifecycle features from function components. They were introduced in React 16.8 to allow you to use state and other React features without writing class components. Hooks follow specific rules and provide a more direct way to work with React's features.",
+        "sections": [
+          {
+            "title": "Essential Hooks",
+            "content": "The most commonly used hooks are useState and useEffect. useState manages local state in function components, while useEffect handles side effects like data fetching, subscriptions, or DOM manipulations.",
+            "code": {
+              "example": "import React, { useState, useEffect } from 'react';\n\nfunction UserProfile({ userId }) {\n  // State management\n  const [user, setUser] = useState(null);\n  const [loading, setLoading] = useState(true);\n  const [error, setError] = useState(null);\n\n  // Side effects\n  useEffect(() => {\n    async function fetchUser() {\n      try {\n        setLoading(true);\n        const response = await fetch(`/api/users/${userId}`);\n        const data = await response.json();\n        setUser(data);\n      } catch (err) {\n        setError(err.message);\n      } finally {\n        setLoading(false);\n      }\n    }\n\n    fetchUser();\n  }, [userId]); // Dependency array\n\n  if (loading) return <div>Loading...</div>;\n  if (error) return <div>Error: {error}</div>;\n\n  return (\n    <div className=\"user-profile\">\n      <h2>{user.name}</h2>\n      <p>Email: {user.email}</p>\n      <p>Role: {user.role}</p>\n    </div>\n  );\n}",
+              "language": "jsx",
+              "explanation": "This example demonstrates useState for state management and useEffect for data fetching, including loading and error states."
+            },
+            "bestPractices": [
+              "Only call hooks at the top level",
+              "Only call hooks from React function components",
+              "Include all dependencies in useEffect dependency array",
+              "Use multiple useEffect hooks for different concerns",
+              "Consider custom hooks for reusable logic"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "react-patterns",
+      "title": "React Patterns",
+      "description": "Common patterns and best practices in React",
+      "content": {
+        "introduction": "React design patterns are reusable solutions to common problems in React applications. Understanding these patterns helps you write more maintainable and scalable code. They include patterns for component composition, state management, and code organization.",
+        "sections": [
+          {
+            "title": "Compound Components",
+            "content": "The Compound Components pattern allows you to create components that work together to form a cohesive unit while maintaining flexibility and encapsulation. This pattern is often used for complex components like forms, tabs, or menus.",
+            "code": {
+              "example": "import React, { createContext, useContext, useState } from 'react';\n\n// Create context\nconst TabContext = createContext();\n\n// Main component\nfunction Tabs({ children, defaultTab }) {\n  const [activeTab, setActiveTab] = useState(defaultTab);\n\n  return (\n    <TabContext.Provider value={{ activeTab, setActiveTab }}>\n      <div className=\"tabs\">{children}</div>\n    </TabContext.Provider>\n  );\n}\n\n// Sub-components\nTabs.List = function TabList({ children }) {\n  return <div className=\"tab-list\">{children}</div>;\n};\n\nTabs.Tab = function Tab({ id, children }) {\n  const { activeTab, setActiveTab } = useContext(TabContext);\n  \n  return (\n    <button\n      className={`tab ${activeTab === id ? 'active' : ''}`}\n      onClick={() => setActiveTab(id)}\n    >\n      {children}\n    </button>\n  );\n};\n\nTabs.Panels = function TabPanels({ children }) {\n  return <div className=\"tab-panels\">{children}</div>;\n};\n\nTabs.Panel = function TabPanel({ id, children }) {\n  const { activeTab } = useContext(TabContext);\n  \n  if (activeTab !== id) return null;\n  return <div className=\"tab-panel\">{children}</div>;\n};\n\n// Usage\nfunction App() {\n  return (\n    <Tabs defaultTab=\"tab1\">\n      <Tabs.List>\n        <Tabs.Tab id=\"tab1\">Profile</Tabs.Tab>\n        <Tabs.Tab id=\"tab2\">Settings</Tabs.Tab>\n      </Tabs.List>\n      <Tabs.Panels>\n        <Tabs.Panel id=\"tab1\">\n          <h2>Profile Content</h2>\n        </Tabs.Panel>\n        <Tabs.Panel id=\"tab2\">\n          <h2>Settings Content</h2>\n        </Tabs.Panel>\n      </Tabs.Panels>\n    </Tabs>\n  );\n}",
+              "language": "jsx",
+              "explanation": "This example shows the Compound Components pattern used to create a flexible tabs component with context for state management."
+            },
+            "advantages": [
+              "Flexible and reusable components",
+              "Clear component relationships",
+              "Encapsulated state management",
+              "Intuitive API for developers",
+              "Maintainable code structure"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "react-performance",
+      "title": "React Performance",
+      "description": "Optimization techniques for React applications",
+      "content": {
+        "introduction": "React performance optimization involves various techniques to ensure your application runs smoothly and efficiently. This includes proper component rendering, state management, and code-splitting strategies.",
+        "sections": [
+          {
+            "title": "Memoization",
+            "content": "Memoization in React helps prevent unnecessary re-renders by caching component output and only re-rendering when dependencies change. React provides useMemo for values and useCallback for functions.",
+            "code": {
+              "example": "import React, { useState, useMemo, useCallback } from 'react';\n\nfunction ExpensiveComponent({ data, onItemClick }) {\n  // Memoize expensive calculations\n  const processedData = useMemo(() => {\n    return data.map(item => ({\n      ...item,\n      fullName: `${item.firstName} ${item.lastName}`,\n      total: item.quantities.reduce((sum, q) => sum + q, 0)\n    }));\n  }, [data]); // Only recalculate if data changes\n\n  // Memoize callback function\n  const handleClick = useCallback((id) => {\n    onItemClick(id);\n  }, [onItemClick]);\n\n  return (\n    <div>\n      {processedData.map(item => (\n        <div key={item.id} onClick={() => handleClick(item.id)}>\n          <h3>{item.fullName}</h3>\n          <p>Total: {item.total}</p>\n        </div>\n      ))}\n    </div>\n  );\n}\n\n// Memoize entire component\nconst MemoizedExpensiveComponent = React.memo(ExpensiveComponent);\n\n// Usage\nfunction App() {\n  const [data, setData] = useState(initialData);\n  \n  const handleItemClick = useCallback((id) => {\n    console.log(`Item clicked: ${id}`);\n  }, []);\n\n  return (\n    <MemoizedExpensiveComponent \n      data={data}\n      onItemClick={handleItemClick}\n    />\n  );\n}",
+              "language": "jsx",
+              "explanation": "This example demonstrates various memoization techniques in React for optimizing performance."
+            },
+            "optimizationTips": [
+              "Use React.memo for pure functional components",
+              "Implement useMemo for expensive calculations",
+              "Use useCallback for function props",
+              "Keep dependency arrays minimal and specific",
+              "Profile performance before optimizing"
+            ]
+          }
+        ]
+      }
+    }
+  ],
+  "resources": {
+    "documentation": [
+      {
+        "title": "React Official Documentation",
+        "url": "https://reactjs.org/docs/getting-started.html"
+      },
+      {
+        "title": "React Hooks Documentation",
+        "url": "https://reactjs.org/docs/hooks-intro.html"
+      },
+      {
+        "title": "Create React App Documentation",
+        "url": "https://create-react-app.dev/"
+      }
+    ],
+    "tutorials": [
+      {
+        "title": "React Developer Tools",
+        "description": "Browser extension for debugging React applications",
+        "url": "https://chrome.google.com/webstore/detail/react-developer-tools/fmkadmapgofadopljbjfkapdkoienihi"
+      },
+      {
+        "title": "React TypeScript Cheatsheet",
+        "description": "Comprehensive guide for using TypeScript with React",
+        "url": "https://react-typescript-cheatsheet.netlify.app/"
+      }
+    ],
+    "books": [
+      {
+        "title": "React Patterns",
+        "author": "Kent C. Dodds",
+        "url": "https://kentcdodds.com/blog/patterns"
+      },
+      {
+        "title": "Pure React",
+        "author": "Dave Ceddia",
+        "url": "https://daveceddia.com/pure-react/"
+      }
+    ],
+    "courses": [
+      {
+        "title": "Epic React",
+        "description": "Complete React training course",
+        "url": "https://epicreact.dev/"
+      },
+      {
+        "title": "React Testing Library Course",
+        "description": "Learn to test React applications",
+        "url": "https://testingjavascript.com/"
+      }
+    ]
+  }
+}

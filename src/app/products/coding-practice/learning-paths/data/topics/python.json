@@ -1,0 +1,133 @@
+{
+  "id": "python",
+  "title": "Python",
+  "description": "Master Python programming - from basics to advanced concepts",
+  "subtopics": [
+    {
+      "id": "python-basics",
+      "title": "Python Fundamentals",
+      "description": "Core concepts and basics of Python programming",
+      "content": {
+        "introduction": "Python is a high-level, interpreted programming language known for its simplicity and readability. It supports multiple programming paradigms, including procedural, object-oriented, and functional programming.",
+        "sections": [
+          {
+            "title": "Data Structures",
+            "content": "Python provides several built-in data structures that are fundamental to programming. Understanding these structures and their operations is crucial.",
+            "code": {
+              "example": "# Lists - mutable sequences\nfruits = ['apple', 'banana', 'orange']\nfruits.append('grape')  # Add element\nfruits.extend(['mango', 'kiwi'])  # Add multiple elements\nfruits.pop()  # Remove and return last element\nfruits.sort(reverse=True)  # Sort in-place\n\n# List comprehension\nsquares = [x**2 for x in range(10) if x % 2 == 0]\n\n# Dictionaries - key-value pairs\nuser = {\n    'name': 'John Doe',\n    'age': 30,\n    'email': 'john@example.com'\n}\n\n# Dictionary comprehension\nsquare_dict = {x: x**2 for x in range(5)}\n\n# Sets - unique elements\nunique_numbers = {1, 2, 3, 3, 4, 4, 5}  # {1, 2, 3, 4, 5}\nmore_numbers = {4, 5, 6, 7}\n\n# Set operations\nunion = unique_numbers | more_numbers\nintersection = unique_numbers & more_numbers\ndifference = unique_numbers - more_numbers\n\n# Tuples - immutable sequences\npoint = (10, 20)\nx, y = point  # Tuple unpacking\n\n# Advanced unpacking\nfirst, *rest, last = [1, 2, 3, 4, 5]\n\n# Collections module\nfrom collections import (\n    Counter, defaultdict, OrderedDict, namedtuple, deque\n)\n\n# Counter\nword_counts = Counter(['apple', 'banana', 'apple', 'orange'])\n\n# defaultdict\ngrades = defaultdict(list)\ngrades['John'].append(85)  # No KeyError if 'John' doesn't exist\n\n# namedtuple\nPerson = namedtuple('Person', ['name', 'age', 'city'])\nperson = Person('John', 30, 'New York')\n\n# deque (double-ended queue)\nqueue = deque(['a', 'b', 'c'])\nqueue.appendleft('d')\nqueue.rotate(1)",
+              "language": "python",
+              "explanation": "This example demonstrates various Python data structures and their operations, including advanced features from the collections module."
+            }
+          },
+          {
+            "title": "Functions and Decorators",
+            "content": "Python functions are first-class objects, enabling powerful functional programming patterns. Decorators provide a way to modify function behavior.",
+            "code": {
+              "example": "from functools import wraps\nimport time\nimport logging\n\n# Function with type hints and default values\ndef greet(name: str, greeting: str = 'Hello') -> str:\n    return f'{greeting}, {name}!'\n\n# *args and **kwargs\ndef flexible_function(*args, **kwargs):\n    print(f'Positional args: {args}')\n    print(f'Keyword args: {kwargs}')\n\n# Decorator for timing functions\ndef timer(func):\n    @wraps(func)\n    def wrapper(*args, **kwargs):\n        start = time.perf_counter()\n        result = func(*args, **kwargs)\n        end = time.perf_counter()\n        print(f'{func.__name__} took {end - start:.6f} seconds')\n        return result\n    return wrapper\n\n# Decorator with parameters\ndef retry(max_attempts: int = 3, delay: float = 1.0):\n    def decorator(func):\n        @wraps(func)\n        def wrapper(*args, **kwargs):\n            attempts = 0\n            while attempts < max_attempts:\n                try:\n                    return func(*args, **kwargs)\n                except Exception as e:\n                    attempts += 1\n                    if attempts == max_attempts:\n                        raise e\n                    time.sleep(delay)\n        return wrapper\n    return decorator\n\n# Class decorator\ndef singleton(cls):\n    instances = {}\n    def get_instance(*args, **kwargs):\n        if cls not in instances:\n            instances[cls] = cls(*args, **kwargs)\n        return instances[cls]\n    return get_instance\n\n# Using the decorators\n@timer\n@retry(max_attempts=3)\ndef fetch_data(url: str) -> dict:\n    # Simulate API call\n    time.sleep(0.1)\n    return {'data': 'success'}\n\n# Context manager using class\nclass Timer:\n    def __enter__(self):\n        self.start = time.perf_counter()\n        return self\n\n    def __exit__(self, *args):\n        self.end = time.perf_counter()\n        self.elapsed = self.end - self.start\n\n# Context manager using decorator\nfrom contextlib import contextmanager\n\n@contextmanager\ndef timer():\n    start = time.perf_counter()\n    yield\n    end = time.perf_counter()\n    print(f'Elapsed time: {end - start:.6f} seconds')\n\n# Using context managers\nwith Timer() as t:\n    time.sleep(1)\nprint(f'Elapsed: {t.elapsed:.6f} seconds')\n\nwith timer():\n    time.sleep(1)",
+              "language": "python",
+              "explanation": "This example shows advanced function concepts including decorators, context managers, and type hints."
+            }
+          }
+        ]
+      }
+    },
+    {
+      "id": "python-advanced",
+      "title": "Advanced Python",
+      "description": "Advanced Python concepts and patterns",
+      "content": {
+        "introduction": "Advanced Python features enable writing more efficient, maintainable, and elegant code. Understanding these concepts is crucial for professional Python development.",
+        "sections": [
+          {
+            "title": "Generators and Iterators",
+            "content": "Generators and iterators provide memory-efficient ways to work with sequences of data.",
+            "code": {
+              "example": "from typing import Iterator, Generator\n\n# Generator function\ndef fibonacci(n: int) -> Generator[int, None, None]:\n    a, b = 0, 1\n    for _ in range(n):\n        yield a\n        a, b = b, a + b\n\n# Generator expression\nsquares = (x**2 for x in range(1000000))\n\n# Custom iterator class\nclass CountDown:\n    def __init__(self, start: int):\n        self.start = start\n\n    def __iter__(self) -> 'CountDown':\n        return self\n\n    def __next__(self) -> int:\n        if self.start <= 0:\n            raise StopIteration\n        self.start -= 1\n        return self.start + 1\n\n# Infinite generator\ndef infinite_sequence() -> Generator[int, None, None]:\n    num = 0\n    while True:\n        yield num\n        num += 1\n\n# Generator pipeline\ndef read_data() -> Generator[str, None, None]:\n    for line in ['data1', 'data2', 'data3']:\n        yield line\n\ndef process_data(data: Iterator[str]) -> Generator[str, None, None]:\n    for item in data:\n        yield item.upper()\n\ndef filter_data(data: Iterator[str]) -> Generator[str, None, None]:\n    for item in data:\n        if len(item) > 4:\n            yield item\n\n# Using the pipeline\ndata = read_data()\nprocessed = process_data(data)\nfiltered = filter_data(processed)\n\n# Generator with send\ndef averager() -> Generator[float, float, None]:\n    total = 0.0\n    count = 0\n    average = 0.0\n    while True:\n        term = yield average\n        total += term\n        count += 1\n        average = total/count\n\n# Using send\navg = averager()\nnext(avg)  # Prime the generator\nprint(avg.send(10))  # 10.0\nprint(avg.send(20))  # 15.0\nprint(avg.send(30))  # 20.0",
+              "language": "python",
+              "explanation": "This example demonstrates various aspects of generators and iterators, including generator expressions, pipelines, and the send method."
+            }
+          },
+          {
+            "title": "Metaclasses and Class Decorators",
+            "content": "Metaclasses and class decorators provide powerful ways to customize class creation and behavior.",
+            "code": {
+              "example": "from typing import Type, Dict, Any\n\n# Metaclass example\nclass Singleton(type):\n    _instances: Dict[Type, Any] = {}\n    \n    def __call__(cls, *args, **kwargs):\n        if cls not in cls._instances:\n            cls._instances[cls] = super().__call__(*args, **kwargs)\n        return cls._instances[cls]\n\nclass DatabaseConnection(metaclass=Singleton):\n    def __init__(self):\n        self.connected = False\n\n    def connect(self):\n        if not self.connected:\n            print('Connecting to database...')\n            self.connected = True\n\n# Abstract base class with metaclass\nfrom abc import ABCMeta, abstractmethod\n\nclass Animal(metaclass=ABCMeta):\n    @abstractmethod\n    def speak(self) -> str:\n        pass\n\n    @classmethod\n    def __subclasshook__(cls, subclass):\n        return (hasattr(subclass, 'speak') and \n                callable(subclass.speak))\n\n# Metaclass for attribute validation\nclass ValidateAttributes(type):\n    def __new__(cls, name, bases, attrs):\n        for key, value in attrs.items():\n            if callable(value):\n                attrs[key] = cls.validate_arguments(value)\n        return super().__new__(cls, name, bases, attrs)\n\n    @staticmethod\n    def validate_arguments(func):\n        def wrapper(*args, **kwargs):\n            # Perform validation\n            return func(*args, **kwargs)\n        return wrapper\n\n# Class decorator for logging\ndef log_methods(cls):\n    import logging\n    logging.basicConfig(level=logging.INFO)\n    \n    for name, method in vars(cls).items():\n        if callable(method):\n            setattr(cls, name, log_method(method))\n    return cls\n\ndef log_method(method):\n    def wrapper(*args, **kwargs):\n        logging.info(f'Calling {method.__name__}')\n        result = method(*args, **kwargs)\n        logging.info(f'{method.__name__} completed')\n        return result\n    return wrapper\n\n# Using the metaclass and decorator\n@log_methods\nclass User(metaclass=ValidateAttributes):\n    def __init__(self, name: str):\n        self.name = name\n\n    def greet(self) -> str:\n        return f'Hello, {self.name}!'\n\n# Metaclass for interface definition\nclass Interface(ABCMeta):\n    def __new__(cls, name, bases, attrs):\n        for key, value in attrs.items():\n            if getattr(value, '__isabstractmethod__', False):\n                attrs[key] = abstractmethod(value)\n        return super().__new__(cls, name, bases, attrs)\n\nclass Printable(metaclass=Interface):\n    def print(self) -> None:\n        pass\n\nclass Document(Printable):\n    def print(self) -> None:\n        print('Printing document...')",
+              "language": "python",
+              "explanation": "This example shows advanced uses of metaclasses and class decorators for implementing patterns like singletons, abstract base classes, and method logging."
+            }
+          }
+        ]
+      }
+    },
+    {
+      "id": "python-async",
+      "title": "Asynchronous Programming",
+      "description": "Asynchronous programming with Python",
+      "content": {
+        "introduction": "Asynchronous programming in Python allows you to write concurrent code using coroutines, event loops, and tasks.",
+        "sections": [
+          {
+            "title": "Async/Await",
+            "content": "The async/await syntax provides a way to write asynchronous code that looks and behaves like synchronous code.",
+            "code": {
+              "example": "import asyncio\nfrom typing import List, Dict\nimport aiohttp\nimport time\n\n# Basic coroutine\nasync def hello(name: str) -> str:\n    await asyncio.sleep(1)  # Simulate I/O\n    return f'Hello, {name}!'\n\n# Concurrent execution\nasync def main():\n    results = await asyncio.gather(\n        hello('Alice'),\n        hello('Bob'),\n        hello('Charlie')\n    )\n    print(results)\n\n# HTTP requests with aiohttp\nasync def fetch_url(session: aiohttp.ClientSession, url: str) -> Dict:\n    async with session.get(url) as response:\n        return await response.json()\n\nasync def fetch_all_urls(urls: List[str]) -> List[Dict]:\n    async with aiohttp.ClientSession() as session:\n        tasks = [fetch_url(session, url) for url in urls]\n        return await asyncio.gather(*tasks)\n\n# Custom async context manager\nclass AsyncTimer:\n    def __init__(self, name: str):\n        self.name = name\n\n    async def __aenter__(self):\n        self.start = time.perf_counter()\n        return self\n\n    async def __aexit__(self, exc_type, exc_val, exc_tb):\n        end = time.perf_counter()\n        print(f'{self.name} took {end - self.start:.2f} seconds')\n\n# Async generator\nasync def async_range(start: int, stop: int):\n    for i in range(start, stop):\n        await asyncio.sleep(0.1)\n        yield i\n\n# Using async generator\nasync def print_range():\n    async for i in async_range(0, 5):\n        print(i)\n\n# Async iterator\nclass AsyncCounter:\n    def __init__(self, stop: int):\n        self.current = 0\n        self.stop = stop\n\n    def __aiter__(self):\n        return self\n\n    async def __anext__(self):\n        if self.current >= self.stop:\n            raise StopAsyncIteration\n        await asyncio.sleep(0.1)\n        self.current += 1\n        return self.current - 1\n\n# Example usage\nasync def main():\n    # Using async context manager\n    async with AsyncTimer('Fetch URLs'):\n        urls = [\n            'https://api.example.com/data1',\n            'https://api.example.com/data2',\n            'https://api.example.com/data3'\n        ]\n        results = await fetch_all_urls(urls)\n\n    # Using async generator\n    async for num in async_range(0, 3):\n        print(num)\n\n    # Using async iterator\n    async for count in AsyncCounter(3):\n        print(count)\n\n# Running the event loop\nif __name__ == '__main__':\n    asyncio.run(main())",
+              "language": "python",
+              "explanation": "This example demonstrates various aspects of asynchronous programming in Python, including coroutines, async context managers, and async iterators."
+            }
+          }
+        ]
+      }
+    }
+  ],
+  "resources": {
+    "documentation": [
+      {
+        "title": "Python Documentation",
+        "url": "https://docs.python.org/3/"
+      },
+      {
+        "title": "Python Enhancement Proposals",
+        "url": "https://www.python.org/dev/peps/"
+      }
+    ],
+    "tutorials": [
+      {
+        "title": "Real Python Tutorials",
+        "url": "https://realpython.com/"
+      },
+      {
+        "title": "Python Design Patterns",
+        "url": "https://python-patterns.guide/"
+      }
+    ],
+    "books": [
+      {
+        "title": "Fluent Python",
+        "author": "Luciano Ramalho",
+        "url": "https://www.oreilly.com/library/view/fluent-python-2nd/9781492056348/"
+      },
+      {
+        "title": "Python Cookbook",
+        "author": "David Beazley",
+        "url": "https://www.oreilly.com/library/view/python-cookbook-3rd/9781449357337/"
+      }
+    ],
+    "tools": [
+      {
+        "title": "PyCharm",
+        "description": "Professional Python IDE",
+        "url": "https://www.jetbrains.com/pycharm/"
+      },
+      {
+        "title": "Black",
+        "description": "The uncompromising code formatter",
+        "url": "https://github.com/psf/black"
+      },
+      {
+        "title": "mypy",
+        "description": "Static type checker",
+        "url": "http://mypy-lang.org/"
+      }
+    ]
+  }
+}

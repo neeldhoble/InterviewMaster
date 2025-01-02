@@ -1,0 +1,135 @@
+{
+  "id": "nodejs",
+  "title": "Node.js",
+  "description": "Master server-side JavaScript with Node.js - from fundamentals to advanced concepts",
+  "subtopics": [
+    {
+      "id": "nodejs-basics",
+      "title": "Node.js Fundamentals",
+      "description": "Core concepts and basics of Node.js",
+      "content": {
+        "introduction": "Node.js is a JavaScript runtime built on Chrome's V8 JavaScript engine. It enables building scalable network applications using an event-driven, non-blocking I/O model. This makes it lightweight and efficient, perfect for data-intensive real-time applications.",
+        "sections": [
+          {
+            "title": "Event Loop",
+            "content": "The event loop is the core of Node.js's non-blocking I/O model. It allows Node.js to perform non-blocking operations despite JavaScript being single-threaded. Understanding the event loop is crucial for writing efficient Node.js applications.",
+            "code": {
+              "example": "console.log('Starting');\n\n// setTimeout (Timer phase)\nsetTimeout(() => {\n  console.log('2 seconds passed');\n}, 2000);\n\n// setImmediate (Check phase)\nsetImmediate(() => {\n  console.log('Immediate');\n});\n\n// process.nextTick (Microtask)\nprocess.nextTick(() => {\n  console.log('Next tick');\n});\n\n// Promise (Microtask)\nPromise.resolve().then(() => {\n  console.log('Promise resolved');\n});\n\nconsole.log('Ending');\n\n/* Output:\nStarting\nEnding\nNext tick\nPromise resolved\nImmediate\n2 seconds passed\n*/",
+              "language": "javascript",
+              "explanation": "This example demonstrates the different phases of the event loop and their execution order."
+            },
+            "keyPoints": [
+              "Event loop phases: timers, pending callbacks, idle/prepare, poll, check, close callbacks",
+              "Microtasks (process.nextTick, Promises) run between phases",
+              "Understanding event loop is crucial for performance",
+              "Avoid blocking the event loop with long-running operations",
+              "Use async/await for cleaner asynchronous code"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "nodejs-streams",
+      "title": "Streams and Buffers",
+      "description": "Working with data streams and buffers",
+      "content": {
+        "introduction": "Streams are one of the fundamental concepts in Node.js. They provide a way to handle reading/writing data chunk by chunk, without loading the entire data into memory. This makes them crucial for handling large amounts of data efficiently.",
+        "sections": [
+          {
+            "title": "Working with Streams",
+            "content": "Node.js provides several types of streams: Readable, Writable, Duplex, and Transform. Understanding how to use streams effectively is crucial for building efficient applications.",
+            "code": {
+              "example": "const fs = require('fs');\nconst zlib = require('zlib');\n\n// Reading and compressing a file using streams\nconst readStream = fs.createReadStream('input.txt');\nconst writeStream = fs.createWriteStream('output.txt.gz');\nconst gzip = zlib.createGzip();\n\n// Pipe the streams together\nreadStream\n  .pipe(gzip)\n  .pipe(writeStream)\n  .on('finish', () => console.log('File compressed'));\n\n// Custom Transform stream\nconst { Transform } = require('stream');\n\nclass UppercaseTransform extends Transform {\n  _transform(chunk, encoding, callback) {\n    callback(null, chunk.toString().toUpperCase());\n  }\n}\n\n// Usage of custom transform stream\nprocess.stdin\n  .pipe(new UppercaseTransform())\n  .pipe(process.stdout);",
+              "language": "javascript",
+              "explanation": "This example shows how to work with different types of streams and create custom transform streams."
+            }
+          }
+        ]
+      }
+    },
+    {
+      "id": "nodejs-express",
+      "title": "Express.js Framework",
+      "description": "Building web applications with Express.js",
+      "content": {
+        "introduction": "Express.js is a minimal and flexible Node.js web application framework that provides a robust set of features for web and mobile applications. It's the de facto standard server framework for Node.js.",
+        "sections": [
+          {
+            "title": "REST API Development",
+            "content": "Express makes it easy to create RESTful web services. Here's an example of a complete REST API with middleware, error handling, and route organization.",
+            "code": {
+              "example": "const express = require('express');\nconst app = express();\n\n// Middleware\napp.use(express.json());\n\n// Error handling middleware\napp.use((err, req, res, next) => {\n  console.error(err.stack);\n  res.status(500).json({ error: 'Something broke!' });\n});\n\n// Route middleware\nconst authenticate = (req, res, next) => {\n  const authHeader = req.headers.authorization;\n  if (!authHeader) {\n    return res.status(401).json({ error: 'No token provided' });\n  }\n  // Verify token here\n  next();\n};\n\n// Routes\napp.get('/api/users', authenticate, async (req, res) => {\n  try {\n    const users = await User.find();\n    res.json(users);\n  } catch (error) {\n    next(error);\n  }\n});\n\napp.post('/api/users', authenticate, async (req, res) => {\n  try {\n    const user = new User(req.body);\n    await user.save();\n    res.status(201).json(user);\n  } catch (error) {\n    next(error);\n  }\n});\n\n// Start server\napp.listen(3000, () => {\n  console.log('Server running on port 3000');\n});",
+              "language": "javascript",
+              "explanation": "This example demonstrates a complete Express.js REST API setup with middleware, authentication, and error handling."
+            }
+          }
+        ]
+      }
+    },
+    {
+      "id": "nodejs-security",
+      "title": "Security Best Practices",
+      "description": "Securing Node.js applications",
+      "content": {
+        "introduction": "Security is crucial for Node.js applications. Understanding common vulnerabilities and how to prevent them is essential for building secure applications.",
+        "sections": [
+          {
+            "title": "Security Measures",
+            "content": "Implementing security measures in Node.js applications involves various aspects, from input validation to dependency management.",
+            "code": {
+              "example": "const express = require('express');\nconst helmet = require('helmet');\nconst rateLimit = require('express-rate-limit');\nconst xss = require('xss-clean');\nconst hpp = require('hpp');\n\nconst app = express();\n\n// Security middleware\napp.use(helmet()); // Set security HTTP headers\n\n// Rate limiting\nconst limiter = rateLimit({\n  max: 100, // Limit each IP to 100 requests per windowMs\n  windowMs: 60 * 60 * 1000, // 1 hour\n  message: 'Too many requests from this IP'\n});\napp.use('/api', limiter);\n\n// Data sanitization against XSS\napp.use(xss());\n\n// Prevent parameter pollution\napp.use(hpp());\n\n// Secure cookies\napp.use(session({\n  secret: process.env.SESSION_SECRET,\n  cookie: {\n    secure: process.env.NODE_ENV === 'production',\n    httpOnly: true,\n    expires: new Date(Date.now() + 24 * 60 * 60 * 1000)\n  }\n}));\n\n// Input validation\nconst validateUser = (req, res, next) => {\n  const schema = Joi.object({\n    name: Joi.string().min(3).required(),\n    email: Joi.string().email().required(),\n    password: Joi.string().pattern(new RegExp('^[a-zA-Z0-9]{6,30}$'))\n  });\n\n  const { error } = schema.validate(req.body);\n  if (error) {\n    return res.status(400).json({ error: error.details[0].message });\n  }\n  next();\n};",
+              "language": "javascript",
+              "explanation": "This example shows various security measures including rate limiting, XSS protection, and input validation."
+            },
+            "bestPractices": [
+              "Always use HTTPS in production",
+              "Implement proper authentication and authorization",
+              "Validate and sanitize all input",
+              "Keep dependencies updated",
+              "Use security headers"
+            ]
+          }
+        ]
+      }
+    }
+  ],
+  "resources": {
+    "documentation": [
+      {
+        "title": "Node.js Documentation",
+        "url": "https://nodejs.org/docs/latest/"
+      },
+      {
+        "title": "Express.js Documentation",
+        "url": "https://expressjs.com/"
+      }
+    ],
+    "tutorials": [
+      {
+        "title": "Node.js Best Practices",
+        "description": "A guide for Node.js best practices",
+        "url": "https://github.com/goldbergyoni/nodebestpractices"
+      }
+    ],
+    "books": [
+      {
+        "title": "Node.js Design Patterns",
+        "author": "Mario Casciaro",
+        "url": "https://www.packtpub.com/product/nodejs-design-patterns-third-edition/9781839214110"
+      }
+    ],
+    "tools": [
+      {
+        "title": "PM2",
+        "description": "Process Manager for Node.js",
+        "url": "https://pm2.keymetrics.io/"
+      },
+      {
+        "title": "Node Security Platform",
+        "description": "Security platform for Node.js",
+        "url": "https://www.npmjs.com/package/nsp"
+      }
+    ]
+  }
+}

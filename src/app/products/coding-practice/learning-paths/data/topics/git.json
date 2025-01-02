@@ -1,0 +1,25 @@
+{
+  "id": "git",
+  "title": "Git",
+  "description": "Version Control with Git",
+  "subtopics": [
+    {
+      "id": "git-basics",
+      "title": "Git Fundamentals",
+      "description": "Essential Git commands and workflows",
+      "content": {
+        "introduction": "Git is a distributed version control system...",
+        "sections": [
+          {
+            "title": "Basic Commands",
+            "content": "Essential Git commands for daily use...",
+            "code": {
+              "example": "# Initialize repository\ngit init\n\n# Add files\ngit add .\n\n# Commit changes\ngit commit -m \"Initial commit\"\n\n# Create and switch branch\ngit checkout -b feature/new-feature\n\n# Merge branches\ngit checkout main\ngit merge feature/new-feature",
+              "language": "bash"
+            }
+          }
+        ]
+      }
+    }
+  ]
+}

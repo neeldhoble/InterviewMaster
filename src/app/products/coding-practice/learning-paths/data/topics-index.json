@@ -1,0 +1,190 @@
+{
+  "topics": [
+    {
+      "id": "html-css",
+      "title": "HTML/CSS",
+      "description": "Web Development Fundamentals",
+      "icon": "CodeIcon",
+      "color": "orange",
+      "category": "Frontend",
+      "jsonPath": "/data/topics/html-css.json"
+    },
+    {
+      "id": "javascript",
+      "title": "JavaScript",
+      "description": "Modern JavaScript Programming",
+      "icon": "JavaScriptIcon",
+      "color": "yellow",
+      "category": "Frontend",
+      "jsonPath": "/data/topics/javascript.json"
+    },
+    {
+      "id": "typescript",
+      "title": "TypeScript",
+      "description": "Typed JavaScript Development",
+      "icon": "TypeScriptIcon",
+      "color": "blue",
+      "category": "Frontend",
+      "jsonPath": "/data/topics/typescript.json"
+    },
+    {
+      "id": "react",
+      "title": "React",
+      "description": "Modern React Development",
+      "icon": "ReactIcon",
+      "color": "cyan",
+      "category": "Frontend",
+      "jsonPath": "/data/topics/react.json"
+    },
+    {
+      "id": "nextjs",
+      "title": "Next.js",
+      "description": "Full-stack React Framework",
+      "icon": "NextJSIcon",
+      "color": "black",
+      "category": "Frontend",
+      "jsonPath": "/data/topics/nextjs.json"
+    },
+    {
+      "id": "nodejs",
+      "title": "Node.js",
+      "description": "Server-side JavaScript",
+      "icon": "NodeIcon",
+      "color": "green",
+      "category": "Backend",
+      "jsonPath": "/data/topics/nodejs.json"
+    },
+    {
+      "id": "python",
+      "title": "Python",
+      "description": "Python Programming",
+      "icon": "PythonIcon",
+      "color": "blue",
+      "category": "Backend",
+      "jsonPath": "/data/topics/python.json"
+    },
+    {
+      "id": "mongodb",
+      "title": "MongoDB",
+      "description": "NoSQL Database",
+      "icon": "DatabaseIcon",
+      "color": "green",
+      "category": "Database",
+      "jsonPath": "/data/topics/mongodb.json"
+    },
+    {
+      "id": "sql",
+      "title": "SQL",
+      "description": "Relational Databases",
+      "icon": "DatabaseIcon",
+      "color": "blue",
+      "category": "Database",
+      "jsonPath": "/data/topics/sql.json"
+    },
+    {
+      "id": "docker",
+      "title": "Docker",
+      "description": "Container Platform",
+      "icon": "DockerIcon",
+      "color": "blue",
+      "category": "DevOps",
+      "jsonPath": "/data/topics/docker.json"
+    },
+    {
+      "id": "aws",
+      "title": "AWS",
+      "description": "Cloud Computing Platform",
+      "icon": "CloudIcon",
+      "color": "orange",
+      "category": "Cloud",
+      "jsonPath": "/data/topics/aws.json"
+    },
+    {
+      "id": "git",
+      "title": "Git",
+      "description": "Version Control System",
+      "icon": "GitIcon",
+      "color": "red",
+      "category": "DevOps",
+      "jsonPath": "/data/topics/git.json"
+    },
+    {
+      "id": "algorithms",
+      "title": "Algorithms",
+      "description": "Data Structures & Algorithms",
+      "icon": "CodeIcon",
+      "color": "purple",
+      "category": "Computer Science",
+      "jsonPath": "/data/topics/algorithms.json"
+    },
+    {
+      "id": "system-design",
+      "title": "System Design",
+      "description": "Scalable System Architecture",
+      "icon": "ArchitectureIcon",
+      "color": "indigo",
+      "category": "Computer Science",
+      "jsonPath": "/data/topics/system-design.json"
+    },
+    {
+      "id": "cybersecurity",
+      "title": "Cybersecurity",
+      "description": "Security Best Practices",
+      "icon": "ShieldIcon",
+      "color": "red",
+      "category": "Security",
+      "jsonPath": "/data/topics/cybersecurity.json"
+    },
+    {
+      "id": "machine-learning",
+      "title": "Machine Learning",
+      "description": "AI & Machine Learning",
+      "icon": "BrainIcon",
+      "color": "green",
+      "category": "AI/ML",
+      "jsonPath": "/data/topics/machine-learning.json"
+    }
+  ],
+  "categories": [
+    {
+      "id": "frontend",
+      "title": "Frontend Development",
+      "color": "orange"
+    },
+    {
+      "id": "backend",
+      "title": "Backend Development",
+      "color": "green"
+    },
+    {
+      "id": "database",
+      "title": "Databases",
+      "color": "blue"
+    },
+    {
+      "id": "devops",
+      "title": "DevOps",
+      "color": "blue"
+    },
+    {
+      "id": "cloud",
+      "title": "Cloud Computing",
+      "color": "orange"
+    },
+    {
+      "id": "computer-science",
+      "title": "Computer Science",
+      "color": "purple"
+    },
+    {
+      "id": "security",
+      "title": "Security",
+      "color": "red"
+    },
+    {
+      "id": "ai-ml",
+      "title": "AI & Machine Learning",
+      "color": "green"
+    }
+  ]
+}
