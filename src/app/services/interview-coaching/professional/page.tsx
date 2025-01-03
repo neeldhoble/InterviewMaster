@@ -1,11 +1,18 @@
 "use client";
 
 import { useState } from 'react';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import { FaUserTie, FaCalendarAlt, FaClock, FaLinkedin, FaGithub, FaCode, FaCheckCircle, FaArrowRight } from 'react-icons/fa';
+import { useRouter } from 'next/navigation';
+import { toast, Toaster } from 'react-hot-toast';
+import { InlineSpinner } from '@/app/components/InlineSpinner';
 
 export default function ProfessionalInterviewCoachingPage() {
+  const router = useRouter();
   const [selectedPackage, setSelectedPackage] = useState<'standard' | 'premium'>('standard');
+  const [isLoading, setIsLoading] = useState(false);
+  const [isSubmitted, setIsSubmitted] = useState(false);
+  const [error, setError] = useState('');
   const [formData, setFormData] = useState({
     name: '',
     email: '',
@@ -57,6 +64,17 @@ export default function ProfessionalInterviewCoachingPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setIsLoading(true);
+    setError('');
+
+    // Validate required fields
+    if (!formData.name || !formData.email || !formData.phone || !formData.experience || !formData.targetRole || !formData.preferredDate || !formData.preferredTime) {
+      toast.error('Please fill in all required fields');
+      setError('Please fill in all required fields');
+      setIsLoading(false);
+      return;
+    }
+
     try {
       const response = await fetch('/api/send-interview-coaching', {
         method: 'POST',
@@ -69,14 +87,23 @@ export default function ProfessionalInterviewCoachingPage() {
         }),
       });
 
+      const data = await response.json();
+
       if (response.ok) {
-        router.push('/services/interview-coaching/success');
+        setIsSubmitted(true);
+        toast.success('Interview coaching request submitted successfully!');
+        setTimeout(() => {
+          router.push('/services/interview-coaching/success');
+        }, 2000);
       } else {
-        throw new Error('Failed to submit form');
+        throw new Error(data.error || 'Failed to submit form');
       }
     } catch (error) {
       console.error('Error:', error);
-      setError('Failed to submit form. Please try again.');
+      toast.error(error.message || 'Failed to submit form. Please try again.');
+      setError(error.message || 'Failed to submit form. Please try again.');
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -277,6 +304,19 @@ export default function ProfessionalInterviewCoachingPage() {
               </div>
 
               <div>
+                <label className="block text-sm font-medium mb-2">Experience</label>
+                <input
+                  type="text"
+                  name="experience"
+                  value={formData.experience}
+                  onChange={handleInputChange}
+                  className="w-full px-4 py-2 rounded-lg bg-white/5 border border-white/10 text-white placeholder-gray-400 focus:outline-none focus:border-[#fcba28]"
+                  placeholder="Your experience"
+                  required
+                />
+              </div>
+
+              <div>
                 <label className="block text-sm font-medium mb-2">Target Role</label>
                 <input
                   type="text"
@@ -329,8 +369,14 @@ export default function ProfessionalInterviewCoachingPage() {
                 type="submit"
                 className="w-full px-6 py-3 bg-[#fcba28] text-black rounded-xl hover:bg-[#fcd978] transition-all duration-300 flex items-center justify-center gap-2 group"
               >
-                Book Your Session
-                <FaArrowRight className="group-hover:translate-x-1 transition-transform duration-200" />
+                {isLoading ? (
+                  <InlineSpinner className="text-black" />
+                ) : (
+                  <>
+                    Book Your Session
+                    <FaArrowRight className="group-hover:translate-x-1 transition-transform duration-200" />
+                  </>
+                )}
               </button>
             </form>
           </motion.div>
