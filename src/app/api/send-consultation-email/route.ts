@@ -5,19 +5,19 @@ export async function POST(req: Request) {
   try {
     const data = await req.json();
     
-    // Configure nodemailer with your email service
+    // Configure nodemailer with Gmail
     const transporter = nodemailer.createTransport({
-      service: 'gmail', // or your preferred email service
+      service: 'gmail',
       auth: {
-        user: process.env.EMAIL_USER,
-        pass: process.env.EMAIL_PASSWORD,
+        user: process.env.ADMIN_EMAIL,
+        pass: process.env.EMAIL_PASS,
       },
     });
 
-    // Email template
-    const mailOptions = {
-      from: process.env.EMAIL_USER,
-      to: process.env.ADMIN_EMAIL, // Your admin email address
+    // Email to admin
+    const adminMailOptions = {
+      from: process.env.ADMIN_EMAIL,
+      to: process.env.ADMIN_EMAIL,
       subject: `New Consultation Request from ${data.name}`,
       html: `
         <h2>New Consultation Request</h2>
@@ -36,7 +36,27 @@ export async function POST(req: Request) {
       `,
     };
 
-    await transporter.sendMail(mailOptions);
+    // Email to client
+    const clientMailOptions = {
+      from: process.env.ADMIN_EMAIL,
+      to: data.email,
+      subject: 'Your Consultation Request - InterviewMaster.ai',
+      html: `
+        <h2>Thank you for your Consultation Request</h2>
+        <p>Dear ${data.name},</p>
+        <p>We have received your consultation request. Our team will review your information and get back to you shortly to confirm your appointment.</p>
+        <h3>Your Request Details:</h3>
+        <p><strong>Consultation Type:</strong> ${data.consultationType}</p>
+        <p><strong>Preferred Date:</strong> ${data.preferredDate}</p>
+        <p><strong>Preferred Time:</strong> ${data.preferredTime}</p>
+        <p>If you need to make any changes to your appointment or have any questions, please don't hesitate to contact us.</p>
+        <p>Best regards,<br>The InterviewMaster.ai Team</p>
+      `,
+    };
+
+    // Send both emails
+    await transporter.sendMail(adminMailOptions);
+    await transporter.sendMail(clientMailOptions);
 
     return NextResponse.json({ success: true });
   } catch (error) {

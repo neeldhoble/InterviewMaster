@@ -17,13 +17,46 @@ export default function ProfessionalConsultationPage() {
     email: '',
     phone: '',
     experience: '',
-    goals: ''
+    consultationType: '',
+    company: '',
+    jobTitle: '',
+    goals: '',
+    preferredMethod: 'video',
+    heardFrom: ''
   });
+
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [error, setError] = useState('');
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    // Handle form submission
-    console.log({ ...formData, date: selectedDate, time: selectedTime });
+    setIsSubmitting(true);
+    setError('');
+
+    try {
+      const response = await fetch('/api/send-consultation-email', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          ...formData,
+          preferredDate: selectedDate,
+          preferredTime: selectedTime,
+        }),
+      });
+
+      if (response.ok) {
+        router.push('/services/consultation/success');
+      } else {
+        throw new Error('Failed to submit consultation request');
+      }
+    } catch (error) {
+      console.error('Error:', error);
+      setError('Failed to submit form. Please try again.');
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
@@ -156,6 +189,63 @@ export default function ProfessionalConsultationPage() {
                     </select>
                   </div>
                 </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-400 mb-1">
+                    Consultation Type
+                  </label>
+                  <div className="relative">
+                    <FaBriefcase className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
+                    <select
+                      name="consultationType"
+                      value={formData.consultationType}
+                      onChange={handleInputChange}
+                      className="w-full bg-white/5 border border-white/10 rounded-lg pl-10 pr-4 py-2 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#fcba28]/50"
+                      required
+                    >
+                      <option value="">Select consultation type</option>
+                      <option value="career-coaching">Career Coaching</option>
+                      <option value="resume-review">Resume Review</option>
+                      <option value="interview-prep">Interview Prep</option>
+                    </select>
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-400 mb-1">
+                    Company
+                  </label>
+                  <div className="relative">
+                    <FaBriefcase className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
+                    <input
+                      type="text"
+                      name="company"
+                      value={formData.company}
+                      onChange={handleInputChange}
+                      className="w-full bg-white/5 border border-white/10 rounded-lg pl-10 pr-4 py-2 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#fcba28]/50"
+                      placeholder="ABC Corporation"
+                      required
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-400 mb-1">
+                    Job Title
+                  </label>
+                  <div className="relative">
+                    <FaBriefcase className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
+                    <input
+                      type="text"
+                      name="jobTitle"
+                      value={formData.jobTitle}
+                      onChange={handleInputChange}
+                      className="w-full bg-white/5 border border-white/10 rounded-lg pl-10 pr-4 py-2 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#fcba28]/50"
+                      placeholder="Software Engineer"
+                      required
+                    />
+                  </div>
+                </div>
               </div>
             </div>
 
@@ -175,10 +265,50 @@ export default function ProfessionalConsultationPage() {
               />
             </div>
 
+            {/* Preferred Method of Communication */}
+            <div>
+              <label className="block text-sm font-medium text-gray-400 mb-1">
+                Preferred Method of Communication
+              </label>
+              <div className="relative">
+                <FaEnvelope className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
+                <select
+                  name="preferredMethod"
+                  value={formData.preferredMethod}
+                  onChange={handleInputChange}
+                  className="w-full bg-white/5 border border-white/10 rounded-lg pl-10 pr-4 py-2 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#fcba28]/50"
+                  required
+                >
+                  <option value="video">Video Call</option>
+                  <option value="phone">Phone Call</option>
+                  <option value="email">Email</option>
+                </select>
+              </div>
+            </div>
+
+            {/* How did you hear about us? */}
+            <div>
+              <label className="block text-sm font-medium text-gray-400 mb-1">
+                How did you hear about us?
+              </label>
+              <div className="relative">
+                <FaEnvelope className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
+                <input
+                  type="text"
+                  name="heardFrom"
+                  value={formData.heardFrom}
+                  onChange={handleInputChange}
+                  className="w-full bg-white/5 border border-white/10 rounded-lg pl-10 pr-4 py-2 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#fcba28]/50"
+                  placeholder="Google Search"
+                  required
+                />
+              </div>
+            </div>
+
             {/* Schedule */}
             <div className="space-y-4">
               <h3 className="text-xl font-semibold mb-4">Schedule Your Session</h3>
-              
+　　 　 　 　
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-400 mb-1">

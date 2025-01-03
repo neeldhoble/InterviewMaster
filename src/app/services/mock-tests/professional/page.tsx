@@ -1,12 +1,33 @@
 "use client";
 
 import { useState } from 'react';
-import { motion } from 'framer-motion';
-import { FaUserTie, FaCalendarAlt, FaClock, FaCheckCircle, FaArrowRight, FaLinkedin, FaGithub, FaCode } from 'react-icons/fa';
+import { motion, AnimatePresence } from 'framer-motion';
+import { FaUserTie, FaCalendarAlt, FaClock, FaCheckCircle, FaArrowRight, FaLinkedin, FaGithub, FaCode, FaUser, FaEnvelope, FaPhone } from 'react-icons/fa';
+import { useRouter } from 'next/navigation';
+import { toast, Toaster } from 'react-hot-toast';
+import { InlineSpinner } from '@/app/components/InlineSpinner';
+import { ErrorPopup } from '@/app/components/ErrorPopup';
+
+interface FormData {
+  name: string;
+  email: string;
+  phone: string;
+  linkedin: string;
+  github: string;
+  experience: string;
+  targetRole: string;
+  preferredDate: string;
+  preferredTime: string;
+  message: string;
+}
 
 export default function ProfessionalMockInterviewPage() {
+  const router = useRouter();
   const [selectedPlan, setSelectedPlan] = useState<'basic' | 'premium'>('basic');
-  const [formData, setFormData] = useState({
+  const [isLoading, setIsLoading] = useState(false);
+  const [isSubmitted, setIsSubmitted] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [formData, setFormData] = useState<FormData>({
     name: '',
     email: '',
     phone: '',
@@ -18,6 +39,22 @@ export default function ProfessionalMockInterviewPage() {
     preferredTime: '',
     message: ''
   });
+
+  const experienceLevels = [
+    '0-2 years',
+    '3-5 years',
+    '5-10 years',
+    '10+ years'
+  ];
+
+  const timeSlots = [
+    '09:00 AM',
+    '10:00 AM',
+    '11:00 AM',
+    '02:00 PM',
+    '03:00 PM',
+    '04:00 PM'
+  ];
 
   const plans = {
     basic: {
@@ -52,16 +89,74 @@ export default function ProfessionalMockInterviewPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    // Handle form submission
-    console.log({ plan: selectedPlan, ...formData });
+    
+    // Validate required fields
+    const requiredFields = ['name', 'email', 'phone', 'experience', 'targetRole', 'preferredDate', 'preferredTime'];
+    const missingFields = requiredFields.filter(field => !formData[field as keyof FormData]);
+    
+    if (missingFields.length > 0) {
+      toast.error('Please fill in all required fields');
+      return;
+    }
+
+    setIsLoading(true);
+
+    try {
+      const response = await fetch('/api/send-mock-test', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          ...formData,
+          package: selectedPlan
+        }),
+      });
+
+      const result = await response.json();
+
+      if (!response.ok) {
+        throw new Error(result.error || 'Failed to submit mock interview request');
+      }
+
+      toast.success('Your mock interview request has been submitted successfully!');
+      setIsSubmitted(true);
+      
+      // Navigate after a short delay to show the success message
+      setTimeout(() => {
+        router.push('/services/mock-tests/success');
+      }, 2000);
+    } catch (err) {
+      console.error('Form submission error:', err);
+      toast.error('Failed to submit request. Please try again.');
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
     <div className="min-h-screen bg-background text-white pt-20 px-4 md:px-8">
+      <Toaster position="top-center" />
+      
+      <AnimatePresence>
+        {isLoading && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50"
+          >
+            <div className="bg-background p-6 rounded-lg shadow-xl border border-[#fcba28]/20 text-center">
+              <InlineSpinner />
+              <p className="mt-4 text-white">Submitting your request...</p>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       {/* Background Effects */}
       <div className="fixed inset-0 overflow-hidden pointer-events-none">
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,#fcba2810_0%,transparent_65%)] blur-3xl" />
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_80%_20%,#fcba2815_0%,transparent_50%)]" />
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_20%_80%,#fcba2815_0%,transparent_50%)]" />
         <div className="absolute inset-0 bg-[linear-gradient(to_right,#80808012_1px,transparent_1px),linear-gradient(to_bottom,#80808012_1px,transparent_1px)] bg-[size:24px_24px]" />
       </div>
@@ -178,10 +273,15 @@ export default function ProfessionalMockInterviewPage() {
           <motion.div
             initial={{ opacity: 0, x: 20 }}
             animate={{ opacity: 1, x: 0 }}
-            className="bg-white/5 p-8 rounded-xl border border-white/10"
+            className="bg-white/5 backdrop-blur-xl rounded-2xl p-8 shadow-xl border border-white/10"
           >
             <h2 className="text-2xl font-bold mb-6">Schedule Your Interview</h2>
-            <form onSubmit={handleSubmit} className="space-y-6">
+            <motion.form
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="bg-white/5 backdrop-blur-xl rounded-2xl p-8 shadow-xl border border-white/10"
+              onSubmit={handleSubmit}
+            >
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
                   <label className="block text-sm font-medium mb-2">Name</label>
@@ -231,10 +331,9 @@ export default function ProfessionalMockInterviewPage() {
                     required
                   >
                     <option value="">Select experience</option>
-                    <option value="0-2">0-2 years</option>
-                    <option value="3-5">3-5 years</option>
-                    <option value="5-10">5-10 years</option>
-                    <option value="10+">10+ years</option>
+                    {experienceLevels.map((level, index) => (
+                      <option key={index} value={level}>{level}</option>
+                    ))}
                   </select>
                 </div>
               </div>
@@ -297,14 +396,18 @@ export default function ProfessionalMockInterviewPage() {
                 </div>
                 <div>
                   <label className="block text-sm font-medium mb-2">Preferred Time</label>
-                  <input
-                    type="time"
+                  <select
                     name="preferredTime"
                     value={formData.preferredTime}
                     onChange={handleInputChange}
                     className="w-full px-4 py-2 rounded-lg bg-white/5 border border-white/10 text-white placeholder-gray-400 focus:outline-none focus:border-[#fcba28]"
                     required
-                  />
+                  >
+                    <option value="">Select time</option>
+                    {timeSlots.map((slot, index) => (
+                      <option key={index} value={slot}>{slot}</option>
+                    ))}
+                  </select>
                 </div>
               </div>
 
@@ -321,12 +424,29 @@ export default function ProfessionalMockInterviewPage() {
 
               <button
                 type="submit"
-                className="w-full px-6 py-3 bg-[#fcba28] text-black rounded-xl hover:bg-[#fcd978] transition-all duration-300 flex items-center justify-center gap-2 group"
+                disabled={isLoading || isSubmitted}
+                className={`w-full px-6 py-3 bg-[#fcba28] text-black rounded-xl hover:bg-[#fcd978] transition-all duration-300 flex items-center justify-center gap-2 group ${
+                  (isLoading || isSubmitted) ? 'opacity-50 cursor-not-allowed' : ''
+                }`}
               >
-                Schedule Interview
-                <FaArrowRight className="group-hover:translate-x-1 transition-transform duration-200" />
+                {isLoading ? (
+                  <>
+                    <InlineSpinner className="w-5 h-5" />
+                    <span>Processing...</span>
+                  </>
+                ) : isSubmitted ? (
+                  <>
+                    <FaCheckCircle className="w-5 h-5" />
+                    <span>Request Submitted</span>
+                  </>
+                ) : (
+                  <>
+                    <span>Schedule Interview</span>
+                    <FaArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform duration-200" />
+                  </>
+                )}
               </button>
-            </form>
+            </motion.form>
           </motion.div>
         </div>
       </div>

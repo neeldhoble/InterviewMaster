@@ -61,8 +61,27 @@ export default function ProfessionalPersonalBrandingPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    // Handle form submission
-    console.log({ package: selectedPackage, ...formData });
+    try {
+      const response = await fetch('/api/send-personal-branding', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          ...formData,
+          package: selectedPackage
+        }),
+      });
+
+      if (response.ok) {
+        router.push('/services/personal-branding/success');
+      } else {
+        throw new Error('Failed to submit form');
+      }
+    } catch (error) {
+      console.error('Error:', error);
+      setError('Failed to submit form. Please try again.');
+    }
   };
 
   return (
