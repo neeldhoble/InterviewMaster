@@ -1,52 +1,58 @@
 "use client";
 
 import { useState } from 'react';
-import { motion } from 'framer-motion';
-import { FaUserTie, FaCalendarAlt, FaClock, FaLinkedin, FaGithub, FaTwitter, FaCheckCircle, FaArrowRight } from 'react-icons/fa';
+import { motion, AnimatePresence } from 'framer-motion';
+import { FaUserTie, FaCalendarAlt, FaClock, FaLinkedin, FaGithub, FaCode, FaCheckCircle, FaArrowRight } from 'react-icons/fa';
+import { useRouter } from 'next/navigation';
+import { toast, Toaster } from 'react-hot-toast';
+import { InlineSpinner } from '@/app/components/InlineSpinner';
 
 export default function ProfessionalPersonalBrandingPage() {
-  const [selectedPackage, setSelectedPackage] = useState<'essential' | 'premium'>('essential');
+  const router = useRouter();
+  const [selectedPackage, setSelectedPackage] = useState<'standard' | 'premium'>('standard');
+  const [isLoading, setIsLoading] = useState(false);
+  const [isSubmitted, setIsSubmitted] = useState(false);
+  const [error, setError] = useState('');
   const [formData, setFormData] = useState({
     name: '',
     email: '',
     phone: '',
     linkedin: '',
-    twitter: '',
-    github: '',
     currentRole: '',
     targetRole: '',
+    experience: '',
+    industry: '',
+    goals: '',
     preferredDate: '',
     preferredTime: '',
-    goals: '',
     message: ''
   });
 
   const packages = {
-    essential: {
-      name: 'Essential Package',
-      price: '$199',
+    standard: {
+      name: 'Standard Package',
+      price: '$149',
       duration: '2 weeks',
       features: [
-        'Personal brand assessment',
-        'Profile optimization for 2 platforms',
-        'Content strategy development',
-        'Basic networking strategy',
-        'One revision round'
+        'LinkedIn Profile Optimization',
+        'Professional Bio Writing',
+        'Basic Personal Website Template',
+        'Social Media Strategy Guide',
+        'One Revision Round'
       ]
     },
     premium: {
       name: 'Premium Package',
-      price: '$499',
-      duration: '1 month',
+      price: '$349',
+      duration: '4 weeks',
       features: [
-        'Comprehensive brand strategy',
-        'Profile optimization for all platforms',
-        'Professional photoshoot',
-        'Content calendar creation',
-        'Advanced networking strategy',
-        'Personal website development',
-        'Unlimited revisions',
-        'Monthly performance review'
+        'Everything in Standard Package',
+        'Custom Personal Website Development',
+        'Content Strategy Development',
+        'Personal Brand Guidelines',
+        'Professional Headshot Guidelines',
+        'Three Revision Rounds',
+        'Monthly Analytics Report'
       ]
     }
   };
@@ -61,6 +67,21 @@ export default function ProfessionalPersonalBrandingPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setIsLoading(true);
+    setError('');
+
+    // Validate required fields
+    const requiredFields = ['name', 'email', 'phone', 'currentRole', 'targetRole', 'experience', 'industry', 'goals', 'preferredDate', 'preferredTime'];
+    const missingFields = requiredFields.filter(field => !formData[field as keyof typeof formData]);
+    
+    if (missingFields.length > 0) {
+      const missingFieldNames = missingFields.map(field => field.replace(/([A-Z])/g, ' $1').toLowerCase());
+      toast.error(`Please fill in: ${missingFieldNames.join(', ')}`);
+      setError(`Please fill in: ${missingFieldNames.join(', ')}`);
+      setIsLoading(false);
+      return;
+    }
+
     try {
       const response = await fetch('/api/send-personal-branding', {
         method: 'POST',
@@ -73,19 +94,46 @@ export default function ProfessionalPersonalBrandingPage() {
         }),
       });
 
+      const data = await response.json();
+
       if (response.ok) {
-        router.push('/services/personal-branding/success');
+        setIsSubmitted(true);
+        toast.success('Personal branding request submitted successfully!');
+        setTimeout(() => {
+          router.push('/services/personal-branding/success');
+        }, 2000);
       } else {
-        throw new Error('Failed to submit form');
+        throw new Error(data.error || 'Failed to submit request');
       }
     } catch (error) {
       console.error('Error:', error);
-      setError('Failed to submit form. Please try again.');
+      toast.error(error.message || 'Failed to submit form. Please try again.');
+      setError(error.message || 'Failed to submit form. Please try again.');
+    } finally {
+      setIsLoading(false);
     }
   };
 
   return (
     <div className="min-h-screen bg-background text-white pt-20">
+      <Toaster position="top-center" />
+      
+      <AnimatePresence>
+        {isLoading && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50"
+          >
+            <div className="bg-background p-6 rounded-lg shadow-xl border border-[#fcba28]/20 text-center">
+              <InlineSpinner />
+              <p className="mt-4 text-white">Submitting your request...</p>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       {/* Background Effects */}
       <div className="fixed inset-0 overflow-hidden pointer-events-none">
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,#fcba2810_0%,transparent_65%)] blur-3xl" />
@@ -114,22 +162,22 @@ export default function ProfessionalPersonalBrandingPage() {
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
-              onClick={() => setSelectedPackage('essential')}
+              onClick={() => setSelectedPackage('standard')}
               className={`cursor-pointer p-6 rounded-xl border-2 transition-all duration-300 ${
-                selectedPackage === 'essential'
+                selectedPackage === 'standard'
                   ? 'border-[#fcba28] bg-[#fcba28]/10'
                   : 'border-white/10 bg-white/5 hover:bg-white/10'
               }`}
             >
               <div className="flex justify-between items-center mb-4">
                 <div>
-                  <h3 className="text-xl font-semibold">Essential Package</h3>
-                  <p className="text-gray-400">{packages.essential.duration}</p>
+                  <h3 className="text-xl font-semibold">Standard Package</h3>
+                  <p className="text-gray-400">{packages.standard.duration}</p>
                 </div>
-                <span className="text-2xl font-bold text-[#fcba28]">{packages.essential.price}</span>
+                <span className="text-2xl font-bold text-[#fcba28]">{packages.standard.price}</span>
               </div>
               <ul className="space-y-3">
-                {packages.essential.features.map((feature, index) => (
+                {packages.standard.features.map((feature, index) => (
                   <li key={index} className="flex items-center gap-3 text-gray-300">
                     <FaCheckCircle className="text-[#fcba28]" />
                     {feature}
@@ -266,20 +314,6 @@ export default function ProfessionalPersonalBrandingPage() {
                 </div>
                 <div>
                   <label className="block text-sm font-medium mb-2">
-                    <FaTwitter className="inline mr-2" />
-                    Twitter
-                  </label>
-                  <input
-                    type="url"
-                    name="twitter"
-                    value={formData.twitter}
-                    onChange={handleInputChange}
-                    className="w-full px-4 py-2 rounded-lg bg-white/5 border border-white/10 text-white placeholder-gray-400 focus:outline-none focus:border-[#fcba28]"
-                    placeholder="Profile URL"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium mb-2">
                     <FaGithub className="inline mr-2" />
                     GitHub
                   </label>
@@ -290,6 +324,20 @@ export default function ProfessionalPersonalBrandingPage() {
                     onChange={handleInputChange}
                     className="w-full px-4 py-2 rounded-lg bg-white/5 border border-white/10 text-white placeholder-gray-400 focus:outline-none focus:border-[#fcba28]"
                     placeholder="Profile URL"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium mb-2">
+                    <FaCode className="inline mr-2" />
+                    Portfolio
+                  </label>
+                  <input
+                    type="url"
+                    name="portfolio"
+                    value={formData.portfolio}
+                    onChange={handleInputChange}
+                    className="w-full px-4 py-2 rounded-lg bg-white/5 border border-white/10 text-white placeholder-gray-400 focus:outline-none focus:border-[#fcba28]"
+                    placeholder="Portfolio URL"
                   />
                 </div>
               </div>
@@ -319,6 +367,32 @@ export default function ProfessionalPersonalBrandingPage() {
                     required
                   />
                 </div>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium mb-2">Experience</label>
+                <input
+                  type="text"
+                  name="experience"
+                  value={formData.experience}
+                  onChange={handleInputChange}
+                  className="w-full px-4 py-2 rounded-lg bg-white/5 border border-white/10 text-white placeholder-gray-400 focus:outline-none focus:border-[#fcba28]"
+                  placeholder="e.g., 5 years"
+                  required
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium mb-2">Industry</label>
+                <input
+                  type="text"
+                  name="industry"
+                  value={formData.industry}
+                  onChange={handleInputChange}
+                  className="w-full px-4 py-2 rounded-lg bg-white/5 border border-white/10 text-white placeholder-gray-400 focus:outline-none focus:border-[#fcba28]"
+                  placeholder="e.g., Tech"
+                  required
+                />
               </div>
 
               <div>
@@ -372,9 +446,21 @@ export default function ProfessionalPersonalBrandingPage() {
               <button
                 type="submit"
                 className="w-full px-6 py-3 bg-[#fcba28] text-black rounded-xl hover:bg-[#fcd978] transition-all duration-300 flex items-center justify-center gap-2 group"
+                disabled={isLoading}
               >
-                Start Your Branding Journey
-                <FaArrowRight className="group-hover:translate-x-1 transition-transform duration-200" />
+                {isLoading ? (
+                  <InlineSpinner className="text-black" />
+                ) : isSubmitted ? (
+                  <>
+                    <FaCheckCircle />
+                    Request Submitted!
+                  </>
+                ) : (
+                  <>
+                    Start Your Branding Journey
+                    <FaArrowRight className="group-hover:translate-x-1 transition-transform duration-200" />
+                  </>
+                )}
               </button>
             </form>
           </motion.div>
