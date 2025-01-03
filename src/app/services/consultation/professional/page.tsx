@@ -1,8 +1,11 @@
 "use client";
 
 import { useState } from 'react';
-import { motion } from 'framer-motion';
-import { FaCalendar, FaClock, FaUser, FaEnvelope, FaPhone, FaBriefcase } from 'react-icons/fa';
+import { motion, AnimatePresence } from 'framer-motion';
+import { FaCalendar, FaClock, FaUser, FaEnvelope, FaPhone, FaBriefcase, FaCheckCircle, FaArrowRight } from 'react-icons/fa';
+import { useRouter } from 'next/navigation';
+import { toast, Toaster } from 'react-hot-toast';
+import { InlineSpinner } from '@/app/components/InlineSpinner';
 
 const timeSlots = [
   '9:00 AM', '10:00 AM', '11:00 AM',
@@ -10,8 +13,11 @@ const timeSlots = [
 ];
 
 export default function ProfessionalConsultationPage() {
+  const router = useRouter();
   const [selectedDate, setSelectedDate] = useState('');
   const [selectedTime, setSelectedTime] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
+  const [isSubmitted, setIsSubmitted] = useState(false);
   const [formData, setFormData] = useState({
     name: '',
     email: '',
@@ -25,13 +31,27 @@ export default function ProfessionalConsultationPage() {
     heardFrom: ''
   });
 
-  const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState('');
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setIsSubmitting(true);
+    setIsLoading(true);
     setError('');
+
+    // Validate required fields
+    if (!selectedDate || !selectedTime) {
+      toast.error('Please select both date and time');
+      setError('Please select both date and time');
+      setIsLoading(false);
+      return;
+    }
+
+    // Log form data for debugging
+    console.log('Submitting form data:', {
+      ...formData,
+      preferredDate: selectedDate,
+      preferredTime: selectedTime,
+    });
 
     try {
       const response = await fetch('/api/send-consultation-email', {
@@ -46,16 +66,24 @@ export default function ProfessionalConsultationPage() {
         }),
       });
 
+      const data = await response.json();
+      console.log('Response:', data);
+
       if (response.ok) {
-        router.push('/services/consultation/success');
+        setIsSubmitted(true);
+        toast.success('Consultation request submitted successfully!');
+        setTimeout(() => {
+          router.push('/services/consultation/success');
+        }, 2000);
       } else {
-        throw new Error('Failed to submit consultation request');
+        throw new Error(data.error || 'Failed to submit consultation request');
       }
     } catch (error) {
       console.error('Error:', error);
-      setError('Failed to submit form. Please try again.');
+      toast.error(error.message || 'Failed to submit form. Please try again.');
+      setError(error.message || 'Failed to submit form. Please try again.');
     } finally {
-      setIsSubmitting(false);
+      setIsLoading(false);
     }
   };
 
@@ -67,11 +95,30 @@ export default function ProfessionalConsultationPage() {
   };
 
   return (
-    <div className="min-h-screen bg-background py-12 px-4 sm:px-6 lg:px-8">
+    <div className="min-h-screen bg-background text-white pt-20 px-4 md:px-8">
+      <Toaster position="top-center" />
+      
+      <AnimatePresence>
+        {isLoading && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50"
+          >
+            <div className="bg-background p-6 rounded-lg shadow-xl border border-[#fcba28]/20 text-center">
+              <InlineSpinner />
+              <p className="mt-4 text-white">Submitting your request...</p>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       {/* Background Effects */}
       <div className="fixed inset-0 overflow-hidden pointer-events-none">
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,#fcba2810_0%,transparent_65%)] blur-3xl" />
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_80%_20%,#fcba2815_0%,transparent_50%)]" />
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_20%_80%,#fcba2815_0%,transparent_50%)]" />
+        <div className="absolute inset-0 bg-[linear-gradient(to_right,#80808012_1px,transparent_1px),linear-gradient(to_bottom,#80808012_1px,transparent_1px)] bg-[size:24px_24px]" />
       </div>
 
       <div className="relative max-w-4xl mx-auto">
@@ -308,7 +355,8 @@ export default function ProfessionalConsultationPage() {
             {/* Schedule */}
             <div className="space-y-4">
               <h3 className="text-xl font-semibold mb-4">Schedule Your Session</h3>
-　　 　 　 　
+　
+　
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-400 mb-1">
@@ -353,7 +401,14 @@ export default function ProfessionalConsultationPage() {
               type="submit"
               className="w-full py-3 bg-[#fcba28] text-black rounded-lg hover:bg-[#fcd978] transition-colors duration-200 font-semibold"
             >
-              Schedule Consultation
+              {isLoading ? (
+                <InlineSpinner />
+              ) : isSubmitted ? (
+                <FaCheckCircle className="mr-2" />
+              ) : (
+                <FaArrowRight className="mr-2" />
+              )}
+              {isLoading ? 'Submitting...' : isSubmitted ? 'Submitted!' : 'Schedule Consultation'}
             </button>
           </form>
         </motion.div>

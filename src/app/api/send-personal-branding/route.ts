@@ -1,28 +1,29 @@
 import { NextResponse } from 'next/server';
 import nodemailer from 'nodemailer';
 
-interface InterviewCoachingRequest {
+interface PersonalBrandingRequest {
   name: string;
   email: string;
   phone: string;
   package: string;
   experience: string;
+  currentRole: string;
   targetRole: string;
-  preferredDate: string;
-  preferredTime: string;
+  industry: string;
   linkedin?: string;
   github?: string;
+  portfolio?: string;
   message?: string;
 }
 
 export async function POST(req: Request) {
   try {
-    const data: InterviewCoachingRequest = await req.json();
+    const data: PersonalBrandingRequest = await req.json();
     
     // Validate required fields
-    const requiredFields = ['name', 'email', 'phone', 'package', 'experience', 'targetRole', 'preferredDate', 'preferredTime'];
+    const requiredFields = ['name', 'email', 'phone', 'package', 'experience', 'currentRole', 'targetRole', 'industry'];
     for (const field of requiredFields) {
-      if (!data[field as keyof InterviewCoachingRequest]) {
+      if (!data[field as keyof PersonalBrandingRequest]) {
         return NextResponse.json(
           { error: `Missing required field: ${field}` },
           { status: 400 }
@@ -31,7 +32,7 @@ export async function POST(req: Request) {
     }
 
     // Log the request data
-    console.log('Interview Coaching Request:', {
+    console.log('Personal Branding Request:', {
       ...data,
       timestamp: new Date().toISOString()
     });
@@ -48,7 +49,7 @@ export async function POST(req: Request) {
 
       // Format the HTML for admin email
       const adminHtml = `
-        <h2>New Interview Coaching Request</h2>
+        <h2>New Personal Branding Request</h2>
         <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
           <h3>Personal Information</h3>
           <p><strong>Name:</strong> ${data.name}</p>
@@ -58,15 +59,14 @@ export async function POST(req: Request) {
           <h3>Professional Details</h3>
           <p><strong>Package:</strong> ${data.package}</p>
           <p><strong>Experience Level:</strong> ${data.experience}</p>
+          <p><strong>Current Role:</strong> ${data.currentRole}</p>
           <p><strong>Target Role:</strong> ${data.targetRole}</p>
-          
-          <h3>Schedule</h3>
-          <p><strong>Preferred Date:</strong> ${data.preferredDate}</p>
-          <p><strong>Preferred Time:</strong> ${data.preferredTime}</p>
+          <p><strong>Industry:</strong> ${data.industry}</p>
           
           <h3>Professional Profiles</h3>
           ${data.linkedin ? `<p><strong>LinkedIn:</strong> <a href="${data.linkedin}">${data.linkedin}</a></p>` : ''}
           ${data.github ? `<p><strong>GitHub:</strong> <a href="${data.github}">${data.github}</a></p>` : ''}
+          ${data.portfolio ? `<p><strong>Portfolio:</strong> <a href="${data.portfolio}">${data.portfolio}</a></p>` : ''}
           
           <h3>Additional Information</h3>
           <p>${data.message || 'No additional notes provided.'}</p>
@@ -76,26 +76,26 @@ export async function POST(req: Request) {
       // Format the HTML for client email
       const clientHtml = `
         <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-          <h2>Thank you for your Interview Coaching Request</h2>
+          <h2>Thank you for your Personal Branding Request</h2>
           <p>Dear ${data.name},</p>
-          <p>We have received your interview coaching request and are excited to help you prepare for your upcoming interviews.</p>
+          <p>We have received your personal branding request and are excited to help you build a strong professional presence.</p>
           
           <h3>Your Request Details:</h3>
           <ul style="list-style: none; padding-left: 0;">
             <li><strong>Package Selected:</strong> ${data.package}</li>
+            <li><strong>Current Role:</strong> ${data.currentRole}</li>
             <li><strong>Target Role:</strong> ${data.targetRole}</li>
-            <li><strong>Preferred Date:</strong> ${data.preferredDate}</li>
-            <li><strong>Preferred Time:</strong> ${data.preferredTime}</li>
+            <li><strong>Industry:</strong> ${data.industry}</li>
           </ul>
           
           <h3>Next Steps:</h3>
           <ol>
-            <li>Our team will review your request and schedule details</li>
-            <li>We will confirm your coaching session via email within 24 hours</li>
-            <li>You will receive preparation materials and guidelines before the session</li>
+            <li>Our team will review your request and professional profiles</li>
+            <li>We will contact you within 24 hours to schedule your consultation</li>
+            <li>You will receive a personalized branding strategy outline</li>
           </ol>
           
-          <p>We aim to provide the most effective interview coaching experience. If you need to modify your schedule or have any questions, please don't hesitate to contact us.</p>
+          <p>We aim to help you create a compelling professional brand that resonates with your target audience. If you need to provide additional information or have any questions, please don't hesitate to contact us.</p>
           
           <p style="margin-top: 20px;">Best regards,<br>The InterviewMaster.ai Team</p>
         </div>
@@ -107,25 +107,25 @@ export async function POST(req: Request) {
         transporter.sendMail({
           from: process.env.ADMIN_EMAIL,
           to: process.env.ADMIN_EMAIL,
-          subject: `New Interview Coaching Request from ${data.name}`,
+          subject: `New Personal Branding Request from ${data.name}`,
           html: adminHtml,
         }),
         // Send to client
         transporter.sendMail({
           from: process.env.ADMIN_EMAIL,
           to: data.email,
-          subject: 'Your Interview Coaching Request - InterviewMaster.ai',
+          subject: 'Your Personal Branding Request - InterviewMaster.ai',
           html: clientHtml,
         })
       ]);
     }
 
     return NextResponse.json(
-      { message: 'Your interview coaching request has been submitted successfully!' },
+      { message: 'Your personal branding request has been submitted successfully!' },
       { status: 200 }
     );
   } catch (error) {
-    console.error('Error processing interview coaching request:', error);
+    console.error('Error processing personal branding request:', error);
     return NextResponse.json(
       { error: 'Failed to process your request. Please try again.' },
       { status: 500 }
