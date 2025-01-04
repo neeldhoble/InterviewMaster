@@ -5,6 +5,7 @@ import { motion } from 'framer-motion';
 import { X, Calendar, Clock, AlertCircle, ArrowRight, Package } from 'lucide-react';
 import { Button } from '../../../components/ui';
 import type { Writer, Package } from '../types';
+import toast from 'react-hot-toast'; // Import toast
 
 interface ScheduleModalProps {
   isOpen: boolean;
@@ -64,17 +65,34 @@ const ScheduleModal = ({ isOpen, onClose, writer }: ScheduleModalProps) => {
   };
 
   const handleSubmit = async () => {
-    // Here you would typically send the booking data to your backend
-    const bookingData = {
-      writerId: writer.id,
-      packageId: selectedPackage,
-      date: selectedDate,
-      time: selectedTime,
-      ...formData
-    };
-    
-    console.log('Booking submitted:', bookingData);
-    onClose();
+    try {
+      const bookingData = {
+        writerId: writer.id,
+        packageId: selectedPackage,
+        date: selectedDate,
+        time: selectedTime,
+        ...formData
+      };
+
+      const response = await fetch('/api/send-resume-request', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(bookingData),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Failed to submit request');
+      }
+
+      toast.success('Your resume writing session has been scheduled successfully!');
+      onClose();
+    } catch (err) {
+      console.error('Booking submission error:', err);
+      toast.error(err instanceof Error ? err.message : 'Failed to schedule session. Please try again.');
+    }
   };
 
   if (!isOpen) return null;
