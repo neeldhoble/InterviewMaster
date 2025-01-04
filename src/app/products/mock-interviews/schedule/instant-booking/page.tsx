@@ -19,6 +19,8 @@ import { formatTime, formatDate } from '@/utils/interviewScheduler';
 import { InterviewTypeSelector } from './components/InterviewTypeSelector';
 import { InterviewerSelector } from './components/InterviewerSelector';
 import { TimeSlotSelector } from './components/TimeSlotSelector';
+import toast from 'react-hot-toast';
+import { useRouter } from 'next/router';
 
 interface TimeSlot {
   id: string;
@@ -55,6 +57,18 @@ export default function InstantBookingPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
   const [bookingComplete, setBookingComplete] = useState(false);
+  const [formData, setFormData] = useState({
+    name: '',
+    email: '',
+    phone: '',
+    experience: '',
+    currentRole: '',
+    targetRole: '',
+    preferredLanguages: '',
+    notes: ''
+  });
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const router = useRouter();
 
   useEffect(() => {
     fetchInterviewTypes();
@@ -140,6 +154,69 @@ export default function InstantBookingPage() {
       fetchAvailableSlots();
     }
   }, [selectedInterviewer, selectedDate]);
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!selectedType || !selectedInterviewer || !selectedDate || !selectedSlot) {
+      toast.error('Please complete all required fields');
+      return;
+    }
+
+    try {
+      setIsSubmitting(true);
+
+      const requestData = {
+        interviewType: {
+          id: selectedType.id,
+          name: selectedType.name,
+          duration: selectedType.duration,
+          price: selectedType.price
+        },
+        interviewer: {
+          id: selectedInterviewer.id,
+          name: selectedInterviewer.name,
+          expertise: selectedInterviewer.expertise,
+          timezone: selectedInterviewer.timezone
+        },
+        date: selectedDate,
+        timeSlot: {
+          startTime: selectedSlot.startTime,
+          endTime: selectedSlot.endTime
+        },
+        candidate: {
+          name: formData.name,
+          email: formData.email,
+          phone: formData.phone,
+          experience: formData.experience,
+          currentRole: formData.currentRole,
+          targetRole: formData.targetRole,
+          preferredLanguages: formData.preferredLanguages,
+          notes: formData.notes
+        }
+      };
+
+      const response = await fetch('/api/send-mock-interview', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(requestData),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Failed to schedule interview');
+      }
+
+      toast.success('Your mock interview has been scheduled successfully!');
+      router.push('/thankyou');
+    } catch (err) {
+      console.error('Interview scheduling error:', err);
+      toast.error(err instanceof Error ? err.message : 'Failed to schedule interview. Please try again.');
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
 
   const handleBooking = async () => {
     if (!selectedType || !selectedInterviewer || !selectedSlot) return;
@@ -362,23 +439,82 @@ export default function InstantBookingPage() {
                         </div>
                       </div>
                     )}
-                    <button
-                      onClick={handleBooking}
-                      disabled={isLoading}
-                      className="w-full px-6 py-3 bg-[#fcba28] text-black rounded-lg hover:bg-[#fcd978] transition-colors duration-200 flex items-center justify-center gap-2"
-                    >
-                      {isLoading ? (
-                        <>
-                          <FaSpinner className="w-5 h-5 animate-spin" />
-                          Processing...
-                        </>
-                      ) : (
-                        <>
-                          Confirm Booking
-                          <FaArrowRight className="w-4 h-4" />
-                        </>
-                      )}
-                    </button>
+                    <form onSubmit={handleSubmit}>
+                      <div className="space-y-4 mb-8">
+                        <input 
+                          type="text" 
+                          value={formData.name} 
+                          onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                          className="w-full p-4 bg-white/5 rounded-lg text-white"
+                          placeholder="Your Name"
+                        />
+                        <input 
+                          type="email" 
+                          value={formData.email} 
+                          onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                          className="w-full p-4 bg-white/5 rounded-lg text-white"
+                          placeholder="Your Email"
+                        />
+                        <input 
+                          type="tel" 
+                          value={formData.phone} 
+                          onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+                          className="w-full p-4 bg-white/5 rounded-lg text-white"
+                          placeholder="Your Phone Number"
+                        />
+                        <input 
+                          type="text" 
+                          value={formData.experience} 
+                          onChange={(e) => setFormData({ ...formData, experience: e.target.value })}
+                          className="w-full p-4 bg-white/5 rounded-lg text-white"
+                          placeholder="Your Experience"
+                        />
+                        <input 
+                          type="text" 
+                          value={formData.currentRole} 
+                          onChange={(e) => setFormData({ ...formData, currentRole: e.target.value })}
+                          className="w-full p-4 bg-white/5 rounded-lg text-white"
+                          placeholder="Your Current Role"
+                        />
+                        <input 
+                          type="text" 
+                          value={formData.targetRole} 
+                          onChange={(e) => setFormData({ ...formData, targetRole: e.target.value })}
+                          className="w-full p-4 bg-white/5 rounded-lg text-white"
+                          placeholder="Your Target Role"
+                        />
+                        <input 
+                          type="text" 
+                          value={formData.preferredLanguages} 
+                          onChange={(e) => setFormData({ ...formData, preferredLanguages: e.target.value })}
+                          className="w-full p-4 bg-white/5 rounded-lg text-white"
+                          placeholder="Your Preferred Languages"
+                        />
+                        <textarea 
+                          value={formData.notes} 
+                          onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
+                          className="w-full p-4 bg-white/5 rounded-lg text-white"
+                          placeholder="Any Additional Notes"
+                        />
+                      </div>
+                      <button
+                        type="submit"
+                        disabled={isSubmitting}
+                        className="w-full px-6 py-3 bg-[#fcba28] text-black rounded-lg hover:bg-[#fcd978] transition-colors duration-200 flex items-center justify-center gap-2"
+                      >
+                        {isSubmitting ? (
+                          <>
+                            <FaSpinner className="w-5 h-5 animate-spin" />
+                            Processing...
+                          </>
+                        ) : (
+                          <>
+                            Confirm Booking
+                            <FaArrowRight className="w-4 h-4" />
+                          </>
+                        )}
+                      </button>
+                    </form>
                   </div>
                 )}
               </motion.div>
