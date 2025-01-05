@@ -8,7 +8,7 @@ import QuestionPanel from './components/QuestionPanel';
 import VideoPreview from './components/VideoPreview';
 import RecordingsList from './components/RecordingsList';
 import { Question, interviewQuestions } from './data/questions';
-import { MessageSquare, BarChart, Download, Share2, ThumbsUp, Volume2, Mic, Camera, Settings, ChevronLeft, X, Clock, Activity, MessageCircle } from 'lucide-react';
+import { MessageSquare, BarChart, Download, Share2, ThumbsUp, Volume2, Mic, Camera, Settings, ChevronLeft, X, Clock, Activity, MessageCircle, Lightbulb } from 'lucide-react';
 import { recordingService } from './services/recordingService';
 import { aiAnalysisService } from './services/aiAnalysisService';
 import { enhancedAnalysisService } from './services/enhancedAnalysisService';
@@ -427,19 +427,19 @@ export default function SimulationPage() {
               >
                 {isRecording ? 'Stop Recording' : 'Start Recording'}
               </button>
-　　 　 　 　 <button
+              <button
                 className="p-4 rounded-xl bg-white/5 hover:bg-white/10 transition-colors text-white font-medium flex items-center justify-center gap-2"
               >
                 <Download className="w-5 h-5" />
                 Download
               </button>
-　　 　 　 　 <button
+              <button
                 className="p-4 rounded-xl bg-white/5 hover:bg-white/10 transition-colors text-white font-medium flex items-center justify-center gap-2"
               >
                 <Share2 className="w-5 h-5" />
                 Share
               </button>
-　　 　 　 　 <button className="p-4 rounded-xl bg-white/5 hover:bg-white/10 transition-colors text-white font-medium flex items-center justify-center gap-2">
+              <button className="p-4 rounded-xl bg-white/5 hover:bg-white/10 transition-colors text-white font-medium flex items-center justify-center gap-2">
                 <ThumbsUp className="w-5 h-5" />
                 Rate
               </button>
@@ -456,7 +456,7 @@ export default function SimulationPage() {
                   {formatTime(timeElapsed)}
                 </p>
               </div>
-　　 　 　 　 <div className="p-4 bg-white/5 border border-white/10 rounded-xl backdrop-blur-lg">
+              <div className="p-4 bg-white/5 border border-white/10 rounded-xl backdrop-blur-lg">
                 <div className="flex items-center gap-2 mb-2">
                   <BarChart className="w-5 h-5 text-[#fcba28]" />
                   <h4 className="text-white font-medium">Confidence</h4>
@@ -465,7 +465,7 @@ export default function SimulationPage() {
                   {isRecording ? "85%" : "--"}
                 </p>
               </div>
-　　 　 　 　 <div className="p-4 bg-white/5 border border-white/10 rounded-xl backdrop-blur-lg">
+              <div className="p-4 bg-white/5 border border-white/10 rounded-xl backdrop-blur-lg">
                 <div className="flex items-center gap-2 mb-2">
                   <Mic className="w-5 h-5 text-[#fcba28]" />
                   <h4 className="text-white font-medium">Audio Quality</h4>
@@ -474,7 +474,7 @@ export default function SimulationPage() {
                   {isRecording ? "Good" : "--"}
                 </p>
               </div>
-　　 　 　 　 <div className="p-4 bg-white/5 border border-white/10 rounded-xl backdrop-blur-lg">
+              <div className="p-4 bg-white/5 border border-white/10 rounded-xl backdrop-blur-lg">
                 <div className="flex items-center gap-2 mb-2">
                   <Camera className="w-5 h-5 text-[#fcba28]" />
                   <h4 className="text-white font-medium">Video Quality</h4>
@@ -627,6 +627,21 @@ export default function SimulationPage() {
                   </div>
                 </div>
               </div>
+              
+              {/* Overall Score */}
+              <div className="flex items-center gap-6">
+                <div className="text-center">
+                  <div className="relative w-16 h-16">
+                    <div className="absolute inset-0 rounded-full bg-gradient-to-br from-emerald-500/20 to-blue-500/20" />
+                    <div className="absolute inset-1 rounded-full bg-black/50 flex items-center justify-center">
+                      <span className="text-xl font-bold text-white">
+                        {Math.round((analysis.communicationScore + analysis.speechMetrics.pace) / 2)}%
+                      </span>
+                    </div>
+                  </div>
+                  <span className="text-xs text-white/60 mt-1 block">Overall Score</span>
+                </div>
+              </div>
             </div>
           </div>
 
@@ -636,12 +651,16 @@ export default function SimulationPage() {
             <div className="lg:col-span-2">
               <div className="p-6 bg-white/5 border border-white/10 rounded-xl backdrop-blur-lg">
                 <div className="flex items-center justify-between mb-4">
-                  <h4 className="text-sm font-medium text-white/80">Current Speech</h4>
-                  <div className="px-3 py-1 rounded-full bg-white/5 border border-white/10">
+                  <div className="flex items-center gap-3">
+                    <Mic className="w-5 h-5 text-emerald-500" />
+                    <h4 className="text-sm font-medium text-white/80">Current Speech</h4>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
                     <span className="text-xs text-white/60">Real-time</span>
                   </div>
                 </div>
-                <div className="min-h-[100px] p-5 bg-white/5 rounded-lg border border-white/10">
+                <div className="min-h-[120px] p-6 bg-white/5 rounded-lg border border-white/10">
                   <p className="text-lg text-white/90 leading-relaxed">
                     {transcript.final}
                     <span className="text-white/50 italic">
@@ -649,71 +668,82 @@ export default function SimulationPage() {
                     </span>
                   </p>
                 </div>
+                
+                {/* Quick Analysis Tags */}
+                <div className="flex flex-wrap gap-2 mt-4">
+                  {analysis.tips.slice(0, 3).map((tip, i) => (
+                    <div 
+                      key={`tip-${i}`}
+                      className="px-3 py-1.5 rounded-full bg-white/5 border border-white/10 text-white/70 text-xs flex items-center gap-2"
+                    >
+                      <div className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+                      {tip}
+                    </div>
+                  ))}
+                </div>
               </div>
             </div>
 
             {/* Right Panel - Analysis Metrics */}
             <div className="space-y-4">
-              {/* Confidence Score */}
-              <div className="p-4 bg-white/5 border border-white/10 rounded-xl backdrop-blur-lg">
-                <div className="flex items-center justify-between mb-3">
+              {/* Communication Score */}
+              <div className="p-5 bg-white/5 border border-white/10 rounded-xl backdrop-blur-lg">
+                <div className="flex items-center justify-between mb-4">
                   <div className="flex items-center gap-2">
-                    <BarChart className="w-4 h-4 text-blue-400" />
-                    <h4 className="text-sm font-medium text-white/80">Confidence</h4>
+                    <BarChart className="w-5 h-5 text-blue-400" />
+                    <h4 className="font-medium text-white/80">Communication</h4>
                   </div>
-                  <div className="px-2 py-1 rounded-full bg-blue-500/20 text-blue-400 text-xs">
+                  <div className="px-3 py-1.5 rounded-full bg-blue-500/20 text-blue-400 text-sm font-medium">
                     {analysis.communicationScore}%
                   </div>
                 </div>
-                <div className="h-2 bg-white/10 rounded-full overflow-hidden mb-2">
+                <div className="h-2.5 bg-white/10 rounded-full overflow-hidden mb-3">
                   <div 
-                    className="h-full bg-blue-400 rounded-full transition-all duration-300"
+                    className="h-full bg-gradient-to-r from-blue-400 to-blue-500 rounded-full transition-all duration-300"
                     style={{ width: `${analysis.communicationScore}%` }}
                   />
                 </div>
-                <p className="text-xs text-white/60">{analysis.tips[0]}</p>
+                <p className="text-sm text-white/60">{analysis.tips[0]}</p>
               </div>
 
               {/* Speaking Rhythm */}
-              <div className="p-4 bg-white/5 border border-white/10 rounded-xl backdrop-blur-lg">
-                <div className="flex items-center justify-between mb-3">
+              <div className="p-5 bg-white/5 border border-white/10 rounded-xl backdrop-blur-lg">
+                <div className="flex items-center justify-between mb-4">
                   <div className="flex items-center gap-2">
-                    <Activity className="w-4 h-4 text-emerald-400" />
-                    <h4 className="text-sm font-medium text-white/80">Speaking Rhythm</h4>
+                    <Activity className="w-5 h-5 text-emerald-400" />
+                    <h4 className="font-medium text-white/80">Speaking Pace</h4>
                   </div>
-                  <div className="px-2 py-1 rounded-full bg-emerald-500/20 text-emerald-400 text-xs">
-                    {analysis.speechMetrics.pace.toFixed(0)} words/min
+                  <div className="px-3 py-1.5 rounded-full bg-emerald-500/20 text-emerald-400 text-sm font-medium">
+                    {analysis.speechMetrics.pace.toFixed(0)} WPM
                   </div>
                 </div>
-                <div className="h-2 bg-white/10 rounded-full overflow-hidden">
+                <div className="h-2.5 bg-white/10 rounded-full overflow-hidden mb-3">
                   <div 
-                    className="h-full bg-emerald-400 rounded-full transition-all duration-300"
-                    style={{ width: `${analysis.speechMetrics.pace}%` }}
+                    className="h-full bg-gradient-to-r from-emerald-400 to-emerald-500 rounded-full transition-all duration-300"
+                    style={{ width: `${(analysis.speechMetrics.pace / 150) * 100}%` }}
                   />
+                </div>
+                <div className="flex items-center justify-between text-xs text-white/60">
+                  <span>Slow</span>
+                  <span>Optimal (120-150 WPM)</span>
+                  <span>Fast</span>
                 </div>
               </div>
 
-              {/* Articulation Analysis */}
-              <div className="p-4 bg-white/5 border border-white/10 rounded-xl backdrop-blur-lg">
-                <div className="flex items-center justify-between mb-3">
-                  <div className="flex items-center gap-2">
-                    <MessageCircle className="w-4 h-4 text-violet-400" />
-                    <h4 className="text-sm font-medium text-white/80">Articulation</h4>
-                  </div>
-                  <div className="px-2 py-1 rounded-full bg-violet-500/20 text-violet-400 text-xs">
-                    {analysis.bodyLanguageScore}%
-                  </div>
+              {/* Speaking Tips */}
+              <div className="p-5 bg-white/5 border border-white/10 rounded-xl backdrop-blur-lg">
+                <div className="flex items-center gap-2 mb-4">
+                  <Lightbulb className="w-5 h-5 text-amber-400" />
+                  <h4 className="font-medium text-white/80">Quick Tips</h4>
                 </div>
-                <div className="flex flex-wrap gap-2 mt-3">
-                  {analysis.tips.map((tip, i) => (
-                    <div 
-                      key={`tip-${i}`}
-                      className="px-2 py-1 rounded-full bg-white/5 border border-white/10 text-white/60 text-xs"
-                    >
+                <ul className="space-y-3">
+                  {analysis.tips.slice(0, 3).map((tip, i) => (
+                    <li key={`full-tip-${i}`} className="flex items-center gap-3 text-sm text-white/70">
+                      <div className="w-1.5 h-1.5 rounded-full bg-amber-400 mt-1" />
                       {tip}
-                    </div>
+                    </li>
                   ))}
-                </div>
+                </ul>
               </div>
             </div>
           </div>
