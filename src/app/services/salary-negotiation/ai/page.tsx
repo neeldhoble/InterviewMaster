@@ -1,8 +1,13 @@
 "use client";
 
-import { motion } from 'framer-motion';
-import { useState } from 'react';
-import { FaRobot, FaChartLine, FaSpinner, FaBriefcase, FaGraduationCap, FaMapMarkerAlt, FaIndustry, FaCheckCircle, FaTimes, FaArrowLeft } from 'react-icons/fa';
+import { useState, useEffect } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { Card } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { DollarSign, Calculator, TrendingUp, Building2, BrainCircuit, ArrowLeft } from 'lucide-react';
+import { SalaryForm } from './components/SalaryForm';
+import { SalaryResults } from './components/SalaryResults';
+import { useSalaryPrediction } from './hooks/useSalaryPrediction';
 import Link from 'next/link';
 
 const containerVariants = {
@@ -10,383 +15,226 @@ const containerVariants = {
   animate: {
     opacity: 1,
     transition: {
-      staggerChildren: 0.2
+      staggerChildren: 0.1,
+      delayChildren: 0.2
     }
-  }
+  },
+  exit: { opacity: 0 }
 };
 
 const itemVariants = {
   initial: { opacity: 0, y: 20 },
-  animate: { opacity: 1, y: 0 }
+  animate: {
+    opacity: 1,
+    y: 0,
+    transition: {
+      duration: 0.4,
+      ease: "easeOut"
+    }
+  },
+  exit: {
+    opacity: 0,
+    y: -20,
+    transition: {
+      duration: 0.3
+    }
+  }
 };
 
-interface FormData {
-  role: string;
-  experience: number;
-  location: string;
-  industry: string;
-  currentSalary: number;
-  targetSalary?: number;
-  skills: string[];
-  benefits: string[];
-}
+const cardVariants = {
+  initial: { scale: 0.95, opacity: 0 },
+  animate: {
+    scale: 1,
+    opacity: 1,
+    transition: {
+      duration: 0.4,
+      ease: "easeOut"
+    }
+  },
+  hover: {
+    scale: 1.03,
+    transition: {
+      duration: 0.2,
+      ease: "easeInOut"
+    }
+  },
+  exit: {
+    scale: 0.95,
+    opacity: 0,
+    transition: {
+      duration: 0.3
+    }
+  }
+};
 
-const industries = [
-  'Technology',
-  'Finance',
-  'Healthcare',
-  'Manufacturing',
-  'Retail',
-  'Education',
-  'Consulting',
-  'Other'
-];
+export default function SalaryNegotiationPage() {
+  const [showResults, setShowResults] = useState(false);
+  const { result, loading, error, getPrediction } = useSalaryPrediction();
 
-const commonSkills = [
-  'Leadership',
-  'Project Management',
-  'Communication',
-  'Problem Solving',
-  'Technical Skills',
-  'Analytics',
-  'Team Management',
-  'Strategic Planning'
-];
+  useEffect(() => {
+    if (error) {
+      setShowResults(false);
+    }
+  }, [error]);
 
-const benefits = [
-  'Health Insurance',
-  'Remote Work',
-  'Stock Options',
-  '401(k)',
-  'Flexible Hours',
-  'Professional Development',
-  'Paid Time Off',
-  'Performance Bonus'
-];
-
-export default function AIConsultation() {
-  const [currentStep, setCurrentStep] = useState(1);
-  const [isAnalyzing, setIsAnalyzing] = useState(false);
-  const [formData, setFormData] = useState<FormData>({
-    role: '',
-    experience: 0,
-    location: '',
-    industry: '',
-    currentSalary: 0,
-    skills: [],
-    benefits: []
-  });
-
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
-    const { name, value } = e.target;
-    setFormData(prev => ({
-      ...prev,
-      [name]: name.includes('Salary') || name === 'experience' ? Number(value) : value
-    }));
+  const handleSubmit = async (formData: any) => {
+    try {
+      await getPrediction(formData);
+      setShowResults(true);
+    } catch (err) {
+      setShowResults(false);
+    }
   };
 
-  const handleSkillToggle = (skill: string) => {
-    setFormData(prev => ({
-      ...prev,
-      skills: prev.skills.includes(skill)
-        ? prev.skills.filter(s => s !== skill)
-        : [...prev.skills, skill]
-    }));
-  };
-
-  const handleBenefitToggle = (benefit: string) => {
-    setFormData(prev => ({
-      ...prev,
-      benefits: prev.benefits.includes(benefit)
-        ? prev.benefits.filter(b => b !== benefit)
-        : [...prev.benefits, benefit]
-    }));
-  };
-
-  const handleSubmit = async () => {
-    setIsAnalyzing(true);
-    // Simulate API call
-    await new Promise(resolve => setTimeout(resolve, 2000));
-    setIsAnalyzing(false);
-    setCurrentStep(4);
+  const handleReset = () => {
+    setShowResults(false);
   };
 
   return (
-    <div className="min-h-screen bg-background text-white pt-20">
-      {/* Background Effects */}
-      <div className="fixed inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,#fcba2810_0%,transparent_65%)] blur-3xl" />
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_80%_20%,#fcba2815_0%,transparent_50%)]" />
-      </div>
-
-      <motion.div
-        className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 relative"
-        variants={containerVariants}
-        initial="initial"
-        animate="animate"
-      >
+    <div className="min-h-screen bg-gradient-to-b from-[#1a1a1a] to-[#2d2d2d] text-white py-12">
+      <div className="container mx-auto px-4 max-w-6xl">
         {/* Header */}
-        <div className="flex items-center mb-8">
-          <Link href="/services/salary-negotiation" className="text-gray-400 hover:text-white transition-colors">
-            <FaArrowLeft className="w-6 h-6" />
+        <motion.div
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="mb-8"
+        >
+          <Link href="/services">
+            <Button variant="ghost" className="mb-4 text-white hover:bg-white/10">
+              <ArrowLeft className="w-4 h-4 mr-2" />
+              Back to Services
+            </Button>
           </Link>
-          <h1 className="text-3xl font-bold ml-4">AI Salary Analysis</h1>
-        </div>
+          <div className="flex items-center gap-3 mb-2">
+            <Calculator className="w-8 h-8 text-[#fcba28]" />
+            <h1 className="text-3xl font-bold text-white">AI Salary Calculator</h1>
+          </div>
+          <p className="text-gray-400">
+            Get precise salary predictions powered by advanced AI and real market data
+          </p>
+        </motion.div>
 
-        {/* Progress Bar */}
-        <div className="mb-8">
-          <div className="flex justify-between mb-2">
-            {['Basic Info', 'Skills', 'Benefits', 'Analysis'].map((step, index) => (
-              <div
-                key={step}
-                className={`text-sm ${currentStep > index + 1 ? 'text-[#fcba28]' : 'text-gray-400'}`}
+        {/* Features Grid */}
+        <motion.div
+          variants={containerVariants}
+          initial="initial"
+          animate="animate"
+          className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-12"
+        >
+          {[
+            {
+              icon: <Calculator className="w-6 h-6" />,
+              title: "Accurate Predictions",
+              description: "Get precise salary estimates based on real market data"
+            },
+            {
+              icon: <TrendingUp className="w-6 h-6" />,
+              title: "Market Insights",
+              description: "Understand industry trends and market demand"
+            },
+            {
+              icon: <Building2 className="w-6 h-6" />,
+              title: "Industry Specific",
+              description: "Tailored insights for your industry and role"
+            },
+            {
+              icon: <DollarSign className="w-6 h-6" />,
+              title: "Negotiation Tips",
+              description: "Get personalized advice for salary negotiations"
+            }
+          ].map((feature, index) => (
+            <motion.div
+              key={index}
+              variants={cardVariants}
+              whileHover="hover"
+              className="relative overflow-hidden rounded-xl bg-white/5 backdrop-blur-sm border border-white/10 p-8 transition-colors hover:bg-white/10"
+            >
+              <div className="flex flex-col items-center text-center space-y-3">
+                <div className="p-3 bg-[#fcba28]/10 rounded-full text-[#fcba28]">
+                  {feature.icon}
+                </div>
+                <h3 className="font-semibold text-white">{feature.title}</h3>
+                <p className="text-sm text-white/70">{feature.description}</p>
+              </div>
+            </motion.div>
+          ))}
+        </motion.div>
+
+        {/* Main Content */}
+        <div className="space-y-8">
+          <AnimatePresence mode="wait">
+            {!showResults && (
+              <motion.div
+                key="form"
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -20 }}
+                className="relative overflow-hidden rounded-xl bg-white/5 backdrop-blur-sm border border-white/10 p-8"
               >
-                {step}
-              </div>
-            ))}
-          </div>
-          <div className="h-2 bg-white/10 rounded-full overflow-hidden">
-            <div
-              className="h-full bg-[#fcba28] transition-all duration-500"
-              style={{ width: `${(currentStep - 1) * 33.33}%` }}
-            />
-          </div>
-        </div>
+                <div className="max-w-3xl mx-auto">
+                  <h2 className="text-2xl font-bold text-center mb-8 text-white">
+                    Calculate Your Worth
+                  </h2>
+                  <SalaryForm onSubmit={handleSubmit} />
+                </div>
+              </motion.div>
+            )}
 
-        {/* Step 1: Basic Information */}
-        {currentStep === 1 && (
-          <motion.div
-            variants={itemVariants}
-            className="space-y-6"
-          >
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div className="space-y-4">
-                <label className="block">
-                  <span className="text-gray-300">Job Role</span>
-                  <div className="mt-1 relative">
-                    <FaBriefcase className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
-                    <input
-                      type="text"
-                      name="role"
-                      value={formData.role}
-                      onChange={handleInputChange}
-                      className="block w-full pl-10 rounded-xl bg-white/5 border border-white/10 px-4 py-3 text-gray-200"
-                      placeholder="Software Engineer"
-                    />
-                  </div>
-                </label>
-
-                <label className="block">
-                  <span className="text-gray-300">Years of Experience</span>
-                  <div className="mt-1 relative">
-                    <FaGraduationCap className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
-                    <input
-                      type="number"
-                      name="experience"
-                      value={formData.experience}
-                      onChange={handleInputChange}
-                      className="block w-full pl-10 rounded-xl bg-white/5 border border-white/10 px-4 py-3 text-gray-200"
-                      placeholder="5"
-                    />
-                  </div>
-                </label>
-              </div>
-
-              <div className="space-y-4">
-                <label className="block">
-                  <span className="text-gray-300">Location</span>
-                  <div className="mt-1 relative">
-                    <FaMapMarkerAlt className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
-                    <input
-                      type="text"
-                      name="location"
-                      value={formData.location}
-                      onChange={handleInputChange}
-                      className="block w-full pl-10 rounded-xl bg-white/5 border border-white/10 px-4 py-3 text-gray-200"
-                      placeholder="San Francisco, CA"
-                    />
-                  </div>
-                </label>
-
-                <label className="block">
-                  <span className="text-gray-300">Industry</span>
-                  <div className="mt-1 relative">
-                    <FaIndustry className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
-                    <select
-                      name="industry"
-                      value={formData.industry}
-                      onChange={handleInputChange}
-                      className="block w-full pl-10 rounded-xl bg-white/5 border border-white/10 px-4 py-3 text-gray-200"
+            {showResults && (
+              <motion.div
+                key="results"
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -20 }}
+                className="relative overflow-hidden rounded-xl bg-white/5 backdrop-blur-sm border border-white/10 p-8"
+              >
+                {error ? (
+                  <div className="text-center text-red-400 p-4">
+                    <p>Error: {error}</p>
+                    <Button
+                      onClick={handleReset}
+                      className="mt-4 border-white/10 hover:bg-white/10"
+                      variant="outline"
                     >
-                      <option value="">Select Industry</option>
-                      {industries.map(industry => (
-                        <option key={industry} value={industry}>{industry}</option>
-                      ))}
-                    </select>
+                      Try Again
+                    </Button>
                   </div>
-                </label>
-              </div>
-            </div>
-
-            <div className="flex justify-end">
-              <button
-                onClick={() => setCurrentStep(2)}
-                className="px-6 py-3 bg-[#fcba28] text-black rounded-xl hover:bg-[#fcd978] transition-all duration-300"
-              >
-                Next Step
-              </button>
-            </div>
-          </motion.div>
-        )}
-
-        {/* Step 2: Skills */}
-        {currentStep === 2 && (
-          <motion.div
-            variants={itemVariants}
-            className="space-y-6"
-          >
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-              {commonSkills.map(skill => (
-                <button
-                  key={skill}
-                  onClick={() => handleSkillToggle(skill)}
-                  className={`p-3 rounded-xl text-sm text-center transition-all duration-300 ${
-                    formData.skills.includes(skill)
-                      ? 'bg-[#fcba28] text-black'
-                      : 'bg-white/5 text-gray-300 hover:bg-white/10'
-                  }`}
-                >
-                  {skill}
-                </button>
-              ))}
-            </div>
-
-            <div className="flex justify-between">
-              <button
-                onClick={() => setCurrentStep(1)}
-                className="px-6 py-3 bg-white/10 text-white rounded-xl hover:bg-white/20 transition-all duration-300"
-              >
-                Previous
-              </button>
-              <button
-                onClick={() => setCurrentStep(3)}
-                className="px-6 py-3 bg-[#fcba28] text-black rounded-xl hover:bg-[#fcd978] transition-all duration-300"
-              >
-                Next Step
-              </button>
-            </div>
-          </motion.div>
-        )}
-
-        {/* Step 3: Benefits */}
-        {currentStep === 3 && (
-          <motion.div
-            variants={itemVariants}
-            className="space-y-6"
-          >
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-              {benefits.map(benefit => (
-                <button
-                  key={benefit}
-                  onClick={() => handleBenefitToggle(benefit)}
-                  className={`p-3 rounded-xl text-sm text-center transition-all duration-300 ${
-                    formData.benefits.includes(benefit)
-                      ? 'bg-[#fcba28] text-black'
-                      : 'bg-white/5 text-gray-300 hover:bg-white/10'
-                  }`}
-                >
-                  {benefit}
-                </button>
-              ))}
-            </div>
-
-            <div className="flex justify-between">
-              <button
-                onClick={() => setCurrentStep(2)}
-                className="px-6 py-3 bg-white/10 text-white rounded-xl hover:bg-white/20 transition-all duration-300"
-              >
-                Previous
-              </button>
-              <button
-                onClick={handleSubmit}
-                disabled={isAnalyzing}
-                className="px-6 py-3 bg-[#fcba28] text-black rounded-xl hover:bg-[#fcd978] transition-all duration-300 disabled:opacity-50 flex items-center gap-2"
-              >
-                {isAnalyzing ? (
+                ) : loading ? (
+                  <div className="flex flex-col items-center justify-center p-8 space-y-4">
+                    <div className="w-12 h-12 border-4 border-[#fcba28] border-t-transparent rounded-full animate-spin"></div>
+                    <p className="text-white/70">Analyzing market data...</p>
+                  </div>
+                ) : result ? (
                   <>
-                    <FaSpinner className="animate-spin" />
-                    Analyzing...
+                    <div className="flex justify-end mb-6">
+                      <Button
+                        onClick={handleReset}
+                        variant="outline"
+                        className="text-sm border-white/10 hover:bg-white/10 text-white"
+                      >
+                        New Calculation
+                      </Button>
+                    </div>
+                    <SalaryResults result={result} />
                   </>
-                ) : (
-                  <>
-                    Generate Analysis
-                    <FaChartLine />
-                  </>
-                )}
-              </button>
-            </div>
-          </motion.div>
-        )}
+                ) : null}
+              </motion.div>
+            )}
+          </AnimatePresence>
 
-        {/* Step 4: Results */}
-        {currentStep === 4 && (
+          {/* Additional Info */}
           <motion.div
             variants={itemVariants}
-            className="space-y-8"
+            className="text-center text-sm text-gray-400 mt-8"
           >
-            {/* Market Position */}
-            <div className="bg-white/5 p-6 rounded-xl border border-white/10">
-              <h3 className="text-xl font-semibold text-[#fcba28] mb-4">Market Position</h3>
-              <div className="h-3 bg-white/10 rounded-full overflow-hidden">
-                <motion.div
-                  initial={{ width: 0 }}
-                  animate={{ width: '75%' }}
-                  transition={{ duration: 1, ease: "easeOut" }}
-                  className="h-full bg-[#fcba28]"
-                />
-              </div>
-              <div className="mt-4 text-gray-300">
-                Your profile is in the <span className="text-[#fcba28]">75th percentile</span> for your role and location
-              </div>
-            </div>
-
-            {/* Recommendations */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div className="bg-white/5 p-6 rounded-xl border border-white/10">
-                <h3 className="text-lg font-semibold text-[#fcba28] mb-4">Strengths</h3>
-                <ul className="space-y-3">
-                  {formData.skills.slice(0, 3).map((skill, index) => (
-                    <li key={index} className="flex items-center gap-2">
-                      <FaCheckCircle className="text-green-400" />
-                      <span className="text-gray-300">{skill}</span>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-
-              <div className="bg-white/5 p-6 rounded-xl border border-white/10">
-                <h3 className="text-lg font-semibold text-[#fcba28] mb-4">Areas to Highlight</h3>
-                <ul className="space-y-3">
-                  {formData.benefits.slice(0, 3).map((benefit, index) => (
-                    <li key={index} className="flex items-center gap-2">
-                      <FaCheckCircle className="text-[#fcba28]" />
-                      <span className="text-gray-300">{benefit}</span>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            </div>
-
-            <div className="flex justify-end">
-              <Link href="/services/salary-negotiation/professional">
-                <button className="px-6 py-3 bg-[#fcba28] text-black rounded-xl hover:bg-[#fcd978] transition-all duration-300">
-                  Get Professional Help
-                </button>
-              </Link>
-            </div>
+            <p>
+              Our AI model is trained on millions of data points and updated regularly.
+              <br />
+              Results are for informational purposes and may vary based on specific circumstances.
+            </p>
           </motion.div>
-        )}
-      </motion.div>
+        </div>
+      </div>
     </div>
   );
 }
