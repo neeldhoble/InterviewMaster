@@ -1,18 +1,20 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Plus, X, Filter, ChevronDown, ChevronUp } from 'lucide-react';
-import { Question, QuestionType, interviewQuestions, getQuestionsByType, getAllCategories } from '../data/questions';
+import { Question, QuestionType } from '../data/questions';
 
 interface QuestionPanelProps {
   currentQuestion: number;
+  questions: Question[];
   onQuestionSelect: (index: number) => void;
   onCustomQuestionAdd: (question: Question) => void;
 }
 
 export const QuestionPanel: React.FC<QuestionPanelProps> = ({
   currentQuestion,
+  questions,
   onQuestionSelect,
   onCustomQuestionAdd,
 }) => {
@@ -20,17 +22,26 @@ export const QuestionPanel: React.FC<QuestionPanelProps> = ({
   const [selectedDifficulty, setSelectedDifficulty] = useState<'all' | 'easy' | 'medium' | 'hard'>('all');
   const [showFilters, setShowFilters] = useState(false);
   const [showAddQuestion, setShowAddQuestion] = useState(false);
+  const [filteredQuestions, setFilteredQuestions] = useState(questions);
   const [customQuestion, setCustomQuestion] = useState({
     text: '',
-    type: 'custom' as QuestionType,
+    type: 'behavioral' as QuestionType,
     category: '',
+    difficulty: 'medium' as 'easy' | 'medium' | 'hard',
   });
 
-  const filteredQuestions = interviewQuestions.filter(q => {
-    if (selectedType !== 'all' && q.type !== selectedType) return false;
-    if (selectedDifficulty !== 'all' && q.difficulty !== selectedDifficulty) return false;
-    return true;
-  });
+  useEffect(() => {
+    const filtered = questions.filter(q => {
+      if (selectedType !== 'all' && q.type !== selectedType) return false;
+      if (selectedDifficulty !== 'all' && q.difficulty !== selectedDifficulty) return false;
+      return true;
+    });
+    setFilteredQuestions(filtered);
+    // If current question is out of bounds after filtering, select the first question
+    if (currentQuestion >= filtered.length) {
+      onQuestionSelect(0);
+    }
+  }, [selectedType, selectedDifficulty, questions, currentQuestion]);
 
   const questionTypes: { value: QuestionType | 'all'; label: string }[] = [
     { value: 'all', label: 'All Types' },
@@ -38,6 +49,9 @@ export const QuestionPanel: React.FC<QuestionPanelProps> = ({
     { value: 'technical', label: 'Technical' },
     { value: 'leadership', label: 'Leadership' },
     { value: 'problem-solving', label: 'Problem Solving' },
+    { value: 'introduction', label: 'Introduction' },
+    { value: 'cultural-fit', label: 'Cultural Fit' },
+    { value: 'closing', label: 'Closing' },
   ];
 
   const difficultyLevels = [
@@ -54,11 +68,22 @@ export const QuestionPanel: React.FC<QuestionPanelProps> = ({
         text: customQuestion.text,
         type: customQuestion.type,
         category: customQuestion.category,
+        difficulty: customQuestion.difficulty,
       };
       onCustomQuestionAdd(newQuestion);
-      setCustomQuestion({ text: '', type: 'custom', category: '' });
+      setCustomQuestion({
+        text: '',
+        type: 'behavioral',
+        category: '',
+        difficulty: 'medium',
+      });
       setShowAddQuestion(false);
     }
+  };
+
+  const getQuestionIndex = (filteredIndex: number) => {
+    const filteredQuestion = filteredQuestions[filteredIndex];
+    return questions.findIndex(q => q.id === filteredQuestion.id);
   };
 
   return (
@@ -138,19 +163,47 @@ export const QuestionPanel: React.FC<QuestionPanelProps> = ({
             exit={{ height: 0, opacity: 0 }}
             className="overflow-hidden mb-4"
           >
-            <div className="p-4 bg-white/5 rounded-lg">
+            <div className="p-4 bg-white/5 rounded-lg space-y-2">
               <textarea
                 value={customQuestion.text}
                 onChange={(e) => setCustomQuestion({ ...customQuestion, text: e.target.value })}
                 placeholder="Enter your custom question..."
-                className="w-full bg-white/10 border border-white/20 rounded-lg p-2 text-white mb-2 min-h-[100px]"
+                className="w-full bg-white/10 border border-white/20 rounded-lg p-2 text-white min-h-[100px]"
               />
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <select
+                    value={customQuestion.type}
+                    onChange={(e) => setCustomQuestion({ ...customQuestion, type: e.target.value as QuestionType })}
+                    className="w-full bg-white/10 border border-white/20 rounded-lg p-2 text-white"
+                  >
+                    {questionTypes.filter(t => t.value !== 'all').map((type) => (
+                      <option key={type.value} value={type.value} className="bg-gray-800">
+                        {type.label}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                <div>
+                  <select
+                    value={customQuestion.difficulty}
+                    onChange={(e) => setCustomQuestion({ ...customQuestion, difficulty: e.target.value as 'easy' | 'medium' | 'hard' })}
+                    className="w-full bg-white/10 border border-white/20 rounded-lg p-2 text-white"
+                  >
+                    {difficultyLevels.filter(l => l.value !== 'all').map((level) => (
+                      <option key={level.value} value={level.value} className="bg-gray-800">
+                        {level.label}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              </div>
               <input
                 type="text"
                 value={customQuestion.category}
                 onChange={(e) => setCustomQuestion({ ...customQuestion, category: e.target.value })}
                 placeholder="Category (e.g., System Design, Algorithms)"
-                className="w-full bg-white/10 border border-white/20 rounded-lg p-2 text-white mb-2"
+                className="w-full bg-white/10 border border-white/20 rounded-lg p-2 text-white"
               />
               <button
                 onClick={handleAddCustomQuestion}
@@ -172,11 +225,11 @@ export const QuestionPanel: React.FC<QuestionPanelProps> = ({
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: index * 0.05 }}
             className={`p-4 rounded-lg transition-colors cursor-pointer ${
-              currentQuestion === index
+              currentQuestion === getQuestionIndex(index)
                 ? 'bg-[#fcba28] text-black'
                 : 'bg-white/5 hover:bg-white/10 text-white'
             }`}
-            onClick={() => onQuestionSelect(index)}
+            onClick={() => onQuestionSelect(getQuestionIndex(index))}
           >
             <div className="flex justify-between items-start gap-4">
               <p className="flex-1">{question.text}</p>

@@ -98,97 +98,97 @@ export const interviewQuestions: Question[] = [
     category: 'Performance',
     difficulty: 'hard'
   },
-  {
-    id: 't5',
-    text: 'Describe your approach to writing clean, maintainable code.',
-    type: 'technical',
-    category: 'Code Quality',
-    difficulty: 'medium'
-  },
 
   // Leadership Questions
   {
     id: 'l1',
-    text: 'How do you approach mentoring junior developers?',
+    text: 'Tell me about a time when you had to lead a team through a difficult situation.',
     type: 'leadership',
-    category: 'Mentorship',
-    difficulty: 'medium'
+    category: 'Team Leadership',
+    difficulty: 'hard'
   },
   {
     id: 'l2',
-    text: 'Tell me about a time when you had to lead a project or initiative.',
+    text: 'How do you motivate team members and maintain high morale?',
     type: 'leadership',
-    category: 'Project Leadership',
-    difficulty: 'hard'
+    category: 'Team Management',
+    difficulty: 'medium'
   },
   {
     id: 'l3',
-    text: 'How do you handle conflicts within your team?',
+    text: 'Describe a situation where you had to influence stakeholders without direct authority.',
     type: 'leadership',
-    category: 'Conflict Resolution',
+    category: 'Stakeholder Management',
     difficulty: 'hard'
   },
 
-  // Problem-Solving Questions
+  // Problem Solving Questions
   {
-    id: 'p1',
+    id: 'ps1',
     text: 'How would you design a scalable system for handling millions of concurrent users?',
     type: 'problem-solving',
     category: 'System Design',
     difficulty: 'hard'
   },
   {
-    id: 'p2',
-    text: 'Describe how you would debug a production issue with limited information.',
+    id: 'ps2',
+    text: 'Describe a complex technical problem you solved and your approach to solving it.',
     type: 'problem-solving',
-    category: 'Debugging',
-    difficulty: 'hard'
+    category: 'Technical Problem Solving',
+    difficulty: 'medium'
   },
   {
-    id: 'p3',
-    text: 'How would you improve the performance of a slow-running application?',
+    id: 'ps3',
+    text: 'How do you approach debugging and troubleshooting complex issues?',
     type: 'problem-solving',
-    category: 'Optimization',
+    category: 'Debugging',
     difficulty: 'medium'
   },
 
   // Cultural Fit Questions
   {
-    id: 'c1',
-    text: 'What type of work environment do you thrive in?',
+    id: 'cf1',
+    text: 'How do you handle work-life balance and manage stress?',
+    type: 'cultural-fit',
+    category: 'Work-Life Balance',
+    difficulty: 'medium'
+  },
+  {
+    id: 'cf2',
+    text: 'What type of work environment helps you thrive?',
     type: 'cultural-fit',
     category: 'Work Environment',
     difficulty: 'easy'
   },
   {
-    id: 'c2',
-    text: 'How do you stay updated with the latest technology trends?',
+    id: 'cf3',
+    text: 'How do you stay updated with industry trends and continue learning?',
     type: 'cultural-fit',
-    category: 'Professional Growth',
-    difficulty: 'easy'
-  },
-  {
-    id: 'c3',
-    text: 'Where do you see yourself in 5 years?',
-    type: 'cultural-fit',
-    category: 'Career Goals',
+    category: 'Professional Development',
     difficulty: 'medium'
   },
 
   // Closing Questions
   {
-    id: 'cl1',
-    text: 'What questions do you have for me about the role or company?',
+    id: 'c1',
+    text: 'What are your salary expectations for this role?',
+    type: 'closing',
+    category: 'Compensation',
+    difficulty: 'medium'
+  },
+  {
+    id: 'c2',
+    text: 'Do you have any questions for me about the role or company?',
     type: 'closing',
     category: 'Final Questions',
     difficulty: 'easy'
   },
   {
-    id: 'cl2',
-    text: 'Is there anything else you would like to share about your background or experience?',
+    id: 'c3',
+    text: 'What are your expectations for the first 30/60/90 days in this role?',
     type: 'closing',
-    category: 'Final Thoughts',
-    difficulty: 'easy'
+    category: 'Role Expectations',
+    difficulty: 'medium'
   }
 ];
 
@@ -206,5 +206,5 @@ export const getQuestionsByCategory = (category: string) => {
 };
 
 export const getAllCategories = () => {
-  return [...new Set(interviewQuestions.map(q => q.category))];
+  return Array.from(new Set(interviewQuestions.map(q => q.category)));
 };
