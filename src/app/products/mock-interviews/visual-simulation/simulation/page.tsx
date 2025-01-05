@@ -12,6 +12,7 @@ import { MessageSquare, BarChart, Download, Share2, ThumbsUp, Volume2, Mic, Came
 import { recordingService } from './services/recordingService';
 import { aiAnalysisService } from './services/aiAnalysisService';
 import { enhancedAnalysisService } from './services/enhancedAnalysisService';
+import { MessageSquare, Activity, Lightbulb, CheckCircle } from 'lucide-react';
 
 export default function SimulationPage() {
   const [isRecording, setIsRecording] = useState(false);
@@ -487,122 +488,255 @@ export default function SimulationPage() {
           </div>
         </div>
 
-        {/* AI Feedback Section */}
-        <div className="mt-8 p-6 bg-white/5 border border-white/10 rounded-xl backdrop-blur-lg">
-          <div className="flex items-center justify-between mb-4">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-full bg-[#fcba28]/20 flex items-center justify-center">
-                <MessageSquare className="w-6 h-6 text-[#fcba28]" />
-              </div>
-              <h3 className="text-xl font-semibold text-white">AI Interview Feedback</h3>
-            </div>
-            {isRecording && (
-              <div className="flex items-center gap-2">
-                <div className="w-2 h-2 rounded-full bg-[#fcba28] animate-pulse" />
-                <span className="text-white/60">Analyzing response...</span>
-              </div>
-            )}
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {/* Communication Skills */}
-            <div className="space-y-3">
-              <h4 className="text-white font-medium">Communication Skills</h4>
-              <div className="h-2 bg-white/10 rounded-full overflow-hidden">
-                <motion.div 
-                  className="h-full bg-[#fcba28]" 
-                  initial={{ width: "0%" }}
-                  animate={{ width: `${analysis.communicationScore}%` }}
-                  transition={{ duration: 1 }}
-                />
-              </div>
-              <div className="space-y-1">
-                <p className="text-white/60 text-sm">
-                  Speaking Pace: {analysis.speechMetrics.pace.toFixed(0)} words/min
-                </p>
-                <p className="text-white/60 text-sm">
-                  Clarity: {analysis.speechMetrics.clarity.toFixed(0)}%
-                </p>
-                <p className="text-white/60 text-sm">
-                  Filler Words: {analysis.speechMetrics.fillerWords}
-                </p>
-              </div>
-            </div>
-
-            {/* Body Language */}
-            <div className="space-y-3">
-              <h4 className="text-white font-medium">Body Language</h4>
-              <div className="h-2 bg-white/10 rounded-full overflow-hidden">
-                <motion.div 
-                  className="h-full bg-[#fcba28]" 
-                  initial={{ width: "0%" }}
-                  animate={{ width: `${analysis.bodyLanguageScore}%` }}
-                  transition={{ duration: 1 }}
-                />
-              </div>
-              <div className="space-y-1">
-                <p className="text-white/60 text-sm">
-                  Engagement: {(analysis.emotionData.happy * 100).toFixed(0)}%
-                </p>
-                <p className="text-white/60 text-sm">
-                  Confidence: {analysis.speechMetrics.confidence.toFixed(0)}%
-                </p>
-                <p className="text-white/60 text-sm">
-                  Expression: {
-                    analysis.emotionData.neutral > 0.5 ? 'Neutral' :
-                    analysis.emotionData.happy > 0.3 ? 'Positive' :
-                    'Mixed'
-                  }
-                </p>
-              </div>
-            </div>
-
-            {/* Answer Quality */}
-            <div className="space-y-3">
-              <h4 className="text-white font-medium">Answer Quality</h4>
-              <div className="h-2 bg-white/10 rounded-full overflow-hidden">
-                <motion.div 
-                  className="h-full bg-[#fcba28]" 
-                  initial={{ width: "0%" }}
-                  animate={{ width: `${analysis.answerQualityScore}%` }}
-                  transition={{ duration: 1 }}
-                />
-              </div>
-              <div className="space-y-1">
-                <p className="text-white/60 text-sm">
-                  Structure: {analysis.answerQualityScore > 80 ? 'Excellent' :
-                            analysis.answerQualityScore > 60 ? 'Good' : 'Needs Improvement'}
-                </p>
-                <p className="text-white/60 text-sm">
-                  Examples: {analysis.answerQualityScore > 70 ? 'Specific' : 'Generic'}
-                </p>
-                <p className="text-white/60 text-sm">
-                  Relevance: {analysis.answerQualityScore > 75 ? 'High' : 'Moderate'}
-                </p>
-              </div>
-            </div>
-          </div>
-
-          {/* Real-time Tips */}
-          <div className="mt-6 p-4 bg-white/5 rounded-lg border border-white/10">
-            <h4 className="text-white font-medium mb-3">Real-time Tips</h4>
-            <ul className="space-y-2">
-              {analysis.tips.map((tip, index) => (
-                <motion.li 
-                  key={index}
-                  className="text-white/60 flex items-center gap-2"
-                  initial={{ opacity: 0, x: -20 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  transition={{ duration: 0.5, delay: index * 0.2 }}
-                >
-                  <div className="w-1.5 h-1.5 rounded-full bg-[#fcba28]" />
-                  {tip}
-                </motion.li>
-              ))}
-            </ul>
+       {/* AI Feedback Section */}
+<div className="mt-8 p-6 bg-white/5 border border-white/10 rounded-xl backdrop-blur-lg relative overflow-hidden">
+  {/* Background Effects */}
+  <div className="absolute inset-0 bg-gradient-to-br from-[#fcba28]/5 via-emerald-500/5 to-blue-500/5" />
+  <div className="absolute inset-0 bg-[radial-gradient(circle_at_30%_20%,#fcba2810_0%,transparent_50%)]" />
+  
+  <div className="relative">
+    {/* Header */}
+    <div className="flex items-center justify-between mb-6">
+      <div className="flex items-center gap-4">
+        <div className="relative">
+          <div className="absolute inset-0 rounded-full bg-[#fcba28]/30 blur-xl animate-pulse" />
+          <div className="relative w-12 h-12 rounded-full bg-gradient-to-br from-[#fcba28]/20 to-emerald-500/20 flex items-center justify-center border border-[#fcba28]/20 backdrop-blur-sm">
+            <MessageSquare className="w-7 h-7 text-[#fcba28]" />
           </div>
         </div>
+        <div className="space-y-1">
+          <h3 className="text-2xl font-semibold text-white flex items-center gap-3">
+            AI Interview Feedback
+            <span className="text-xs font-normal px-2 py-1 rounded-full bg-[#fcba28]/20 text-[#fcba28]">
+              Advanced Analysis
+            </span>
+          </h3>
+          {isRecording && (
+            <div className="flex items-center gap-2">
+              <div className="w-2 h-2 rounded-full bg-[#fcba28] animate-[ping_1.5s_infinite]" />
+              <span className="text-white/60 text-sm">Real-time analysis in progress...</span>
+            </div>
+          )}
+        </div>
+      </div>
 
+      {/* Overall Performance Score */}
+      <div className="text-center">
+        <div className="relative w-24 h-24">
+          <div className="absolute inset-0 rounded-full bg-gradient-to-br from-[#fcba28]/20 via-emerald-500/20 to-blue-500/20 animate-pulse blur-sm" />
+          <div className="absolute inset-1 rounded-full bg-black/50 backdrop-blur-sm border border-white/10">
+            <div className="absolute inset-0 rounded-full"
+                 style={{
+                   background: `conic-gradient(from 0deg, #fcba28 ${Math.round(
+                     (analysis.communicationScore + analysis.bodyLanguageScore + analysis.answerQualityScore) / 3
+                   )}%, transparent 0)`
+                 }} />
+            <div className="absolute inset-2 rounded-full bg-black/80 flex items-center justify-center">
+              <div className="text-center">
+                <span className="text-3xl font-bold bg-gradient-to-br from-[#fcba28] to-emerald-500 text-transparent bg-clip-text">
+                  {Math.round((analysis.communicationScore + analysis.bodyLanguageScore + analysis.answerQualityScore) / 3)}
+                </span>
+                <span className="text-sm font-medium text-[#fcba28]">/100</span>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div className="mt-2">
+          <span className="text-sm font-medium text-white/80">Overall Performance</span>
+        </div>
+      </div>
+    </div>
+
+    {/* Main Grid */}
+    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      {/* Communication Skills */}
+      <div className="p-5 bg-white/5 border border-white/10 rounded-xl backdrop-blur-sm relative overflow-hidden group hover:bg-white/10 transition-all">
+        <div className="absolute inset-0 bg-gradient-to-br from-[#fcba28]/5 to-transparent" />
+        <div className="relative">
+          <div className="flex items-center justify-between mb-4">
+            <h4 className="text-white font-medium flex items-center gap-2">
+              <div className="p-2 rounded-lg bg-[#fcba28]/20">
+                <MessageSquare className="w-5 h-5 text-[#fcba28]" />
+              </div>
+              Communication Skills
+            </h4>
+            <div className="px-3 py-1.5 rounded-full bg-[#fcba28]/20 text-[#fcba28] text-sm font-medium">
+              {analysis.communicationScore}%
+            </div>
+          </div>
+          
+          <div className="h-2.5 bg-white/10 rounded-full overflow-hidden mb-4">
+            <motion.div 
+              className="h-full bg-gradient-to-r from-[#fcba28] to-emerald-500 rounded-full"
+              initial={{ width: "0%" }}
+              animate={{ width: `${analysis.communicationScore}%` }}
+              transition={{ duration: 1 }}
+            />
+          </div>
+
+          <div className="space-y-3">
+            <div className="flex items-center justify-between p-2 rounded-lg bg-white/5 backdrop-blur-sm">
+              <span className="text-white/60 text-sm">Speaking Pace</span>
+              <span className="text-sm font-medium text-[#fcba28]">
+                {analysis.speechMetrics.pace.toFixed(0)} WPM
+              </span>
+            </div>
+            <div className="flex items-center justify-between p-2 rounded-lg bg-white/5 backdrop-blur-sm">
+              <span className="text-white/60 text-sm">Clarity</span>
+              <span className="text-sm font-medium text-emerald-400">
+                {analysis.speechMetrics.clarity.toFixed(0)}%
+              </span>
+            </div>
+            <div className="flex items-center justify-between p-2 rounded-lg bg-white/5 backdrop-blur-sm">
+              <span className="text-white/60 text-sm">Filler Words</span>
+              <span className="text-sm font-medium text-blue-400">
+                {analysis.speechMetrics.fillerWords}
+              </span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Body Language */}
+      <div className="p-5 bg-white/5 border border-white/10 rounded-xl backdrop-blur-sm relative overflow-hidden group hover:bg-white/10 transition-all">
+        <div className="absolute inset-0 bg-gradient-to-br from-emerald-500/5 to-transparent" />
+        <div className="relative">
+          <div className="flex items-center justify-between mb-4">
+            <h4 className="text-white font-medium flex items-center gap-2">
+              <div className="p-2 rounded-lg bg-emerald-500/20">
+                <Activity className="w-5 h-5 text-emerald-400" />
+              </div>
+              Body Language
+            </h4>
+            <div className="px-3 py-1.5 rounded-full bg-emerald-500/20 text-emerald-400 text-sm font-medium">
+              {analysis.bodyLanguageScore}%
+            </div>
+          </div>
+
+          <div className="h-2.5 bg-white/10 rounded-full overflow-hidden mb-4">
+            <motion.div 
+              className="h-full bg-gradient-to-r from-emerald-400 to-emerald-500 rounded-full"
+              initial={{ width: "0%" }}
+              animate={{ width: `${analysis.bodyLanguageScore}%` }}
+              transition={{ duration: 1 }}
+            />
+          </div>
+
+          <div className="space-y-3">
+            <div className="flex items-center justify-between p-2 rounded-lg bg-white/5 backdrop-blur-sm">
+              <span className="text-white/60 text-sm">Engagement</span>
+              <span className="text-sm font-medium text-emerald-400">
+                {(analysis.emotionData.happy * 100).toFixed(0)}%
+              </span>
+            </div>
+            <div className="flex items-center justify-between p-2 rounded-lg bg-white/5 backdrop-blur-sm">
+              <span className="text-white/60 text-sm">Confidence</span>
+              <span className="text-sm font-medium text-emerald-400">
+                {analysis.speechMetrics.confidence.toFixed(0)}%
+              </span>
+            </div>
+            <div className="flex items-center justify-between p-2 rounded-lg bg-white/5 backdrop-blur-sm">
+              <span className="text-white/60 text-sm">Expression</span>
+              <span className={`text-sm font-medium ${
+                analysis.emotionData.neutral > 0.5 ? 'text-blue-400' :
+                analysis.emotionData.happy > 0.3 ? 'text-emerald-400' : 'text-amber-400'
+              }`}>
+                {analysis.emotionData.neutral > 0.5 ? 'Neutral' :
+                 analysis.emotionData.happy > 0.3 ? 'Positive' : 'Mixed'}
+              </span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Answer Quality */}
+      <div className="p-5 bg-white/5 border border-white/10 rounded-xl backdrop-blur-sm relative overflow-hidden group hover:bg-white/10 transition-all">
+        <div className="absolute inset-0 bg-gradient-to-br from-blue-500/5 to-transparent" />
+        <div className="relative">
+          <div className="flex items-center justify-between mb-4">
+            <h4 className="text-white font-medium flex items-center gap-2">
+              <div className="p-2 rounded-lg bg-blue-500/20">
+                <CheckCircle className="w-5 h-5 text-blue-400" />
+              </div>
+              Answer Quality
+            </h4>
+            <div className="px-3 py-1.5 rounded-full bg-blue-500/20 text-blue-400 text-sm font-medium">
+              {analysis.answerQualityScore}%
+            </div>
+          </div>
+
+          <div className="h-2.5 bg-white/10 rounded-full overflow-hidden mb-4">
+            <motion.div 
+              className="h-full bg-gradient-to-r from-blue-400 to-blue-500 rounded-full"
+              initial={{ width: "0%" }}
+              animate={{ width: `${analysis.answerQualityScore}%` }}
+              transition={{ duration: 1 }}
+            />
+          </div>
+
+          <div className="space-y-3">
+            <div className="flex items-center justify-between p-2 rounded-lg bg-white/5 backdrop-blur-sm">
+              <span className="text-white/60 text-sm">Structure</span>
+              <span className={`text-sm font-medium ${
+                analysis.answerQualityScore > 80 ? 'text-emerald-400' :
+                analysis.answerQualityScore > 60 ? 'text-blue-400' : 'text-amber-400'
+              }`}>
+                {analysis.answerQualityScore > 80 ? 'Excellent' :
+                 analysis.answerQualityScore > 60 ? 'Good' : 'Needs Work'}
+              </span>
+            </div>
+            <div className="flex items-center justify-between p-2 rounded-lg bg-white/5 backdrop-blur-sm">
+              <span className="text-white/60 text-sm">Examples</span>
+              <span className={`text-sm font-medium ${
+                analysis.answerQualityScore > 70 ? 'text-emerald-400' : 'text-amber-400'
+              }`}>
+                {analysis.answerQualityScore > 70 ? 'Specific' : 'Generic'}
+              </span>
+            </div>
+            <div className="flex items-center justify-between p-2 rounded-lg bg-white/5 backdrop-blur-sm">
+              <span className="text-white/60 text-sm">Relevance</span>
+              <span className={`text-sm font-medium ${
+                analysis.answerQualityScore > 75 ? 'text-emerald-400' : 'text-blue-400'
+              }`}>
+                {analysis.answerQualityScore > 75 ? 'High' : 'Moderate'}
+              </span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    {/* Enhanced Real-time Tips */}
+    <div className="mt-6 p-5 bg-white/5 rounded-xl border border-white/10 backdrop-blur-sm relative overflow-hidden">
+      <div className="absolute inset-0 bg-gradient-to-br from-[#fcba28]/5 via-emerald-500/5 to-blue-500/5" />
+      <div className="relative">
+        <div className="flex items-center gap-3 mb-4">
+          <div className="p-2 rounded-lg bg-[#fcba28]/20">
+            <Lightbulb className="w-5 h-5 text-[#fcba28]" />
+          </div>
+          <h4 className="text-white font-medium">Real-time Improvement Tips</h4>
+        </div>
+        
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+          {analysis.tips.map((tip, index) => (
+            <motion.div
+              key={index}
+              className="p-3 bg-white/5 rounded-lg border border-white/10 backdrop-blur-sm hover:bg-white/10 transition-all"
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5, delay: index * 0.1 }}
+            >
+              <div className="flex items-start gap-3">
+                <div className="w-1.5 h-1.5 rounded-full bg-gradient-to-br from-[#fcba28] to-emerald-500 mt-2" />
+                <p className="text-white/70 text-sm leading-relaxed">{tip}</p>
+              </div>
+            </motion.div>
+          ))}
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
         {/* Live Transcript Section */}
         <div className="mt-6 grid grid-cols-1 gap-6">
           {/* Header Section */}
