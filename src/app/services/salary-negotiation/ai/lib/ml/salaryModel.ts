@@ -73,6 +73,29 @@ export class SalaryModel {
   };
 
   private readonly locationMultipliers: Record<string, { multiplier: number; currency: string; insight: string }> = {
+    // Indian Metro Cities
+    'Bangalore': { multiplier: 1.3, currency: 'INR', insight: 'India\'s Silicon Valley with highest tech salaries.' },
+    'Mumbai': { multiplier: 1.25, currency: 'INR', insight: 'Financial capital with high cost of living.' },
+    'Delhi NCR': { multiplier: 1.2, currency: 'INR', insight: 'Major business hub with diverse opportunities.' },
+    'Hyderabad': { multiplier: 1.15, currency: 'INR', insight: 'Growing tech center with reasonable cost of living.' },
+    'Pune': { multiplier: 1.1, currency: 'INR', insight: 'Emerging IT hub with good quality of life.' },
+    'Chennai': { multiplier: 1.1, currency: 'INR', insight: 'Strong in manufacturing and IT sectors.' },
+    
+    // Indian Tier 2 Cities
+    'Ahmedabad': { multiplier: 0.95, currency: 'INR', insight: 'Emerging business hub with lower living costs.' },
+    'Kolkata': { multiplier: 1.0, currency: 'INR', insight: 'Major economic center in Eastern India.' },
+    'Indore': { multiplier: 0.9, currency: 'INR', insight: 'Growing IT and education hub.' },
+    'Chandigarh': { multiplier: 0.95, currency: 'INR', insight: 'Well-planned city with good quality of life.' },
+    'Jaipur': { multiplier: 0.9, currency: 'INR', insight: 'Growing IT and startup ecosystem.' },
+    'Kochi': { multiplier: 0.95, currency: 'INR', insight: 'Major IT and startup hub in South India.' },
+    'Thiruvananthapuram': { multiplier: 0.9, currency: 'INR', insight: 'Growing IT sector with good work-life balance.' },
+    'Bhubaneswar': { multiplier: 0.85, currency: 'INR', insight: 'Emerging IT hub with affordable living.' },
+    'Nagpur': { multiplier: 0.85, currency: 'INR', insight: 'Central India\'s major commercial hub.' },
+    'Coimbatore': { multiplier: 0.9, currency: 'INR', insight: 'Industrial city with growing IT sector.' },
+    'Lucknow': { multiplier: 0.85, currency: 'INR', insight: 'Major cultural and business center.' },
+    'Gurgaon': { multiplier: 1.15, currency: 'INR', insight: 'Corporate hub with many multinational companies.' },
+    'Noida': { multiplier: 1.1, currency: 'INR', insight: 'Major IT and business process outsourcing hub.' },
+    
     // US Cities
     'San Francisco': { multiplier: 1.5, currency: 'USD', insight: 'Tech hub with highest salaries but very high cost of living.' },
     'New York': { multiplier: 1.4, currency: 'USD', insight: 'Financial center with diverse opportunities and high cost of living.' },
@@ -81,14 +104,10 @@ export class SalaryModel {
     'Austin': { multiplier: 1.1, currency: 'USD', insight: 'Emerging tech hub with lower cost of living.' },
     'Chicago': { multiplier: 1.2, currency: 'USD', insight: 'Diverse economy with moderate cost of living.' },
     'Los Angeles': { multiplier: 1.35, currency: 'USD', insight: 'Entertainment and tech hub with high cost of living.' },
-    
-    // Indian Cities
-    'Bangalore': { multiplier: 1.3, currency: 'INR', insight: 'India\'s Silicon Valley with highest tech salaries.' },
-    'Mumbai': { multiplier: 1.25, currency: 'INR', insight: 'Financial capital with high cost of living.' },
-    'Delhi NCR': { multiplier: 1.2, currency: 'INR', insight: 'Major business hub with diverse opportunities.' },
-    'Hyderabad': { multiplier: 1.15, currency: 'INR', insight: 'Growing tech center with reasonable cost of living.' },
-    'Pune': { multiplier: 1.1, currency: 'INR', insight: 'Emerging IT hub with good quality of life.' },
-    'Chennai': { multiplier: 1.1, currency: 'INR', insight: 'Strong in manufacturing and IT sectors.' },
+    'Denver': { multiplier: 1.15, currency: 'USD', insight: 'Growing tech scene with good quality of life.' },
+    'Portland': { multiplier: 1.2, currency: 'USD', insight: 'Emerging tech hub with strong work-life balance.' },
+    'San Diego': { multiplier: 1.25, currency: 'USD', insight: 'Growing biotech and tech sectors.' },
+    'Washington DC': { multiplier: 1.3, currency: 'USD', insight: 'Strong government and defense sector jobs.' },
     
     // European Cities
     'London': { multiplier: 1.4, currency: 'GBP', insight: 'Major financial center with high salaries and living costs.' },
@@ -96,6 +115,17 @@ export class SalaryModel {
     'Amsterdam': { multiplier: 1.2, currency: 'EUR', insight: 'Tech-friendly with good work-life balance.' },
     'Paris': { multiplier: 1.3, currency: 'EUR', insight: 'Strong in fashion, tech, and finance.' },
     'Dublin': { multiplier: 1.25, currency: 'EUR', insight: 'Tech hub with many multinational companies.' },
+    'Munich': { multiplier: 1.25, currency: 'EUR', insight: 'Strong in automotive and tech sectors.' },
+    'Stockholm': { multiplier: 1.3, currency: 'EUR', insight: 'Innovation hub with high quality of life.' },
+    'Zurich': { multiplier: 1.45, currency: 'EUR', insight: 'Financial center with highest European salaries.' },
+    
+    // APAC Cities
+    'Singapore': { multiplier: 1.35, currency: 'USD', insight: 'Major financial hub with high salaries and living costs.' },
+    'Tokyo': { multiplier: 1.3, currency: 'USD', insight: 'Technology and finance center with unique work culture.' },
+    'Hong Kong': { multiplier: 1.35, currency: 'USD', insight: 'Financial center with high cost of living.' },
+    'Sydney': { multiplier: 1.3, currency: 'USD', insight: 'Major tech and financial hub in Australia.' },
+    'Melbourne': { multiplier: 1.25, currency: 'USD', insight: 'Growing tech scene with good quality of life.' },
+    'Seoul': { multiplier: 1.2, currency: 'USD', insight: 'Technology and entertainment hub.' },
     
     // Remote
     'Remote': { multiplier: 1.0, currency: 'USD', insight: 'Location-independent with salary often based on company location.' },

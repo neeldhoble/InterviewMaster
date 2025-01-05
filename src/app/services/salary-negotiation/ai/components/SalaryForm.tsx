@@ -1,10 +1,14 @@
 'use client';
 
 import { useState } from 'react';
-import { motion } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem } from '@/components/ui/command';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Check, ChevronsUpDown } from 'lucide-react';
+import { cn } from '@/lib/utils';
+import { motion } from 'framer-motion';
 import { Select } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
 import { X } from 'lucide-react';
@@ -13,7 +17,87 @@ interface SalaryFormProps {
   onSubmit: (data: any) => void;
 }
 
+const locations = [
+  // Indian Metro Cities
+  { value: 'bangalore', label: 'Bangalore', group: 'Indian Metro Cities' },
+  { value: 'mumbai', label: 'Mumbai', group: 'Indian Metro Cities' },
+  { value: 'delhi-ncr', label: 'Delhi NCR', group: 'Indian Metro Cities' },
+  { value: 'hyderabad', label: 'Hyderabad', group: 'Indian Metro Cities' },
+  { value: 'pune', label: 'Pune', group: 'Indian Metro Cities' },
+  { value: 'chennai', label: 'Chennai', group: 'Indian Metro Cities' },
+  
+  // Indian Tier 2 Cities
+  { value: 'ahmedabad', label: 'Ahmedabad', group: 'Indian Tier 2 Cities' },
+  { value: 'kolkata', label: 'Kolkata', group: 'Indian Tier 2 Cities' },
+  { value: 'indore', label: 'Indore', group: 'Indian Tier 2 Cities' },
+  { value: 'chandigarh', label: 'Chandigarh', group: 'Indian Tier 2 Cities' },
+  { value: 'jaipur', label: 'Jaipur', group: 'Indian Tier 2 Cities' },
+  { value: 'kochi', label: 'Kochi', group: 'Indian Tier 2 Cities' },
+  { value: 'thiruvananthapuram', label: 'Thiruvananthapuram', group: 'Indian Tier 2 Cities' },
+  { value: 'bhubaneswar', label: 'Bhubaneswar', group: 'Indian Tier 2 Cities' },
+  { value: 'nagpur', label: 'Nagpur', group: 'Indian Tier 2 Cities' },
+  { value: 'coimbatore', label: 'Coimbatore', group: 'Indian Tier 2 Cities' },
+  { value: 'lucknow', label: 'Lucknow', group: 'Indian Tier 2 Cities' },
+  { value: 'gurgaon', label: 'Gurgaon', group: 'Indian Tier 2 Cities' },
+  { value: 'noida', label: 'Noida', group: 'Indian Tier 2 Cities' },
+  
+  // US Cities
+  { value: 'san-francisco', label: 'San Francisco', group: 'US Cities' },
+  { value: 'new-york', label: 'New York', group: 'US Cities' },
+  { value: 'seattle', label: 'Seattle', group: 'US Cities' },
+  { value: 'boston', label: 'Boston', group: 'US Cities' },
+  { value: 'austin', label: 'Austin', group: 'US Cities' },
+  { value: 'chicago', label: 'Chicago', group: 'US Cities' },
+  { value: 'los-angeles', label: 'Los Angeles', group: 'US Cities' },
+  { value: 'denver', label: 'Denver', group: 'US Cities' },
+  { value: 'portland', label: 'Portland', group: 'US Cities' },
+  { value: 'san-diego', label: 'San Diego', group: 'US Cities' },
+  { value: 'washington-dc', label: 'Washington DC', group: 'US Cities' },
+  
+  // European Cities
+  { value: 'london', label: 'London', group: 'European Cities' },
+  { value: 'berlin', label: 'Berlin', group: 'European Cities' },
+  { value: 'amsterdam', label: 'Amsterdam', group: 'European Cities' },
+  { value: 'paris', label: 'Paris', group: 'European Cities' },
+  { value: 'dublin', label: 'Dublin', group: 'European Cities' },
+  { value: 'munich', label: 'Munich', group: 'European Cities' },
+  { value: 'stockholm', label: 'Stockholm', group: 'European Cities' },
+  { value: 'zurich', label: 'Zurich', group: 'European Cities' },
+  
+  // APAC Cities
+  { value: 'singapore', label: 'Singapore', group: 'APAC Cities' },
+  { value: 'tokyo', label: 'Tokyo', group: 'APAC Cities' },
+  { value: 'hong-kong', label: 'Hong Kong', group: 'APAC Cities' },
+  { value: 'sydney', label: 'Sydney', group: 'APAC Cities' },
+  { value: 'melbourne', label: 'Melbourne', group: 'APAC Cities' },
+  { value: 'seoul', label: 'Seoul', group: 'APAC Cities' },
+  
+  // Remote
+  { value: 'remote', label: 'Remote', group: 'Remote' },
+];
+
+const industries = [
+  'Technology',
+  'Finance',
+  'Healthcare',
+  'Manufacturing',
+  'Retail',
+  'Education',
+  'Consulting'
+];
+
+const educationLevels = [
+  'High School',
+  'Associate',
+  'Bachelor',
+  'Master',
+  'PhD',
+  'MBA'
+];
+
 export function SalaryForm({ onSubmit }: SalaryFormProps) {
+  const [open, setOpen] = useState(false);
+  const [location, setLocation] = useState('');
   const [formData, setFormData] = useState({
     role: '',
     location: '',
@@ -24,42 +108,18 @@ export function SalaryForm({ onSubmit }: SalaryFormProps) {
     currentSkill: ''
   });
 
-  const industries = [
-    'Technology',
-    'Finance',
-    'Healthcare',
-    'Manufacturing',
-    'Retail',
-    'Education',
-    'Consulting'
-  ];
-
-  const locations = [
-    'San Francisco',
-    'New York',
-    'Seattle',
-    'Boston',
-    'Austin',
-    'Chicago',
-    'Los Angeles',
-    'Remote'
-  ];
-
-  const educationLevels = [
-    'High School',
-    'Associate',
-    'Bachelor',
-    'Master',
-    'PhD',
-    'MBA'
-  ];
-
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     onSubmit({
       ...formData,
+      location: locations.find(loc => loc.value === location)?.label || location,
       experience: Number(formData.experience)
     });
+  };
+
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({ ...prev, [name]: value }));
   };
 
   const addSkill = () => {
@@ -114,19 +174,52 @@ export function SalaryForm({ onSubmit }: SalaryFormProps) {
 
         {/* Location */}
         <div className="space-y-2">
-          <Label htmlFor="location" className="text-white">Location</Label>
-          <select
-            id="location"
-            value={formData.location}
-            onChange={(e) => setFormData(prev => ({ ...prev, location: e.target.value }))}
-            required
-            className="w-full h-10 px-3 rounded-md bg-white/5 border border-white/10 text-white"
-          >
-            <option value="">Select Location</option>
-            {locations.map(location => (
-              <option key={location} value={location}>{location}</option>
-            ))}
-          </select>
+          <Label>Location</Label>
+          <Popover open={open} onOpenChange={setOpen}>
+            <PopoverTrigger asChild>
+              <Button
+                variant="outline"
+                role="combobox"
+                aria-expanded={open}
+                className="w-full justify-between text-left font-normal"
+              >
+                {location
+                  ? locations.find(loc => loc.value === location)?.label
+                  : "Select location..."}
+                <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-full p-0">
+              <Command>
+                <CommandInput placeholder="Search location..." className="h-9" />
+                <CommandEmpty>No location found.</CommandEmpty>
+                {['Indian Metro Cities', 'Indian Tier 2 Cities', 'US Cities', 'European Cities', 'APAC Cities', 'Remote'].map((group) => (
+                  <CommandGroup key={group} heading={group}>
+                    {locations
+                      .filter(loc => loc.group === group)
+                      .map(loc => (
+                        <CommandItem
+                          key={loc.value}
+                          value={loc.value}
+                          onSelect={(currentValue) => {
+                            setLocation(currentValue === location ? '' : currentValue);
+                            setOpen(false);
+                          }}
+                        >
+                          {loc.label}
+                          <Check
+                            className={cn(
+                              "ml-auto h-4 w-4",
+                              location === loc.value ? "opacity-100" : "opacity-0"
+                            )}
+                          />
+                        </CommandItem>
+                      ))}
+                  </CommandGroup>
+                ))}
+              </Command>
+            </PopoverContent>
+          </Popover>
         </div>
 
         {/* Experience */}
