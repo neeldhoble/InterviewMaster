@@ -629,19 +629,35 @@ export default function SimulationPage() {
               </div>
               
               {/* Overall Score */}
-              <div className="flex items-center gap-6">
-                <div className="text-center">
-                  <div className="relative w-16 h-16">
-                    <div className="absolute inset-0 rounded-full bg-gradient-to-br from-emerald-500/20 to-blue-500/20" />
-                    <div className="absolute inset-1 rounded-full bg-black/50 flex items-center justify-center">
-                      <span className="text-xl font-bold text-white">
-                        {Math.round((analysis.communicationScore + analysis.speechMetrics.pace) / 2)}%
-                      </span>
-                    </div>
-                  </div>
-                  <span className="text-xs text-white/60 mt-1 block">Overall Score</span>
-                </div>
-              </div>
+<div className="flex items-center gap-6">
+  <div className="text-center">
+    <div className="relative w-20 h-20">
+      <div className="absolute inset-0 rounded-full bg-gradient-to-br from-emerald-500/20 via-blue-500/20 to-violet-500/20 animate-pulse" />
+      <div className="absolute inset-1 rounded-full bg-black/50 flex items-center justify-center">
+        <div className="text-center">
+          <span className="text-2xl font-bold text-white">
+            {Math.round(
+              analysis.communicationScore * 0.4 +
+              analysis.speechMetrics.clarity * 0.3 +
+              Math.min(100, (analysis.speechMetrics.pace / 150) * 100) * 0.3
+            )}
+          </span>
+          <span className="text-sm font-medium text-emerald-500">/100</span>
+        </div>
+      </div>
+    </div>
+    <div className="mt-1 space-y-0.5">
+      <span className="text-sm font-medium text-white/80 block">Overall Score</span>
+      <div className="flex items-center justify-center gap-1 text-[10px]">
+        <span className="text-emerald-400">Comm 40%</span>
+        <span className="text-white/20">·</span>
+        <span className="text-blue-400">Clarity 30%</span>
+        <span className="text-white/20">·</span>
+        <span className="text-violet-400">Pace 30%</span>
+      </div>
+    </div>
+  </div>
+</div>
             </div>
           </div>
 
