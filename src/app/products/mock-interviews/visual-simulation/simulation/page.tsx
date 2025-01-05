@@ -8,7 +8,7 @@ import QuestionPanel from './components/QuestionPanel';
 import VideoPreview from './components/VideoPreview';
 import RecordingsList from './components/RecordingsList';
 import { Question, interviewQuestions } from './data/questions';
-import { MessageSquare, BarChart, Download, Share2, ThumbsUp, Volume2, Mic, Camera, Settings, ChevronLeft, X } from 'lucide-react';
+import { MessageSquare, BarChart, Download, Share2, ThumbsUp, Volume2, Mic, Camera, Settings, ChevronLeft, X, Clock, Activity, MessageCircle } from 'lucide-react';
 import { recordingService } from './services/recordingService';
 import { aiAnalysisService } from './services/aiAnalysisService';
 import { enhancedAnalysisService } from './services/enhancedAnalysisService';
@@ -427,22 +427,19 @@ export default function SimulationPage() {
               >
                 {isRecording ? 'Stop Recording' : 'Start Recording'}
               </button>
-              
-              <button
+　　 　 　 　 <button
                 className="p-4 rounded-xl bg-white/5 hover:bg-white/10 transition-colors text-white font-medium flex items-center justify-center gap-2"
               >
                 <Download className="w-5 h-5" />
                 Download
               </button>
-              
-              <button
+　　 　 　 　 <button
                 className="p-4 rounded-xl bg-white/5 hover:bg-white/10 transition-colors text-white font-medium flex items-center justify-center gap-2"
               >
                 <Share2 className="w-5 h-5" />
                 Share
               </button>
-              
-              <button className="p-4 rounded-xl bg-white/5 hover:bg-white/10 transition-colors text-white font-medium flex items-center justify-center gap-2">
+　　 　 　 　 <button className="p-4 rounded-xl bg-white/5 hover:bg-white/10 transition-colors text-white font-medium flex items-center justify-center gap-2">
                 <ThumbsUp className="w-5 h-5" />
                 Rate
               </button>
@@ -459,8 +456,7 @@ export default function SimulationPage() {
                   {formatTime(timeElapsed)}
                 </p>
               </div>
-              
-              <div className="p-4 bg-white/5 border border-white/10 rounded-xl backdrop-blur-lg">
+　　 　 　 　 <div className="p-4 bg-white/5 border border-white/10 rounded-xl backdrop-blur-lg">
                 <div className="flex items-center gap-2 mb-2">
                   <BarChart className="w-5 h-5 text-[#fcba28]" />
                   <h4 className="text-white font-medium">Confidence</h4>
@@ -469,8 +465,7 @@ export default function SimulationPage() {
                   {isRecording ? "85%" : "--"}
                 </p>
               </div>
-              
-              <div className="p-4 bg-white/5 border border-white/10 rounded-xl backdrop-blur-lg">
+　　 　 　 　 <div className="p-4 bg-white/5 border border-white/10 rounded-xl backdrop-blur-lg">
                 <div className="flex items-center gap-2 mb-2">
                   <Mic className="w-5 h-5 text-[#fcba28]" />
                   <h4 className="text-white font-medium">Audio Quality</h4>
@@ -479,8 +474,7 @@ export default function SimulationPage() {
                   {isRecording ? "Good" : "--"}
                 </p>
               </div>
-              
-              <div className="p-4 bg-white/5 border border-white/10 rounded-xl backdrop-blur-lg">
+　　 　 　 　 <div className="p-4 bg-white/5 border border-white/10 rounded-xl backdrop-blur-lg">
                 <div className="flex items-center gap-2 mb-2">
                   <Camera className="w-5 h-5 text-[#fcba28]" />
                   <h4 className="text-white font-medium">Video Quality</h4>
@@ -610,45 +604,117 @@ export default function SimulationPage() {
         </div>
 
         {/* Live Transcript Section */}
-        <div className="mt-6 p-6 bg-white/5 border border-white/10 rounded-xl backdrop-blur-lg">
-          <div className="flex items-center justify-between mb-4">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-full bg-emerald-500/20 flex items-center justify-center">
-                <MessageSquare className="w-6 h-6 text-emerald-500" />
+        <div className="mt-6 grid grid-cols-1 gap-6">
+          {/* Header Section */}
+          <div className="p-6 bg-white/5 border border-white/10 rounded-xl backdrop-blur-lg">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-4">
+                <div className="w-12 h-12 rounded-full bg-emerald-500/20 flex items-center justify-center">
+                  <MessageSquare className="w-7 h-7 text-emerald-500" />
+                </div>
+                <div className="space-y-1">
+                  <h3 className="text-2xl font-semibold text-white">Live Transcript</h3>
+                  <div className="flex items-center gap-3">
+                    <div className="flex items-center gap-2">
+                      <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+                      <span className="text-sm text-white/60">Live Analysis</span>
+                    </div>
+                    <div className="h-4 w-[1px] bg-white/10" />
+                    <div className="flex items-center gap-2">
+                      <Clock className="w-4 h-4 text-white/40" />
+                      <span className="text-sm text-white/60">{new Date().toLocaleTimeString()}</span>
+                    </div>
+                  </div>
+                </div>
               </div>
-              <h3 className="text-xl font-semibold text-white">Live Transcript</h3>
             </div>
           </div>
 
-          <div className="space-y-4">
-            {/* Current Speech */}
-            <div className="min-h-[60px] p-4 bg-white/5 rounded-lg">
-              <p className="text-white/80">
-                {transcript.final}
-                <span className="text-white/50 italic">
-                  {transcript.interim}
-                </span>
-              </p>
+          {/* Main Content */}
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            {/* Left Panel - Current Speech */}
+            <div className="lg:col-span-2">
+              <div className="p-6 bg-white/5 border border-white/10 rounded-xl backdrop-blur-lg">
+                <div className="flex items-center justify-between mb-4">
+                  <h4 className="text-sm font-medium text-white/80">Current Speech</h4>
+                  <div className="px-3 py-1 rounded-full bg-white/5 border border-white/10">
+                    <span className="text-xs text-white/60">Real-time</span>
+                  </div>
+                </div>
+                <div className="min-h-[100px] p-5 bg-white/5 rounded-lg border border-white/10">
+                  <p className="text-lg text-white/90 leading-relaxed">
+                    {transcript.final}
+                    <span className="text-white/50 italic">
+                      {transcript.interim}
+                    </span>
+                  </p>
+                </div>
+              </div>
             </div>
 
-            {/* Speech History */}
-            <div className="space-y-3 max-h-[200px] overflow-y-auto">
-              {transcript.segments.slice().reverse().map((segment, index) => (
-                <motion.div
-                  key={segment.timestamp}
-                  className="p-3 bg-white/5 rounded-lg"
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.3, delay: index * 0.1 }}
-                >
-                  <div className="flex items-center justify-between mb-1">
-                    <span className="text-xs text-white/40">
-                      {new Date(segment.timestamp).toLocaleTimeString()}
-                    </span>
+            {/* Right Panel - Analysis Metrics */}
+            <div className="space-y-4">
+              {/* Confidence Score */}
+              <div className="p-4 bg-white/5 border border-white/10 rounded-xl backdrop-blur-lg">
+                <div className="flex items-center justify-between mb-3">
+                  <div className="flex items-center gap-2">
+                    <BarChart className="w-4 h-4 text-blue-400" />
+                    <h4 className="text-sm font-medium text-white/80">Confidence</h4>
                   </div>
-                  <p className="text-white/70 text-sm">{segment.text}</p>
-                </motion.div>
-              ))}
+                  <div className="px-2 py-1 rounded-full bg-blue-500/20 text-blue-400 text-xs">
+                    {analysis.communicationScore}%
+                  </div>
+                </div>
+                <div className="h-2 bg-white/10 rounded-full overflow-hidden mb-2">
+                  <div 
+                    className="h-full bg-blue-400 rounded-full transition-all duration-300"
+                    style={{ width: `${analysis.communicationScore}%` }}
+                  />
+                </div>
+                <p className="text-xs text-white/60">{analysis.tips[0]}</p>
+              </div>
+
+              {/* Speaking Rhythm */}
+              <div className="p-4 bg-white/5 border border-white/10 rounded-xl backdrop-blur-lg">
+                <div className="flex items-center justify-between mb-3">
+                  <div className="flex items-center gap-2">
+                    <Activity className="w-4 h-4 text-emerald-400" />
+                    <h4 className="text-sm font-medium text-white/80">Speaking Rhythm</h4>
+                  </div>
+                  <div className="px-2 py-1 rounded-full bg-emerald-500/20 text-emerald-400 text-xs">
+                    {analysis.speechMetrics.pace.toFixed(0)} words/min
+                  </div>
+                </div>
+                <div className="h-2 bg-white/10 rounded-full overflow-hidden">
+                  <div 
+                    className="h-full bg-emerald-400 rounded-full transition-all duration-300"
+                    style={{ width: `${analysis.speechMetrics.pace}%` }}
+                  />
+                </div>
+              </div>
+
+              {/* Articulation Analysis */}
+              <div className="p-4 bg-white/5 border border-white/10 rounded-xl backdrop-blur-lg">
+                <div className="flex items-center justify-between mb-3">
+                  <div className="flex items-center gap-2">
+                    <MessageCircle className="w-4 h-4 text-violet-400" />
+                    <h4 className="text-sm font-medium text-white/80">Articulation</h4>
+                  </div>
+                  <div className="px-2 py-1 rounded-full bg-violet-500/20 text-violet-400 text-xs">
+                    {analysis.bodyLanguageScore}%
+                  </div>
+                </div>
+                <div className="flex flex-wrap gap-2 mt-3">
+                  {analysis.tips.map((tip, i) => (
+                    <div 
+                      key={`tip-${i}`}
+                      className="px-2 py-1 rounded-full bg-white/5 border border-white/10 text-white/60 text-xs"
+                    >
+                      {tip}
+                    </div>
+                  ))}
+                </div>
+              </div>
             </div>
           </div>
         </div>
