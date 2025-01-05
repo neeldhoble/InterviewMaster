@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Plus, X, Filter, ChevronDown, ChevronUp } from 'lucide-react';
+import { Plus, X, Filter, ChevronDown, ChevronUp, ChevronRight } from 'lucide-react';
 import { Question, QuestionType } from '../data/questions';
 
 interface QuestionPanelProps {
@@ -86,6 +86,16 @@ export const QuestionPanel: React.FC<QuestionPanelProps> = ({
     return questions.findIndex(q => q.id === filteredQuestion.id);
   };
 
+  const handleNextQuestion = () => {
+    const currentFilteredIndex = filteredQuestions.findIndex(
+      q => questions.findIndex(origQ => origQ.id === q.id) === currentQuestion
+    );
+    if (currentFilteredIndex < filteredQuestions.length - 1) {
+      const nextIndex = getQuestionIndex(currentFilteredIndex + 1);
+      onQuestionSelect(nextIndex);
+    }
+  };
+
   return (
     <div className="bg-white/5 backdrop-blur-lg rounded-xl p-4 w-full max-w-2xl mx-auto">
       {/* Header with Filters */}
@@ -109,6 +119,18 @@ export const QuestionPanel: React.FC<QuestionPanelProps> = ({
             )}
           </button>
         </div>
+      </div>
+
+      {/* Next Question Button */}
+      <div className="mb-4">
+        <button
+          onClick={handleNextQuestion}
+          className="w-full bg-[#fcba28] hover:bg-[#fcd978] text-black font-medium py-2 rounded-lg transition-colors flex items-center justify-center gap-2"
+          disabled={currentQuestion >= filteredQuestions.length - 1}
+        >
+          Next Question
+          <ChevronRight className="w-5 h-5" />
+        </button>
       </div>
 
       {/* Filters Panel */}
@@ -247,6 +269,20 @@ export const QuestionPanel: React.FC<QuestionPanelProps> = ({
             <div className="mt-2 text-xs opacity-70">{question.category}</div>
           </motion.div>
         ))}
+      </div>
+
+      {/* Question Navigation Progress */}
+      <div className="mt-4 flex items-center justify-between text-sm text-white/60">
+        <span>Question {currentQuestion + 1} of {filteredQuestions.length}</span>
+        <div className="flex items-center gap-2">
+          <div className="h-1 w-32 bg-white/10 rounded-full overflow-hidden">
+            <div 
+              className="h-full bg-[#fcba28] rounded-full transition-all duration-300"
+              style={{ width: `${((currentQuestion + 1) / filteredQuestions.length) * 100}%` }}
+            />
+          </div>
+          <span>{Math.round(((currentQuestion + 1) / filteredQuestions.length) * 100)}%</span>
+        </div>
       </div>
     </div>
   );
