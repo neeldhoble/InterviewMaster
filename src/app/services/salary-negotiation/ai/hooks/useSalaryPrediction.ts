@@ -11,9 +11,19 @@ export function useSalaryPrediction() {
     setError(null);
 
     try {
-      const model = new SalaryModel();
-      const prediction = model.predict(input);
-      
+      const response = await fetch('/api/salary-prediction', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(input),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to get salary prediction');
+      }
+
+      const prediction = await response.json();
       setResult(prediction);
       return prediction;
     } catch (err) {

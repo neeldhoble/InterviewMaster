@@ -8,64 +8,9 @@ import { DollarSign, Calculator, TrendingUp, Building2, BrainCircuit, ArrowLeft 
 import { SalaryForm } from './components/SalaryForm';
 import { SalaryResults } from './components/SalaryResults';
 import { useSalaryPrediction } from './hooks/useSalaryPrediction';
+import { BackgroundEffects } from './components/BackgroundEffects';
+import { MaxWidthWrapper } from "@/components/MaxWidthWrapper";
 import Link from 'next/link';
-
-const containerVariants = {
-  initial: { opacity: 0 },
-  animate: {
-    opacity: 1,
-    transition: {
-      staggerChildren: 0.1,
-      delayChildren: 0.2
-    }
-  },
-  exit: { opacity: 0 }
-};
-
-const itemVariants = {
-  initial: { opacity: 0, y: 20 },
-  animate: {
-    opacity: 1,
-    y: 0,
-    transition: {
-      duration: 0.4,
-      ease: "easeOut"
-    }
-  },
-  exit: {
-    opacity: 0,
-    y: -20,
-    transition: {
-      duration: 0.3
-    }
-  }
-};
-
-const cardVariants = {
-  initial: { scale: 0.95, opacity: 0 },
-  animate: {
-    scale: 1,
-    opacity: 1,
-    transition: {
-      duration: 0.4,
-      ease: "easeOut"
-    }
-  },
-  hover: {
-    scale: 1.03,
-    transition: {
-      duration: 0.2,
-      ease: "easeInOut"
-    }
-  },
-  exit: {
-    scale: 0.95,
-    opacity: 0,
-    transition: {
-      duration: 0.3
-    }
-  }
-};
 
 export default function SalaryNegotiationPage() {
   const [showResults, setShowResults] = useState(false);
@@ -91,150 +36,155 @@ export default function SalaryNegotiationPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-[#1a1a1a] to-[#2d2d2d] text-white py-12">
-      <div className="container mx-auto px-4 max-w-6xl">
-        {/* Header */}
-        <motion.div
-          initial={{ opacity: 0, y: -20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="mb-8"
-        >
-          <Link href="/services/salary-negotiation" className="inline-block">
-            <Button variant="ghost" className="mb-4 text-white hover:bg-white/10">
-              <ArrowLeft className="w-4 h-4 mr-2" />
-              Back to Salary Negotiation
-            </Button>
-          </Link>
-          <div className="flex items-center gap-3 mb-2">
-            <Calculator className="w-8 h-8 text-[#fcba28]" />
-            <h1 className="text-3xl font-bold text-white">AI Salary Calculator</h1>
-          </div>
-          <p className="text-gray-400">
-            Get precise salary predictions powered by advanced AI and real market data
-          </p>
-        </motion.div>
+    <main className="relative min-h-screen bg-background overflow-hidden">
+      {/* Background Effects */}
+      <BackgroundEffects />
 
-        {/* Features Grid */}
-        <motion.div
-          variants={containerVariants}
-          initial="initial"
-          animate="animate"
-          className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-12"
-        >
-          {[
-            {
-              icon: <Calculator className="w-6 h-6" />,
-              title: "Accurate Predictions",
-              description: "Get precise salary estimates based on real market data"
-            },
-            {
-              icon: <TrendingUp className="w-6 h-6" />,
-              title: "Market Insights",
-              description: "Understand industry trends and market demand"
-            },
-            {
-              icon: <Building2 className="w-6 h-6" />,
-              title: "Industry Specific",
-              description: "Tailored insights for your industry and role"
-            },
-            {
-              icon: <DollarSign className="w-6 h-6" />,
-              title: "Negotiation Tips",
-              description: "Get personalized advice for salary negotiations"
-            }
-          ].map((feature, index) => (
+      {/* Content */}
+      <div className="relative z-10">
+        <MaxWidthWrapper>
+          <div className="py-20">
+            {/* Header */}
             <motion.div
-              key={index}
-              variants={cardVariants}
-              whileHover="hover"
-              className="relative overflow-hidden rounded-xl bg-white/5 backdrop-blur-sm border border-white/10 p-8 transition-colors hover:bg-white/10"
+              initial={{ opacity: 0, y: -20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.8, ease: "easeOut" }}
+              className="mb-12 text-center"
             >
-              <div className="flex flex-col items-center text-center space-y-3">
-                <div className="p-3 bg-[#fcba28]/10 rounded-full text-[#fcba28]">
-                  {feature.icon}
-                </div>
-                <h3 className="font-semibold text-white">{feature.title}</h3>
-                <p className="text-sm text-white/70">{feature.description}</p>
-              </div>
+              <Link
+                href="/services"
+                className="inline-flex items-center text-[#fcba28] hover:text-[#fcba28]/80 mb-6 transition-colors"
+              >
+                <ArrowLeft className="w-4 h-4 mr-2" />
+                Back to Services
+              </Link>
+              <motion.h1 
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.2, duration: 0.8 }}
+                className="text-4xl md:text-6xl font-bold mb-6 bg-clip-text text-transparent bg-gradient-to-b from-white to-white/70"
+              >
+                AI Salary Negotiation
+              </motion.h1>
+              <motion.p 
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.4, duration: 0.8 }}
+                className="text-lg md:text-xl text-gray-400 max-w-3xl mx-auto"
+              >
+                Get accurate salary insights powered by AI. Make informed decisions about your career and negotiate with confidence.
+              </motion.p>
             </motion.div>
-          ))}
-        </motion.div>
 
-        {/* Main Content */}
-        <div className="space-y-8">
-          <AnimatePresence mode="wait">
-            {!showResults && (
-              <motion.div
-                key="form"
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -20 }}
-                className="relative overflow-hidden rounded-xl bg-white/5 backdrop-blur-sm border border-white/10 p-8"
-              >
-                <div className="max-w-3xl mx-auto">
-                  <h2 className="text-2xl font-bold text-center mb-8 text-white">
-                    Calculate Your Worth
-                  </h2>
-                  <SalaryForm onSubmit={handleSubmit} />
-                </div>
-              </motion.div>
-            )}
-
-            {showResults && (
-              <motion.div
-                key="results"
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -20 }}
-                className="relative overflow-hidden rounded-xl bg-white/5 backdrop-blur-sm border border-white/10 p-8"
-              >
-                {error ? (
-                  <div className="text-center text-red-400 p-4">
-                    <p>Error: {error}</p>
-                    <Button
-                      onClick={handleReset}
-                      className="mt-4 border-white/10 hover:bg-white/10"
-                      variant="outline"
-                    >
-                      Try Again
-                    </Button>
-                  </div>
-                ) : loading ? (
-                  <div className="flex flex-col items-center justify-center p-8 space-y-4">
-                    <div className="w-12 h-12 border-4 border-[#fcba28] border-t-transparent rounded-full animate-spin"></div>
-                    <p className="text-white/70">Analyzing market data...</p>
-                  </div>
-                ) : result ? (
-                  <>
-                    <div className="flex justify-end mb-6">
+            {/* Main Content */}
+            <div className="max-w-4xl mx-auto relative">
+              <AnimatePresence mode="wait">
+                {!showResults ? (
+                  <motion.div
+                    key="form"
+                    initial={{ opacity: 0, x: -20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    exit={{ opacity: 0, x: 20 }}
+                    transition={{ duration: 0.5 }}
+                  >
+                    <SalaryForm onSubmit={handleSubmit} />
+                  </motion.div>
+                ) : (
+                  <motion.div
+                    key="results"
+                    initial={{ opacity: 0, x: 20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    exit={{ opacity: 0, x: -20 }}
+                    transition={{ duration: 0.5 }}
+                    className="space-y-8"
+                  >
+                    <div className="flex justify-end">
                       <Button
                         onClick={handleReset}
                         variant="outline"
-                        className="text-sm border-white/10 hover:bg-white/10 text-white"
+                        className="text-[#fcba28] border-[#fcba28] hover:bg-[#fcba28]/10 transition-colors"
                       >
-                        New Calculation
+                        <ArrowLeft className="w-4 h-4 mr-2" />
+                        Start Over
                       </Button>
                     </div>
                     <SalaryResults result={result} />
-                  </>
-                ) : null}
-              </motion.div>
-            )}
-          </AnimatePresence>
+                  </motion.div>
+                )}
+              </AnimatePresence>
 
-          {/* Additional Info */}
-          <motion.div
-            variants={itemVariants}
-            className="text-center text-sm text-gray-400 mt-8"
-          >
-            <p>
-              Our AI model is trained on millions of data points and updated regularly.
-              <br />
-              Results are for informational purposes and may vary based on specific circumstances.
-            </p>
-          </motion.div>
-        </div>
+              {/* Loading Overlay */}
+              <AnimatePresence>
+                {loading && (
+                  <motion.div
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={{ opacity: 0 }}
+                    className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50"
+                  >
+                    <motion.div 
+                      initial={{ scale: 0.9, opacity: 0 }}
+                      animate={{ scale: 1, opacity: 1 }}
+                      exit={{ scale: 0.9, opacity: 0 }}
+                      className="bg-gray-900/90 p-8 rounded-xl shadow-xl text-center backdrop-blur-lg border border-[#fcba28]/20"
+                    >
+                      <div className="relative w-16 h-16 mx-auto mb-4">
+                        <motion.div
+                          className="absolute inset-0 rounded-full border-4 border-[#fcba28]/30"
+                          initial={{ scale: 0 }}
+                          animate={{ scale: 1 }}
+                          transition={{ duration: 0.5 }}
+                        />
+                        <motion.div
+                          className="absolute inset-0 rounded-full border-4 border-[#fcba28] border-t-transparent"
+                          animate={{ rotate: 360 }}
+                          transition={{ duration: 1.5, repeat: Infinity, ease: "linear" }}
+                        />
+                      </div>
+                      <motion.p 
+                        initial={{ opacity: 0, y: 10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: 0.2 }}
+                        className="text-lg text-white"
+                      >
+                        Analyzing salary data...
+                      </motion.p>
+                    </motion.div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+
+              {/* Error Message */}
+              <AnimatePresence>
+                {error && (
+                  <motion.div
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -20 }}
+                    className="bg-red-500/10 border border-red-500/20 rounded-lg p-6 mt-4 text-center backdrop-blur-sm"
+                  >
+                    <motion.div
+                      initial={{ scale: 0.9 }}
+                      animate={{ scale: 1 }}
+                      className="text-red-400 mb-2 text-lg font-semibold"
+                    >
+                      Error Processing Request
+                    </motion.div>
+                    <motion.p 
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      transition={{ delay: 0.2 }}
+                      className="text-red-300"
+                    >
+                      {error}
+                    </motion.p>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </div>
+          </div>
+        </MaxWidthWrapper>
       </div>
-    </div>
+    </main>
   );
 }
