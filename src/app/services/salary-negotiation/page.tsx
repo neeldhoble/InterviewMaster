@@ -197,6 +197,32 @@ export default function SalaryNegotiationPage() {
           </motion.div>
         </motion.div>
 
+        {/* AI Salary Calculator Card */}
+        <Link href="/services/salary-negotiation/ai" className="block">
+          <motion.div
+            variants={itemVariants}
+            whileHover={{ scale: 1.02 }}
+            className="group relative overflow-hidden rounded-xl bg-gradient-to-br from-[#1a1a1a] to-[#2d2d2d] p-8 transition-all hover:shadow-lg"
+          >
+            <div className="absolute inset-0 bg-gradient-to-r from-[#fcba2810] to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+            <div className="relative z-10">
+              <div className="flex items-center gap-4 mb-4">
+                <div className="p-3 bg-[#fcba28]/10 rounded-full">
+                  <FaRobot className="w-6 h-6 text-[#fcba28]" />
+                </div>
+                <h3 className="text-xl font-semibold text-white">AI Salary Calculator</h3>
+              </div>
+              <p className="text-gray-400 mb-6">
+                Get instant salary insights powered by AI. Compare your worth across different locations and roles.
+              </p>
+              <div className="flex items-center text-[#fcba28]">
+                <span className="mr-2">Try Now</span>
+                <FaArrowRight className="w-4 h-4" />
+              </div>
+            </div>
+          </motion.div>
+        </Link>
+
         {/* Stats Section */}
         <motion.div variants={itemVariants}>
           <h2 className="text-3xl font-bold text-white text-center mb-8">

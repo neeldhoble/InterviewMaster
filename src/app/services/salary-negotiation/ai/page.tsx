@@ -99,10 +99,10 @@ export default function SalaryNegotiationPage() {
           animate={{ opacity: 1, y: 0 }}
           className="mb-8"
         >
-          <Link href="/services">
+          <Link href="/services/salary-negotiation" className="inline-block">
             <Button variant="ghost" className="mb-4 text-white hover:bg-white/10">
               <ArrowLeft className="w-4 h-4 mr-2" />
-              Back to Services
+              Back to Salary Negotiation
             </Button>
           </Link>
           <div className="flex items-center gap-3 mb-2">
