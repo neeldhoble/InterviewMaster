@@ -1,39 +1,45 @@
 "use client";
 
-import { useState } from 'react';
-import { motion } from 'framer-motion';
-import { FaRobot, FaMicrophone, FaVideo, FaChartLine, FaLightbulb, FaCheckCircle, FaArrowRight } from 'react-icons/fa';
+import { useState, useEffect } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { FaMicrophone, FaVideo, FaComments } from 'react-icons/fa';
+import Avatar from '@/components/Avatar';
 
 export default function AIInterviewCoachingPage() {
-  const [currentStep, setCurrentStep] = useState<'setup' | 'interview' | 'feedback'>('setup');
-  const [selectedTopics, setSelectedTopics] = useState<string[]>([]);
-  const [isRecording, setIsRecording] = useState(false);
+  const [avatarState, setAvatarState] = useState<'idle' | 'speaking' | 'thinking' | 'greeting'>('idle');
+  const [currentTip, setCurrentTip] = useState('');
+  const [isSessionActive, setIsSessionActive] = useState(false);
 
-  const topics = [
-    { id: 'behavioral', name: 'Behavioral Questions', icon: FaLightbulb },
-    { id: 'technical', name: 'Technical Skills', icon: FaRobot },
-    { id: 'communication', name: 'Communication', icon: FaMicrophone },
-    { id: 'leadership', name: 'Leadership', icon: FaChartLine }
+  const interviewTips = [
+    {
+      category: 'Posture',
+      tips: [
+        'Keep your back straight and shoulders relaxed',
+        'Maintain an open posture to show confidence',
+        'Keep your feet planted firmly on the ground'
+      ]
+    },
+    {
+      category: 'Voice',
+      tips: [
+        'Speak clearly and at a moderate pace',
+        'Use appropriate volume - not too loud or soft',
+        'Take brief pauses to emphasize key points'
+      ]
+    },
+    {
+      category: 'Body Language',
+      tips: [
+        'Maintain good eye contact',
+        'Use natural hand gestures while speaking',
+        'Show engagement through subtle nodding'
+      ]
+    }
   ];
 
-  const toggleTopic = (topicId: string) => {
-    setSelectedTopics(prev =>
-      prev.includes(topicId)
-        ? prev.filter(id => id !== topicId)
-        : [...prev, topicId]
-    );
-  };
-
-  const startInterview = () => {
-    setCurrentStep('interview');
-  };
-
-  const handleRecording = () => {
-    setIsRecording(!isRecording);
-  };
-
-  const submitInterview = () => {
-    setCurrentStep('feedback');
+  const startSession = () => {
+    setIsSessionActive(true);
+    setAvatarState('speaking');
   };
 
   return (
@@ -46,168 +52,131 @@ export default function AIInterviewCoachingPage() {
         <div className="absolute inset-0 bg-[linear-gradient(to_right,#80808012_1px,transparent_1px),linear-gradient(to_bottom,#80808012_1px,transparent_1px)] bg-[size:24px_24px]" />
       </div>
 
-      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 relative">
-        {currentStep === 'setup' && (
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="space-y-12"
-          >
-            <div className="text-center">
-              <div className="inline-block p-4 rounded-full bg-[#fcba28]/20 mb-6">
-                <FaRobot className="w-8 h-8 text-[#fcba28]" />
-              </div>
-              <h1 className="text-4xl md:text-5xl font-bold mb-6">
-                AI Interview Coach
-              </h1>
-              <p className="text-xl text-gray-300 max-w-3xl mx-auto">
-                Practice your interview skills with our AI coach. Get instant feedback and improve your performance.
-              </p>
-            </div>
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative">
+        {/* Hero Section */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="text-center mb-12"
+        >
+          <h1 className="text-4xl md:text-6xl font-bold mb-6">
+            AI Interview{' '}
+            <span className="bg-gradient-to-r from-[#fcba28] via-[#fcd978] to-[#fcba28] text-transparent bg-clip-text">
+              Coach
+            </span>
+          </h1>
+          <p className="text-xl text-gray-400 mb-8">
+            Perfect your interview skills with our AI-powered virtual coach
+          </p>
+        </motion.div>
 
-            <div className="space-y-8">
-              <h2 className="text-2xl font-bold text-[#fcba28]">Select Topics to Practice</h2>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                {topics.map(topic => {
-                  const Icon = topic.icon;
-                  return (
-                    <button
-                      key={topic.id}
-                      onClick={() => toggleTopic(topic.id)}
-                      className={`p-6 rounded-xl border-2 transition-all duration-300 ${
-                        selectedTopics.includes(topic.id)
-                          ? 'border-[#fcba28] bg-[#fcba28]/10'
-                          : 'border-white/10 bg-white/5 hover:bg-white/10'
-                      }`}
-                    >
-                      <Icon className="w-8 h-8 text-[#fcba28] mb-4" />
-                      <h3 className="text-lg font-semibold">{topic.name}</h3>
-                    </button>
-                  );
-                })}
-              </div>
+        {/* Main Content */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+          {/* Avatar Section */}
+          <div className="relative h-[600px] bg-gradient-to-b from-[#fcba2810] to-transparent rounded-2xl p-4">
+            <div className="absolute inset-0 flex items-center justify-center">
+              <Avatar 
+                avatarState={avatarState}
+                className="w-full h-full max-w-[400px] mx-auto"
+              />
             </div>
+          </div>
 
-            <div className="flex justify-center">
-              <button
-                onClick={startInterview}
-                disabled={selectedTopics.length === 0}
-                className="px-8 py-4 bg-[#fcba28] text-black rounded-xl font-semibold hover:bg-[#fcd978] transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
-              >
-                Start Interview <FaArrowRight />
-              </button>
-            </div>
-          </motion.div>
-        )}
-
-        {currentStep === 'interview' && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            className="space-y-8"
-          >
-            <div className="bg-white/5 p-8 rounded-xl border border-white/10">
-              <h2 className="text-2xl font-bold mb-6">Question 1</h2>
-              <p className="text-xl text-gray-300 mb-8">
-                Tell me about a challenging project you've worked on and how you handled it.
-              </p>
-              
-              <div className="flex items-center justify-center gap-6">
-                <button
-                  onClick={handleRecording}
-                  className={`p-6 rounded-full ${
-                    isRecording
-                      ? 'bg-red-500 animate-pulse'
-                      : 'bg-[#fcba28]'
-                  } text-black transition-all duration-300`}
+          {/* Controls Section */}
+          <div className="space-y-8">
+            {/* Session Controls */}
+            <div className="bg-[#ffffff08] backdrop-blur-sm rounded-xl p-6">
+              <h3 className="text-2xl font-semibold mb-4">Interview Session</h3>
+              <div className="grid grid-cols-2 gap-4">
+                <motion.button
+                  onClick={startSession}
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
+                  className="flex items-center justify-center gap-2 bg-gradient-to-r from-[#fcba28] to-[#fcd978] text-black font-semibold py-3 px-6 rounded-lg hover:opacity-90 transition-opacity"
                 >
-                  <FaMicrophone className="w-8 h-8" />
-                </button>
-                <button
-                  onClick={submitInterview}
-                  className="px-6 py-3 bg-[#fcba28] text-black rounded-xl font-semibold hover:bg-[#fcd978] transition-all duration-300 flex items-center gap-2"
+                  <FaMicrophone />
+                  Start Session
+                </motion.button>
+                <motion.button
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
+                  className="flex items-center justify-center gap-2 bg-[#ffffff15] py-3 px-6 rounded-lg hover:bg-[#ffffff20] transition-colors"
                 >
-                  Submit Answer <FaArrowRight />
-                </button>
-              </div>
-            </div>
-          </motion.div>
-        )}
-
-        {currentStep === 'feedback' && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            className="space-y-8"
-          >
-            <div className="text-center mb-12">
-              <h2 className="text-3xl font-bold mb-4">Interview Analysis</h2>
-              <p className="text-gray-300">Here's your personalized feedback and areas for improvement.</p>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
-              <div className="bg-white/5 p-6 rounded-xl border border-white/10">
-                <h3 className="text-xl font-semibold text-[#fcba28] mb-4">Content Score</h3>
-                <div className="text-4xl font-bold">85%</div>
-              </div>
-              <div className="bg-white/5 p-6 rounded-xl border border-white/10">
-                <h3 className="text-xl font-semibold text-[#fcba28] mb-4">Delivery Score</h3>
-                <div className="text-4xl font-bold">78%</div>
-              </div>
-              <div className="bg-white/5 p-6 rounded-xl border border-white/10">
-                <h3 className="text-xl font-semibold text-[#fcba28] mb-4">Structure Score</h3>
-                <div className="text-4xl font-bold">92%</div>
+                  <FaVideo />
+                  Enable Camera
+                </motion.button>
               </div>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div className="bg-white/5 p-6 rounded-xl border border-white/10">
-                <h3 className="text-xl font-semibold text-[#fcba28] mb-4">Strengths</h3>
-                <ul className="space-y-3">
-                  <li className="flex items-start gap-3">
-                    <FaCheckCircle className="text-green-400 flex-shrink-0 mt-1" />
-                    <span>Clear and concise explanation of the project challenges</span>
-                  </li>
-                  <li className="flex items-start gap-3">
-                    <FaCheckCircle className="text-green-400 flex-shrink-0 mt-1" />
-                    <span>Good use of the STAR method in structuring your response</span>
-                  </li>
-                  <li className="flex items-start gap-3">
-                    <FaCheckCircle className="text-green-400 flex-shrink-0 mt-1" />
-                    <span>Strong emphasis on your specific contributions</span>
-                  </li>
-                </ul>
-              </div>
-
-              <div className="bg-white/5 p-6 rounded-xl border border-white/10">
-                <h3 className="text-xl font-semibold text-[#fcba28] mb-4">Areas for Improvement</h3>
-                <ul className="space-y-3">
-                  <li className="flex items-start gap-3">
-                    <FaLightbulb className="text-yellow-400 flex-shrink-0 mt-1" />
-                    <span>Consider providing more quantifiable results</span>
-                  </li>
-                  <li className="flex items-start gap-3">
-                    <FaLightbulb className="text-yellow-400 flex-shrink-0 mt-1" />
-                    <span>Pace could be slightly slower for better clarity</span>
-                  </li>
-                  <li className="flex items-start gap-3">
-                    <FaLightbulb className="text-yellow-400 flex-shrink-0 mt-1" />
-                    <span>Include more details about team collaboration</span>
-                  </li>
-                </ul>
+            {/* Real-time Feedback */}
+            <div className="bg-[#ffffff08] backdrop-blur-sm rounded-xl p-6">
+              <h3 className="text-2xl font-semibold mb-4">Real-time Feedback</h3>
+              <div className="space-y-4">
+                <div className="flex items-center gap-4 text-sm">
+                  <div className="w-24">Posture</div>
+                  <motion.div 
+                    className="flex-1 bg-[#ffffff15] rounded-full h-2"
+                    initial={{ width: 0 }}
+                    animate={{ width: "100%" }}
+                  >
+                    <motion.div 
+                      className="bg-[#fcba28] rounded-full h-2"
+                      initial={{ width: 0 }}
+                      animate={{ width: "75%" }}
+                      transition={{ duration: 1 }}
+                    />
+                  </motion.div>
+                </div>
+                <div className="flex items-center gap-4 text-sm">
+                  <div className="w-24">Voice</div>
+                  <motion.div 
+                    className="flex-1 bg-[#ffffff15] rounded-full h-2"
+                    initial={{ width: 0 }}
+                    animate={{ width: "100%" }}
+                  >
+                    <motion.div 
+                      className="bg-[#fcba28] rounded-full h-2"
+                      initial={{ width: 0 }}
+                      animate={{ width: "80%" }}
+                      transition={{ duration: 1 }}
+                    />
+                  </motion.div>
+                </div>
+                <div className="flex items-center gap-4 text-sm">
+                  <div className="w-24">Eye Contact</div>
+                  <motion.div 
+                    className="flex-1 bg-[#ffffff15] rounded-full h-2"
+                    initial={{ width: 0 }}
+                    animate={{ width: "100%" }}
+                  >
+                    <motion.div 
+                      className="bg-[#fcba28] rounded-full h-2"
+                      initial={{ width: 0 }}
+                      animate={{ width: "65%" }}
+                      transition={{ duration: 1 }}
+                    />
+                  </motion.div>
+                </div>
               </div>
             </div>
 
-            <div className="flex justify-center gap-4">
-              <button
-                onClick={() => setCurrentStep('setup')}
-                className="px-6 py-3 bg-[#fcba28] text-black rounded-xl font-semibold hover:bg-[#fcd978] transition-all duration-300"
+            {/* Current Tip */}
+            <AnimatePresence mode="wait">
+              <motion.div
+                key={currentTip}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -20 }}
+                className="bg-[#ffffff08] backdrop-blur-sm rounded-xl p-6"
               >
-                Practice Another Question
-              </button>
-            </div>
-          </motion.div>
-        )}
+                <h3 className="text-2xl font-semibold mb-4">Coach's Tip</h3>
+                <p className="text-gray-300">
+                  {currentTip || "Click 'Start Session' to begin receiving real-time coaching tips"}
+                </p>
+              </motion.div>
+            </AnimatePresence>
+          </div>
+        </div>
       </div>
     </div>
   );
