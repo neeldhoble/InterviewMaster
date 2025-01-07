@@ -11,6 +11,16 @@ module.exports = {
   webpack: (config, { isServer }) => {
     config.resolve.alias['@'] = `${__dirname}/src`;
     config.resolve.alias['@interview-types'] = `${__dirname}/src/app/products/interview-questions/types.ts`;
+
+    // Handle PDF.js worker
+    if (!isServer) {
+      config.resolve.fallback = {
+        ...config.resolve.fallback,
+        canvas: false,
+        encoding: false
+      };
+    }
+
     return config;
   },
 
