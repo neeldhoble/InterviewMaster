@@ -1,37 +1,14 @@
 "use client";
 
-interface SpeechConfig {
-  rate?: number;
-  pitch?: number;
-  volume?: number;
-  voice?: SpeechSynthesisVoice;
-}
-
 class SpeechService {
   private synth: SpeechSynthesis;
   private recognition: any;
+  private isRecognitionActive: boolean = false;
   private currentUtterance: SpeechSynthesisUtterance | null = null;
-  private preferredVoice: SpeechSynthesisVoice | null = null;
 
   constructor() {
     this.synth = window.speechSynthesis;
-    this.initVoice();
     this.initRecognition();
-  }
-
-  private async initVoice() {
-    if (this.synth.getVoices().length === 0) {
-      await new Promise<void>(resolve => {
-        this.synth.addEventListener('voiceschanged', () => resolve(), { once: true });
-      });
-    }
-
-    const voices = this.synth.getVoices();
-    this.preferredVoice = voices.find(voice => 
-      voice.name.includes('Microsoft') || 
-      voice.name.includes('Google') || 
-      voice.name.includes('Natural')
-    ) || voices[0];
   }
 
   private initRecognition() {
@@ -40,25 +17,83 @@ class SpeechService {
       this.recognition = new SpeechRecognition();
       this.recognition.continuous = true;
       this.recognition.interimResults = true;
+      this.recognition.lang = 'en-US';
     }
   }
 
-  speak(
-    text: string, 
-    onStart?: () => void, 
-    onEnd?: () => void,
-    config: SpeechConfig = {}
+  startRecognition(
+    onResult: (text: string, isFinal: boolean) => void,
+    onError?: (error: any) => void
   ) {
-    // Cancel any ongoing speech
-    this.stop();
+    if (!this.recognition) {
+      onError?.(new Error('Speech recognition not supported'));
+      return;
+    }
+
+    this.isRecognitionActive = true;
+    let finalTranscript = '';
+    let interimTranscript = '';
+
+    this.recognition.onresult = (event: any) => {
+      interimTranscript = '';
+      
+      for (let i = event.resultIndex; i < event.results.length; ++i) {
+        const transcript = event.results[i][0].transcript;
+        if (event.results[i].isFinal) {
+          finalTranscript += transcript + ' ';
+          onResult(finalTranscript.trim(), true);
+        } else {
+          interimTranscript += transcript;
+          onResult(interimTranscript.trim(), false);
+        }
+      }
+    };
+
+    this.recognition.onerror = (error: any) => {
+      console.error('Speech recognition error:', error);
+      onError?.(error);
+    };
+
+    this.recognition.onend = () => {
+      if (this.isRecognitionActive) {
+        this.recognition.start();
+      }
+    };
+
+    try {
+      this.recognition.start();
+    } catch (error) {
+      console.error('Error starting recognition:', error);
+      onError?.(error);
+    }
+  }
+
+  stopRecognition() {
+    this.isRecognitionActive = false;
+    if (this.recognition) {
+      this.recognition.stop();
+    }
+  }
+
+  speak(text: string, onStart?: () => void, onEnd?: () => void) {
+    if (this.currentUtterance) {
+      this.synth.cancel();
+    }
 
     const utterance = new SpeechSynthesisUtterance(text);
     
-    // Apply configuration
-    utterance.voice = config.voice || this.preferredVoice;
-    utterance.rate = config.rate || 0.9; // Slightly slower for clarity
-    utterance.pitch = config.pitch || 1;
-    utterance.volume = config.volume || 1;
+    // Get available voices
+    const voices = this.synth.getVoices();
+    const preferredVoice = voices.find(voice => 
+      voice.name.includes('Microsoft') || 
+      voice.name.includes('Google') || 
+      voice.name.includes('Natural')
+    ) || voices[0];
+
+    utterance.voice = preferredVoice;
+    utterance.rate = 0.9; // Slightly slower for clarity
+    utterance.pitch = 1;
+    utterance.volume = 1;
 
     utterance.onstart = () => {
       this.currentUtterance = utterance;
@@ -70,41 +105,7 @@ class SpeechService {
       onEnd?.();
     };
 
-    utterance.onerror = (event) => {
-      console.error('Speech synthesis error:', event);
-      this.currentUtterance = null;
-      onEnd?.();
-    };
-
     this.synth.speak(utterance);
-  }
-
-  startRecognition(
-    onResult: (transcript: string, isFinal: boolean) => void,
-    onError?: (error: any) => void
-  ) {
-    if (!this.recognition) {
-      onError?.(new Error('Speech recognition not supported'));
-      return;
-    }
-
-    this.recognition.onresult = (event: any) => {
-      const result = event.results[event.results.length - 1];
-      const transcript = result[0].transcript;
-      onResult(transcript, result.isFinal);
-    };
-
-    this.recognition.onerror = (error: any) => {
-      onError?.(error);
-    };
-
-    this.recognition.start();
-  }
-
-  stopRecognition() {
-    if (this.recognition) {
-      this.recognition.stop();
-    }
   }
 
   stop() {
@@ -112,22 +113,6 @@ class SpeechService {
       this.synth.cancel();
       this.currentUtterance = null;
     }
-  }
-
-  pause() {
-    this.synth.pause();
-  }
-
-  resume() {
-    this.synth.resume();
-  }
-
-  getVoices(): SpeechSynthesisVoice[] {
-    return this.synth.getVoices();
-  }
-
-  setPreferredVoice(voice: SpeechSynthesisVoice) {
-    this.preferredVoice = voice;
   }
 }
 
