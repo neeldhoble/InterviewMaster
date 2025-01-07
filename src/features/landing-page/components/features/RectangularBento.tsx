@@ -1,6 +1,7 @@
 // @ts-nocheck
 import { useState, useEffect } from "react";
 import { AnimationProps, motion } from "framer-motion";
+import { Laptop, Code, Github } from 'lucide-react';
 
 // Icons related to the interview process, technology stack, and the purpose of InterviewMaster.ai
 import { BsFillPersonCheckFill } from "react-icons/bs";
@@ -14,21 +15,120 @@ import { CardBentoIcon } from "./CardBentoIcon";
 import { CardBentoWrapper } from "./CardBentoWrapper";
 
 export const RectangularBento = () => {
+  const containerVariants = {
+    hidden: { opacity: 0, scale: 0.95 },
+    visible: {
+      opacity: 1,
+      scale: 1,
+      transition: {
+        duration: 0.5,
+        staggerChildren: 0.1
+      }
+    }
+  };
+
+  const itemVariants = {
+    hidden: { opacity: 0, x: -20 },
+    visible: {
+      opacity: 1,
+      x: 0,
+      transition: { duration: 0.5 }
+    }
+  };
+
   return (
-    <div className="col-span-2 h-fit sm:h-[209px] hover:scale-105 transition duration-200 ease-linear">
-      <CardBentoWrapper className="bg-[#0ba95b]">
-        <div className="relative z-20">
-          <CardBentoIcon icon={FaQuestionCircle} />
-          <h3 className="mb-1.5 text-2xl font-bold uppercase text-background">
-            Interview Preparation Made Easy
-          </h3>
-          <p className="max-w-sm text-background">
-            Prepare for interviews with our expert-backed resources, quizzes, and real-time coding challenges to help you ace your next big opportunity.
+    <motion.div
+      initial="hidden"
+      animate="visible"
+      variants={containerVariants}
+      className="relative h-full w-full bg-gradient-to-br from-brand-blue/20 to-brand-blue/5 rounded-xl p-6 group"
+    >
+      {/* Background Animation */}
+      <motion.div
+        className="absolute inset-0 bg-brand-blue/10 rounded-xl"
+        animate={{
+          scale: [1, 1.05, 1],
+          opacity: [0.1, 0.2, 0.1]
+        }}
+        transition={{
+          duration: 3,
+          repeat: Infinity,
+          ease: "easeInOut"
+        }}
+      />
+
+      <div className="relative z-10 grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <motion.div variants={itemVariants} className="space-y-4">
+          <div className="flex items-center space-x-3">
+            <Laptop className="w-8 h-8 text-brand-blue" />
+            <h3 className="text-xl font-bold text-white">Technical Excellence</h3>
+          </div>
+
+          <p className="text-white/70">
+            Master technical interviews with our comprehensive coding platform and real-world challenges.
           </p>
-        </div>
-        <SpinningLogos />
-      </CardBentoWrapper>
-    </div>
+
+          <div className="flex flex-col space-y-3">
+            <div className="flex items-center space-x-2">
+              <Code className="w-5 h-5 text-brand-blue" />
+              <span className="text-white/80">Live coding environment</span>
+            </div>
+            <div className="flex items-center space-x-2">
+              <Github className="w-5 h-5 text-brand-blue" />
+              <span className="text-white/80">GitHub integration</span>
+            </div>
+          </div>
+        </motion.div>
+
+        <motion.div
+          variants={itemVariants}
+          className="relative h-full min-h-[200px] rounded-lg overflow-hidden"
+        >
+          {/* Code Editor Animation */}
+          <motion.div
+            className="absolute inset-0 bg-gray-900 rounded-lg p-4"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.5 }}
+          >
+            <motion.div
+              className="h-full flex flex-col space-y-2"
+              animate={{ y: [-200, 0] }}
+              transition={{
+                duration: 20,
+                repeat: Infinity,
+                ease: "linear"
+              }}
+            >
+              {[...Array(10)].map((_, i) => (
+                <div key={i} className="flex items-center space-x-2">
+                  <span className="text-brand-blue/50">{i + 1}</span>
+                  <span className="text-brand-blue/80">{'function example() {'}</span>
+                </div>
+              ))}
+            </motion.div>
+          </motion.div>
+        </motion.div>
+      </div>
+
+      {/* Decorative Elements */}
+      <motion.div
+        className="absolute top-4 right-4"
+        animate={{
+          rotate: [0, 360],
+        }}
+        transition={{
+          duration: 20,
+          repeat: Infinity,
+          ease: "linear"
+        }}
+      >
+        <svg width="40" height="40" viewBox="0 0 40 40" className="text-brand-blue/30">
+          <rect x="5" y="5" width="30" height="30" stroke="currentColor" strokeWidth="2" fill="none" />
+          <rect x="15" y="15" width="10" height="10" stroke="currentColor" strokeWidth="2" fill="none" />
+        </svg>
+      </motion.div>
+    </motion.div>
   );
 };
 

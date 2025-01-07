@@ -11,21 +11,99 @@ import {
 } from "lucide-react";
 import { CardBentoIcon } from "./CardBentoIcon";
 import { CardBentoWrapper } from "./CardBentoWrapper";
+import { motion } from 'framer-motion';
+import { Brain, Code, Target } from 'lucide-react';
 
 export const TowerBento = () => {
+    const containerVariants = {
+        hidden: { opacity: 0, y: 20 },
+        visible: {
+            opacity: 1,
+            y: 0,
+            transition: {
+                duration: 0.5,
+                staggerChildren: 0.1
+            }
+        }
+    };
+
+    const itemVariants = {
+        hidden: { opacity: 0, x: -20 },
+        visible: {
+            opacity: 1,
+            x: 0,
+            transition: { duration: 0.5 }
+        }
+    };
+
     return (
-        <div className="cols-span-1 h-[600px] lg:col-span-4 lg:h-[600px] hover:scale-105 transition duration-200 ease-linear">
-            <CardBentoWrapper className="flex flex-col bg-[#3B82F6]"> {/* Updated color scheme */}
-                <CardBentoIcon icon={Palette} />
-                <h3 className="mb-2 text-2xl font-bold uppercase text-background">Master Your Interview Skills</h3> {/* Updated text */}
-                <p className="mb-8 text-background">
-                    Enhance your interview preparation with tailored courses, mock interviews, and expert resources.
-                </p>
-                <Mockup />
-            </CardBentoWrapper>
-        </div>
-    )
-}
+        <motion.div
+            initial="hidden"
+            animate="visible"
+            variants={containerVariants}
+            className="relative h-full w-full bg-gradient-to-br from-brand-red/20 to-brand-red/5 rounded-xl p-6 group"
+        >
+            {/* Background Animation */}
+            <motion.div
+                className="absolute inset-0 bg-brand-red/10 rounded-xl"
+                animate={{
+                    scale: [1, 1.02, 1],
+                    opacity: [0.1, 0.2, 0.1]
+                }}
+                transition={{
+                    duration: 4,
+                    repeat: Infinity,
+                    ease: "easeInOut"
+                }}
+            />
+
+            <div className="relative z-10 space-y-6">
+                <motion.div variants={itemVariants} className="flex items-center space-x-3">
+                    <Brain className="w-8 h-8 text-brand-red" />
+                    <h3 className="text-xl font-bold text-white">AI-Powered Interview Prep</h3>
+                </motion.div>
+
+                <motion.p variants={itemVariants} className="text-white/70">
+                    Practice with our advanced AI system that adapts to your skill level and provides personalized feedback.
+                </motion.p>
+
+                <motion.div variants={itemVariants} className="flex flex-col space-y-4">
+                    <div className="flex items-center space-x-2">
+                        <Code className="w-5 h-5 text-brand-red" />
+                        <span className="text-white/80">Real-time code evaluation</span>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                        <Target className="w-5 h-5 text-brand-red" />
+                        <span className="text-white/80">Targeted practice sessions</span>
+                    </div>
+                </motion.div>
+
+                <motion.div
+                    className="absolute bottom-4 right-4"
+                    animate={{
+                        y: [0, -5, 0],
+                    }}
+                    transition={{
+                        duration: 2,
+                        repeat: Infinity,
+                        ease: "easeInOut"
+                    }}
+                >
+                    <svg width="40" height="40" viewBox="0 0 40 40" className="text-brand-red">
+                        <circle cx="20" cy="20" r="16" stroke="currentColor" strokeWidth="2" fill="none" />
+                        <path
+                            d="M20 12v16M28 20l-8 8-8-8"
+                            stroke="currentColor"
+                            strokeWidth="2"
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                        />
+                    </svg>
+                </motion.div>
+            </div>
+        </motion.div>
+    );
+};
 
 const Mockup = () => (
     <div className="absolute -bottom-4 left-6 h-[340px] w-full overflow-hidden rounded-xl border border-zinc-700 bg-background sm:h-[370px]">

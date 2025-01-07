@@ -121,14 +121,14 @@ export const BannerStacks = () => {
 
           <motion.div
             variants={itemVariants}
-            className="grid grid-cols-2 md:grid-cols-5 gap-8 w-full"
+            className="flex flex-nowrap justify-center items-center gap-12 w-full px-4 py-8 overflow-x-auto scrollbar-hide"
           >
             {stacks.map((stack, index) => (
               <motion.div
                 key={stack.name}
                 variants={itemVariants}
                 whileHover={{ scale: 1.05 }}
-                className="group relative flex flex-col items-center"
+                className="group relative flex flex-col items-center flex-shrink-0 w-[180px] mx-2"
               >
                 {/* Card Background with Gradient */}
                 <div className={`absolute inset-0 bg-gradient-to-br ${stack.color} opacity-0 group-hover:opacity-5 rounded-xl transition-opacity duration-300`} />

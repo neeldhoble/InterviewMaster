@@ -125,24 +125,110 @@ export const FAQ = () => {
                     </p>
                 </motion.div>
 
-                <motion.div
-                    initial={{ opacity: 0 }}
-                    whileInView={{ opacity: 1 }}
-                    transition={{ duration: 0.5, delay: 0.2 }}
-                    viewport={{ once: true }}
-                    className="grid gap-4"
-                >
-                    {faqData.map((faq, index) => (
-                        <FAQItem
-                            key={index}
-                            question={faq.question}
-                            answer={faq.answer}
-                            icon={faq.icon}
-                            isOpen={openIndex === index}
-                            onToggle={() => setOpenIndex(openIndex === index ? null : index)}
-                        />
-                    ))}
-                </motion.div>
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-start">
+                    {/* Left Side - Animation */}
+                    <motion.div
+                        initial={{ opacity: 0, x: -20 }}
+                        whileInView={{ opacity: 1, x: 0 }}
+                        transition={{ duration: 0.5 }}
+                        className="relative hidden lg:block"
+                    >
+                        <div className="relative w-full aspect-square">
+                            {/* Animated Elements */}
+                            <motion.div
+                                animate={{
+                                    y: [0, -20, 0],
+                                    rotate: [0, 5, 0]
+                                }}
+                                transition={{
+                                    duration: 4,
+                                    repeat: Infinity,
+                                    ease: "easeInOut"
+                                }}
+                                className="absolute top-1/4 left-1/4 w-32 h-32 bg-gradient-to-br from-[#fcba28] to-amber-600 rounded-2xl shadow-xl"
+                            />
+                            <motion.div
+                                animate={{
+                                    y: [0, 20, 0],
+                                    rotate: [0, -5, 0]
+                                }}
+                                transition={{
+                                    duration: 3,
+                                    repeat: Infinity,
+                                    ease: "easeInOut",
+                                    delay: 0.5
+                                }}
+                                className="absolute top-1/3 right-1/4 w-24 h-24 bg-gradient-to-br from-amber-400 to-amber-600 rounded-full shadow-xl"
+                            />
+                            <motion.div
+                                animate={{
+                                    scale: [1, 1.1, 1],
+                                    rotate: [0, 10, 0]
+                                }}
+                                transition={{
+                                    duration: 5,
+                                    repeat: Infinity,
+                                    ease: "easeInOut",
+                                    delay: 1
+                                }}
+                                className="absolute bottom-1/4 left-1/3 w-40 h-40 bg-gradient-to-br from-[#fcba28]/80 to-amber-500/80 rounded-3xl shadow-xl backdrop-blur-sm"
+                            >
+                                <div className="absolute inset-0 bg-white/10 rounded-3xl" />
+                            </motion.div>
+                            
+                            {/* Interview Icons Animation */}
+                            <motion.div
+                                animate={{
+                                    y: [0, -15, 0],
+                                    x: [0, 10, 0]
+                                }}
+                                transition={{
+                                    duration: 6,
+                                    repeat: Infinity,
+                                    ease: "easeInOut"
+                                }}
+                                className="absolute top-1/2 right-1/3 p-4 bg-white/5 backdrop-blur-md rounded-xl shadow-lg"
+                            >
+                                <MessageSquare className="w-8 h-8 text-[#fcba28]" />
+                            </motion.div>
+                            <motion.div
+                                animate={{
+                                    y: [0, 15, 0],
+                                    x: [0, -10, 0]
+                                }}
+                                transition={{
+                                    duration: 5,
+                                    repeat: Infinity,
+                                    ease: "easeInOut",
+                                    delay: 0.5
+                                }}
+                                className="absolute bottom-1/3 left-1/2 p-4 bg-white/5 backdrop-blur-md rounded-xl shadow-lg"
+                            >
+                                <Brain className="w-8 h-8 text-amber-500" />
+                            </motion.div>
+                        </div>
+                    </motion.div>
+
+                    {/* Right Side - FAQ Items */}
+                    <motion.div
+                        initial={{ opacity: 0 }}
+                        whileInView={{ opacity: 1 }}
+                        transition={{ duration: 0.5, delay: 0.2 }}
+                        viewport={{ once: true }}
+                        className="grid gap-4"
+                    >
+                        {faqData.map((faq, index) => (
+                            <FAQItem
+                                key={index}
+                                question={faq.question}
+                                answer={faq.answer}
+                                icon={faq.icon}
+                                isOpen={openIndex === index}
+                                onToggle={() => setOpenIndex(openIndex === index ? null : index)}
+                            />
+                        ))}
+                    </motion.div>
+                </div>
 
                 <motion.div
                     initial={{ opacity: 0, y: 20 }}
