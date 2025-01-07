@@ -4,83 +4,42 @@ import { GoogleGenerativeAI } from "@google/generative-ai";
 
 const genAI = new GoogleGenerativeAI(process.env.NEXT_PUBLIC_GEMINI_API_KEY || '');
 
-interface CoachingFeedback {
+interface InterviewFeedback {
   feedback: string;
   suggestions: string[];
-  nextTip: string;
   confidence: number;
+  strengths: string[];
+  improvements: string[];
+  bodyLanguageTips: string[];
+  voiceModulationTips: string[];
+  technicalAccuracy: number;
+  communicationScore: number;
 }
 
-interface CoachingTopic {
-  title: string;
-  description: string;
-  keyPoints: string[];
+interface MockInterviewQuestion {
+  question: string;
+  context: string;
+  expectedPoints: string[];
+  difficulty: 'easy' | 'medium' | 'hard';
 }
 
 class GeminiService {
   private model = genAI.getGenerativeModel({ model: "gemini-pro" });
 
-  async getCoachingTopics(role: string, experience: string): Promise<CoachingTopic[]> {
-    const prompt = `Create a list of interview coaching topics for a ${role} position with ${experience} experience.
-    Return ONLY a JSON array of topics in this format:
-    [
-      {
-        "title": "topic title",
-        "description": "brief description",
-        "keyPoints": ["key point 1", "key point 2"]
-      }
-    ]`;
-
-    try {
-      const result = await this.model.generateContent(prompt);
-      const response = await result.response;
-      return JSON.parse(response.text());
-    } catch (error) {
-      console.error('Error getting coaching topics:', error);
-      return [
-        {
-          title: "Body Language Mastery",
-          description: "Learn effective non-verbal communication",
-          keyPoints: ["Maintain eye contact", "Use confident posture", "Appropriate gestures"]
-        },
-        {
-          title: "Voice and Speech",
-          description: "Perfect your speaking style",
-          keyPoints: ["Clear pronunciation", "Appropriate pace", "Voice modulation"]
-        }
-      ];
-    }
-  }
-
-  async getCoachingAdvice(topic: string, context: string): Promise<string> {
-    const prompt = `As an expert interview coach, provide detailed advice about ${topic} in the context of ${context}.
-    Focus on practical, actionable tips. Keep it concise and engaging, using a friendly, encouraging tone.
-    Limit to 3-4 sentences.`;
-
-    try {
-      const result = await this.model.generateContent(prompt);
-      const response = await result.response;
-      return response.text();
-    } catch (error) {
-      return "Remember to maintain good posture and eye contact. Speak clearly and confidently, varying your tone to emphasize key points. Practice these techniques regularly to make them natural.";
-    }
-  }
-
-  async analyzePractice(
-    topic: string,
-    recording: string,
-    duration: number
-  ): Promise<CoachingFeedback> {
-    const prompt = `Analyze this practice session for ${topic}:
-    Recording transcript: ${recording}
-    Duration: ${duration} seconds
+  async analyzeSpeech(transcript: string): Promise<InterviewFeedback> {
+    const prompt = `Analyze this interview response transcript for voice patterns, clarity, and content:
+    "${transcript}"
     
-    Return ONLY a JSON object in this format:
+    Provide detailed feedback in JSON format with:
     {
-      "feedback": "detailed feedback",
-      "suggestions": ["suggestion1", "suggestion2"],
-      "nextTip": "next practice tip",
-      "confidence": 85
+      "feedback": "overall feedback",
+      "suggestions": ["specific suggestions"],
+      "confidence": 85,
+      "strengths": ["identified strengths"],
+      "improvements": ["areas to improve"],
+      "voiceModulationTips": ["voice improvement tips"],
+      "technicalAccuracy": 90,
+      "communicationScore": 88
     }`;
 
     try {
@@ -88,78 +47,161 @@ class GeminiService {
       const response = await result.response;
       return JSON.parse(response.text());
     } catch (error) {
-      return {
-        feedback: "Good effort in practicing the techniques.",
-        suggestions: ["Try to speak more slowly", "Practice in front of a mirror"],
-        nextTip: "Focus on maintaining eye contact while speaking",
-        confidence: 75
-      };
+      console.error('Error analyzing speech:', error);
+      return this.getDefaultFeedback();
     }
   }
 
-  async getExampleDemonstration(topic: string): Promise<string> {
-    const prompt = `Provide a short, natural demonstration script for teaching ${topic} in interview coaching.
-    Make it sound natural and conversational, as if a coach is speaking directly to the student.
-    Keep it under 30 seconds when spoken.`;
+  async analyzeBodyLanguage(videoData: any): Promise<string[]> {
+    const prompt = `Analyze the following body language metrics and provide specific improvement tips:
+    - Posture
+    - Hand gestures
+    - Eye contact
+    - Facial expressions
+    Return only an array of specific, actionable tips.`;
 
     try {
       const result = await this.model.generateContent(prompt);
       const response = await result.response;
-      return response.text();
+      return JSON.parse(response.text());
     } catch (error) {
-      return "Let me demonstrate proper eye contact. Notice how I maintain steady but not intense eye contact, occasionally breaking it naturally. This shows confidence and engagement without being intimidating.";
+      return [
+        "Maintain upright posture",
+        "Use natural hand gestures",
+        "Make consistent eye contact",
+        "Show engaged facial expressions"
+      ];
     }
   }
 
-  async generatePracticeScenario(topic: string): Promise<string> {
-    const prompt = `Create a practice scenario for ${topic} that a candidate can use to improve their interview skills.
-    Make it specific and actionable, with clear instructions.
-    Keep it concise and engaging.`;
+  async generateMockInterview(role: string, experience: string, topic: string): Promise<MockInterviewQuestion[]> {
+    const prompt = `Create 5 mock interview questions for a ${role} position with ${experience} experience, focusing on ${topic}.
+    Return in JSON format:
+    [{
+      "question": "question text",
+      "context": "why this is asked",
+      "expectedPoints": ["key points to cover"],
+      "difficulty": "medium"
+    }]`;
 
     try {
       const result = await this.model.generateContent(prompt);
       const response = await result.response;
-      return response.text();
+      return JSON.parse(response.text());
     } catch (error) {
-      return "Practice introducing yourself while standing up. Focus on maintaining good posture and using natural hand gestures. Record yourself and watch for any nervous movements.";
+      return this.getDefaultQuestions();
     }
   }
 
-  async providePracticeReport(
-    practices: { topic: string; recording: string; feedback: CoachingFeedback }[]
-  ): Promise<string> {
-    const prompt = `Create a progress report based on these practice sessions:
-    ${practices.map(p => `
-      Topic: ${p.topic}
-      Recording: ${p.recording}
-      Feedback: ${JSON.stringify(p.feedback)}
-    `).join('\n')}
+  async getPersonalizedTips(role: string, experience: string, strengths: string[], weaknesses: string[]): Promise<any> {
+    const prompt = `Create a personalized improvement plan for a ${role} with ${experience} experience.
+    Strengths: ${strengths.join(', ')}
+    Areas to improve: ${weaknesses.join(', ')}
     
-    Provide encouraging feedback and specific improvement suggestions.
-    Format in markdown.`;
+    Return in JSON format:
+    {
+      "shortTermGoals": ["goal1", "goal2"],
+      "longTermGoals": ["goal1", "goal2"],
+      "dailyPracticeTips": ["tip1", "tip2"],
+      "resourceRecommendations": ["resource1", "resource2"]
+    }`;
+
+    try {
+      const result = await this.model.generateContent(prompt);
+      const response = await result.response;
+      return JSON.parse(response.text());
+    } catch (error) {
+      return this.getDefaultImprovementPlan();
+    }
+  }
+
+  async analyzeResponse(question: string, answer: string): Promise<any> {
+    const prompt = `Analyze this interview response:
+    Question: "${question}"
+    Answer: "${answer}"
+    
+    Provide analysis in JSON format:
+    {
+      "relevance": 90,
+      "structure": 85,
+      "clarity": 88,
+      "technicalAccuracy": 92,
+      "improvements": ["improvement1", "improvement2"],
+      "positiveAspects": ["aspect1", "aspect2"]
+    }`;
+
+    try {
+      const result = await this.model.generateContent(prompt);
+      const response = await result.response;
+      return JSON.parse(response.text());
+    } catch (error) {
+      return this.getDefaultResponseAnalysis();
+    }
+  }
+
+  async generateFeedbackSummary(sessionData: any): Promise<string> {
+    const prompt = `Create a comprehensive feedback summary for this interview session:
+    ${JSON.stringify(sessionData)}
+    
+    Include:
+    1. Overall performance
+    2. Key strengths
+    3. Areas for improvement
+    4. Specific action items
+    5. Next steps`;
 
     try {
       const result = await this.model.generateContent(prompt);
       const response = await result.response;
       return response.text();
     } catch (error) {
-      return `# Practice Progress Report
-
-## Overall Progress
-You're making good strides in your interview preparation.
-
-## Key Improvements
-- More confident delivery
-- Better posture maintenance
-- Clearer speech patterns
-
-## Focus Areas
-1. Continue practicing voice modulation
-2. Work on natural hand gestures
-3. Maintain consistent eye contact
-
-Keep up the great work! Each practice session brings you closer to interview success.`;
+      return "Session summary not available. Please try again.";
     }
+  }
+
+  private getDefaultFeedback(): InterviewFeedback {
+    return {
+      feedback: "Good effort in the interview response.",
+      suggestions: ["Practice more concise answers", "Use the STAR method"],
+      confidence: 75,
+      strengths: ["Clear communication", "Structured response"],
+      improvements: ["Add more specific examples", "Work on pacing"],
+      bodyLanguageTips: ["Maintain eye contact", "Use confident posture"],
+      voiceModulationTips: ["Vary tone for emphasis", "Speak at a steady pace"],
+      technicalAccuracy: 80,
+      communicationScore: 75
+    };
+  }
+
+  private getDefaultQuestions(): MockInterviewQuestion[] {
+    return [
+      {
+        question: "Tell me about a challenging project you worked on.",
+        context: "Assessing problem-solving and project management skills",
+        expectedPoints: ["Project description", "Challenges faced", "Solutions implemented", "Outcome"],
+        difficulty: "medium"
+      }
+    ];
+  }
+
+  private getDefaultImprovementPlan() {
+    return {
+      shortTermGoals: ["Improve response structure", "Practice common questions"],
+      longTermGoals: ["Master technical concepts", "Develop leadership skills"],
+      dailyPracticeTips: ["Record practice sessions", "Review industry news"],
+      resourceRecommendations: ["Online courses", "Industry blogs"]
+    };
+  }
+
+  private getDefaultResponseAnalysis() {
+    return {
+      relevance: 80,
+      structure: 75,
+      clarity: 70,
+      technicalAccuracy: 80,
+      improvements: ["Add more specific examples", "Improve answer structure"],
+      positiveAspects: ["Good technical knowledge", "Clear communication"]
+    };
   }
 }
 
