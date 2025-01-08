@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   FaRobot, FaCode, FaLightbulb, FaArrowLeft, FaClock, 
@@ -77,6 +77,9 @@ export default function AITestsPage() {
   const [generatedTest, setGeneratedTest] = useState<any>(null);
   const [selectedAnswers, setSelectedAnswers] = useState<Record<string, string>>({});
   const [showFeedback, setShowFeedback] = useState<Record<string, boolean>>({});
+  const [testSubmitted, setTestSubmitted] = useState(false);
+  const [timeRemaining, setTimeRemaining] = useState<number | null>(null);
+  const [showStats, setShowStats] = useState(false);
   const [performance, setPerformance] = useState<TestPerformance>({
     correctAnswers: 0,
     totalQuestions: 0,
@@ -91,12 +94,47 @@ export default function AITestsPage() {
       setShowForm(false);
       setSelectedAnswers({});
       setShowFeedback({});
+      setTestSubmitted(false);
+      setTimeRemaining(formData.timeLimit * 60); // Convert minutes to seconds
     } catch (error) {
       console.error('Error:', error);
       alert('Failed to generate test. Please try again.');
     } finally {
       setLoading(false);
     }
+  };
+
+  useEffect(() => {
+    let timer: NodeJS.Timeout;
+    if (timeRemaining !== null && timeRemaining > 0 && !testSubmitted) {
+      timer = setInterval(() => {
+        setTimeRemaining(prev => {
+          if (prev === null || prev <= 0) {
+            clearInterval(timer);
+            return 0;
+          }
+          return prev - 1;
+        });
+      }, 1000);
+    }
+    return () => {
+      if (timer) clearInterval(timer);
+    };
+  }, [timeRemaining, testSubmitted]);
+
+  const formatTime = (seconds: number): string => {
+    const minutes = Math.floor(seconds / 60);
+    const remainingSeconds = seconds % 60;
+    return `${minutes}:${remainingSeconds.toString().padStart(2, '0')}`;
+  };
+
+  const handleTestSubmit = () => {
+    setTestSubmitted(true);
+    const allFeedback: Record<string, boolean> = {};
+    generatedTest.questions.forEach((q: any) => {
+      allFeedback[q.id] = true;
+    });
+    setShowFeedback(allFeedback);
   };
 
   const handleAnswerSelect = (questionId: string, answer: string, topic: string) => {
@@ -205,7 +243,9 @@ export default function AITestsPage() {
                     <div className="flex gap-4 text-gray-400">
                       <div className="flex items-center gap-2">
                         <FaClock className="text-[#fcba28]" />
-                        <span>{generatedTest.metadata.duration} minutes</span>
+                        <span className={timeRemaining !== null && timeRemaining <= 300 ? 'text-red-500' : ''}>
+                          {timeRemaining !== null ? formatTime(timeRemaining) : `${generatedTest.metadata.timeLimit} minutes`}
+                        </span>
                       </div>
                       <div className="flex items-center gap-2">
                         <FaList className="text-[#fcba28]" />
@@ -263,6 +303,65 @@ export default function AITestsPage() {
 
                 {generatedTest && (
                   <div className="space-y-8">
+                    {/* Test Statistics */}
+                    {showStats && (
+                      <motion.div
+                        initial={{ opacity: 0, height: 0 }}
+                        animate={{ opacity: 1, height: 'auto' }}
+                        exit={{ opacity: 0, height: 0 }}
+                        className="relative p-6 rounded-xl bg-black/20 border border-[#fcba28]/20 backdrop-blur-sm"
+                      >
+                        <button
+                          onClick={() => setShowStats(false)}
+                          className="absolute top-4 right-4 text-gray-400 hover:text-red-500"
+                        >
+                          ×
+                        </button>
+                        <h3 className="text-[#fcba28] font-medium mb-4">Test Statistics</h3>
+                        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+                          <div className="p-4 rounded-lg bg-black/20 border border-[#fcba28]/20">
+                            <div className="text-sm text-gray-400 mb-1">Questions</div>
+                            <div className="text-xl font-medium text-[#fcba28]">
+                              {generatedTest.metadata.questionCount}
+                            </div>
+                          </div>
+                          <div className="p-4 rounded-lg bg-black/20 border border-[#fcba28]/20">
+                            <div className="text-sm text-gray-400 mb-1">Time Limit</div>
+                            <div className="text-xl font-medium text-[#fcba28]">
+                              {generatedTest.metadata.timeLimit}m
+                            </div>
+                          </div>
+                          <div className="p-4 rounded-lg bg-black/20 border border-[#fcba28]/20">
+                            <div className="text-sm text-gray-400 mb-1">Completed</div>
+                            <div className="text-xl font-medium text-[#fcba28]">
+                              {Object.keys(selectedAnswers).length}/{generatedTest.questions.length}
+                            </div>
+                          </div>
+                          <div className="p-4 rounded-lg bg-black/20 border border-[#fcba28]/20">
+                            <div className="text-sm text-gray-400 mb-1">Time Left</div>
+                            <div className="text-xl font-medium text-[#fcba28]">
+                              {timeRemaining !== null ? formatTime(timeRemaining) : '--:--'}
+                            </div>
+                          </div>
+                        </div>
+                      </motion.div>
+                    )}
+
+                    <div className="flex justify-between items-center mb-4">
+                      <button
+                        onClick={() => setShowStats(!showStats)}
+                        className="text-[#fcba28] hover:text-[#fcd978] transition-colors"
+                      >
+                        {showStats ? 'Hide Statistics' : 'Show Statistics'}
+                      </button>
+                      <div className="flex items-center gap-2 text-gray-400">
+                        <span>Progress:</span>
+                        <span className="font-medium">
+                          {Object.keys(selectedAnswers).length}/{generatedTest.questions.length}
+                        </span>
+                      </div>
+                    </div>
+
                     <div className="grid gap-6">
                       {generatedTest.questions.map((question: any, index: number) => (
                         <motion.div
@@ -406,8 +505,114 @@ export default function AITestsPage() {
                         </motion.div>
                       ))}
                     </div>
+
+                    {/* Submit Test Button */}
+                    {!testSubmitted && Object.keys(selectedAnswers).length > 0 && (
+                      <motion.div
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        className="mt-8"
+                      >
+                        <motion.button
+                          whileHover={{ scale: 1.02 }}
+                          whileTap={{ scale: 0.98 }}
+                          onClick={handleTestSubmit}
+                          className="w-full py-4 rounded-xl text-lg font-medium bg-[#fcba28] text-black hover:bg-[#fcba28]/90 transition-all"
+                        >
+                          Submit Test
+                        </motion.button>
+                        <p className="text-center text-sm text-gray-400 mt-2">
+                          You've completed {Object.keys(selectedAnswers).length} out of {generatedTest.questions.length} questions
+                        </p>
+                      </motion.div>
+                    )}
                   </div>
                 )}
+              </motion.div>
+            )}
+          </AnimatePresence>
+
+          {/* Final Score Modal */}
+          <AnimatePresence>
+            {testSubmitted && (
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50"
+              >
+                <motion.div
+                  initial={{ scale: 0.9, y: 20 }}
+                  animate={{ scale: 1, y: 0 }}
+                  exit={{ scale: 0.9, y: 20 }}
+                  className="relative bg-background p-8 rounded-2xl max-w-lg w-full mx-4 border border-[#fcba28]/20"
+                >
+                  <button
+                    onClick={() => setTestSubmitted(false)}
+                    className="absolute top-4 right-4 text-gray-400 hover:text-red-500"
+                  >
+                    ×
+                  </button>
+                  
+                  <div className="text-center mb-6">
+                    <div className="inline-flex items-center justify-center p-4 rounded-full bg-[#fcba28]/10 mb-4">
+                      {(performance.correctAnswers / performance.totalQuestions) >= 0.7 ? (
+                        <FaCheckCircle className="w-8 h-8 text-green-500" />
+                      ) : (
+                        <FaTimesCircle className="w-8 h-8 text-red-500" />
+                      )}
+                    </div>
+                    <h3 className="text-2xl font-bold text-[#fcba28] mb-2">Test Complete!</h3>
+                    <p className="text-gray-400">
+                      You scored {((performance.correctAnswers / performance.totalQuestions) * 100).toFixed(1)}%
+                    </p>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-4 mb-6">
+                    <div className="p-4 rounded-lg bg-black/20 border border-[#fcba28]/20">
+                      <div className="text-sm text-gray-400 mb-1">Correct Answers</div>
+                      <div className="text-xl font-medium text-green-500">{performance.correctAnswers}</div>
+                    </div>
+                    <div className="p-4 rounded-lg bg-black/20 border border-[#fcba28]/20">
+                      <div className="text-sm text-gray-400 mb-1">Total Questions</div>
+                      <div className="text-xl font-medium text-[#fcba28]">{performance.totalQuestions}</div>
+                    </div>
+                  </div>
+
+                  {/* Topic Performance */}
+                  <div className="space-y-2 mb-6">
+                    <h4 className="text-sm text-gray-400">Performance by Topic</h4>
+                    {Object.entries(performance.topics).map(([topic, rate]) => (
+                      <div key={topic} className="flex items-center justify-between">
+                        <span className="text-sm text-gray-300">{topic}</span>
+                        <span className={`text-sm font-medium ${
+                          rate >= 0.7 ? 'text-green-500' : 'text-red-500'
+                        }`}>
+                          {(rate * 100).toFixed(0)}%
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+
+                  <div className="flex gap-4">
+                    <motion.button
+                      whileHover={{ scale: 1.02 }}
+                      whileTap={{ scale: 0.98 }}
+                      onClick={() => setShowForm(true)}
+                      className="flex-1 py-3 rounded-xl bg-[#fcba28] text-black font-medium hover:bg-[#fcba28]/90 transition-all"
+                    >
+                      Generate New Test
+                    </motion.button>
+                    <motion.button
+                      whileHover={{ scale: 1.02 }}
+                      whileTap={{ scale: 0.98 }}
+                      onClick={() => setTestSubmitted(false)}
+                      className="flex-1 py-3 rounded-xl bg-black/20 text-[#fcba28] font-medium hover:bg-black/30 transition-all"
+                    >
+                      Review Answers
+                    </motion.button>
+                  </div>
+                </motion.div>
               </motion.div>
             )}
           </AnimatePresence>
