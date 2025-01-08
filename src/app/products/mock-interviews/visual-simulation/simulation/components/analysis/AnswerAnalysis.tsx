@@ -12,85 +12,57 @@ interface AnswerAnalysisProps {
   };
 }
 
+interface AnalysisState {
+  analysis: string;
+  improvedAnswer: string;
+  modelAnswer: string;
+  score: number;
+  keyImprovements: string[];
+  communicationScore: number;
+  clarity: number;
+  confidence: number;
+  success: boolean;
+}
+
 export const AnswerAnalysis: React.FC<AnswerAnalysisProps> = ({
   isRecording,
   currentQuestion,
   transcript,
 }) => {
-  const [analysis, setAnalysis] = useState({
-    originalAnalysis: '',
+  const [analysis, setAnalysis] = useState<AnalysisState>({
+    analysis: '',
     improvedAnswer: '',
     modelAnswer: '',
-    keyImprovements: [] as string[],
+    score: 0,
+    keyImprovements: [],
+    communicationScore: 0,
+    clarity: 0,
     confidence: 0,
+    success: false
   });
-
-  const [recognition, setRecognition] = useState<any>(null);
-
-  useEffect(() => {
-    if (typeof window !== 'undefined') {
-      const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-      if (SpeechRecognition) {
-        const recognitionInstance = new SpeechRecognition();
-        recognitionInstance.continuous = true;
-        recognitionInstance.interimResults = true;
-        recognitionInstance.lang = 'en-US';
-        setRecognition(recognitionInstance);
-      }
-    }
-  }, []);
 
   useEffect(() => {
     let analysisTimeout: NodeJS.Timeout;
     
     const analyzeAnswer = async () => {
-      if (transcript.final) {
+      if (transcript.final && currentQuestion) {
         try {
-          const prompt = `
-            Question: ${currentQuestion}
-            Answer: ${transcript.final}
-            
-            Please analyze this interview answer and provide:
-            1. Analysis of the current answer
-            2. An improved version of the same answer
-            3. A model answer that showcases the best way to answer
-            4. Key improvements needed
-            5. Confidence score (0-100)
-            
-            Format as JSON:
-            {
-              "analysis": "detailed analysis",
-              "improvedAnswer": "improved version",
-              "modelAnswer": "ideal answer",
-              "keyImprovements": ["improvement1", "improvement2", "improvement3"],
-              "confidence": 85
-            }
-          `;
-
-          const result = await geminiService.generateContent(prompt);
-          const response = JSON.parse(result);
-          
-          setAnalysis({
-            originalAnalysis: response.analysis,
-            improvedAnswer: response.improvedAnswer,
-            modelAnswer: response.modelAnswer,
-            keyImprovements: response.keyImprovements,
-            confidence: response.confidence,
-          });
+          const result = await geminiService.analyzeInterviewAnswer(currentQuestion, transcript.final);
+          setAnalysis(result);
         } catch (error) {
           console.error('Error analyzing answer:', error);
         }
       }
     };
 
-    if (isRecording && transcript.final) {
-      // Wait 2 seconds after the last speech before analyzing
+    if (transcript.final) {
+      // Wait 1.5 seconds after the last speech before analyzing
       clearTimeout(analysisTimeout);
-      analysisTimeout = setTimeout(analyzeAnswer, 2000);
+      analysisTimeout = setTimeout(analyzeAnswer, 1500);
     }
 
     return () => clearTimeout(analysisTimeout);
-  }, [isRecording, transcript.final, currentQuestion]);
+  }, [transcript.final, currentQuestion]);
 
   return (
     <div className="space-y-6">
@@ -107,41 +79,50 @@ export const AnswerAnalysis: React.FC<AnswerAnalysisProps> = ({
                 <div className={`w-2 h-2 rounded-full ${isRecording ? 'bg-red-500 animate-pulse' : 'bg-gray-500'}`} />
                 <span className="text-sm text-white/60">{isRecording ? 'Recording' : 'Ready'}</span>
               </div>
-              <div className="h-4 w-[1px] bg-white/10" />
-              <div className="flex items-center gap-2">
-                <Clock className="w-4 h-4 text-white/40" />
-                <span className="text-sm text-white/60">Real-time Analysis</span>
-              </div>
+              {analysis.success && (
+                <>
+                  <div className="h-4 w-[1px] bg-white/10" />
+                  <div className="flex items-center gap-2">
+                    <Activity className="w-4 h-4 text-emerald-400" />
+                    <span className="text-sm text-emerald-400">Analysis Ready</span>
+                  </div>
+                </>
+              )}
             </div>
           </div>
         </div>
         
-        {/* Confidence Score */}
-        {analysis.confidence > 0 && (
-          <div className="text-center">
+        {/* Overall Score */}
+        {analysis.score > 0 && (
+          <motion.div 
+            className="text-center"
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ duration: 0.3 }}
+          >
             <div className="relative w-20 h-20">
-              <motion.div 
-                className="absolute inset-0 rounded-full bg-violet-500/20"
-                initial={{ scale: 0.8, opacity: 0 }}
-                animate={{ scale: 1, opacity: 1 }}
-                transition={{ duration: 0.5 }}
-              />
+              <div className="absolute inset-0 rounded-full bg-gradient-to-br from-emerald-500/20 via-blue-500/20 to-violet-500/20 animate-pulse" />
               <div className="absolute inset-1 rounded-full bg-black/50 flex items-center justify-center">
                 <div className="text-center">
-                  <span className="text-2xl font-bold text-white">{analysis.confidence}</span>
-                  <span className="text-sm font-medium text-violet-400">/100</span>
+                  <span className="text-2xl font-bold text-white">{analysis.score}</span>
+                  <span className="text-sm font-medium text-emerald-500">/100</span>
                 </div>
               </div>
             </div>
-            <span className="text-sm text-white/60">Confidence Score</span>
-          </div>
+            <span className="text-sm text-white/60">Overall Score</span>
+          </motion.div>
         )}
       </div>
 
       {/* Main Content */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Current Answer Analysis */}
-        <div className="space-y-4">
+        <motion.div 
+          className="space-y-4"
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.3 }}
+        >
           <div className="flex items-center gap-2">
             <MessageCircle className="w-5 h-5 text-violet-400" />
             <h4 className="font-medium text-white">Your Answer</h4>
@@ -151,15 +132,20 @@ export const AnswerAnalysis: React.FC<AnswerAnalysisProps> = ({
               {transcript.final || transcript.interim || "Start speaking to see your answer..."}
             </p>
           </div>
-          {analysis.originalAnalysis && (
+          {analysis.analysis && (
             <div className="p-4 bg-violet-500/10 rounded-lg border border-violet-500/20">
-              <p className="text-white/70 text-sm leading-relaxed">{analysis.originalAnalysis}</p>
+              <p className="text-white/70 text-sm leading-relaxed">{analysis.analysis}</p>
             </div>
           )}
-        </div>
+        </motion.div>
 
         {/* Improved Answer */}
-        <div className="space-y-4">
+        <motion.div 
+          className="space-y-4"
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.3, delay: 0.1 }}
+        >
           <div className="flex items-center gap-2">
             <CheckCircle className="w-5 h-5 text-emerald-400" />
             <h4 className="font-medium text-white">Improved Version</h4>
@@ -169,11 +155,16 @@ export const AnswerAnalysis: React.FC<AnswerAnalysisProps> = ({
               {analysis.improvedAnswer || "Waiting for your answer to provide improvements..."}
             </p>
           </div>
-        </div>
+        </motion.div>
       </div>
 
       {/* Model Answer */}
-      <div className="space-y-4">
+      <motion.div 
+        className="space-y-4"
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.3, delay: 0.2 }}
+      >
         <div className="flex items-center gap-2">
           <Activity className="w-5 h-5 text-blue-400" />
           <h4 className="font-medium text-white">Model Answer</h4>
@@ -183,7 +174,7 @@ export const AnswerAnalysis: React.FC<AnswerAnalysisProps> = ({
             {analysis.modelAnswer || "Speak to see a model answer..."}
           </p>
         </div>
-      </div>
+      </motion.div>
 
       {/* Key Improvements */}
       {analysis.keyImprovements.length > 0 && (
@@ -194,7 +185,7 @@ export const AnswerAnalysis: React.FC<AnswerAnalysisProps> = ({
               className="p-4 bg-white/5 rounded-lg border border-white/10"
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.3, delay: i * 0.1 }}
+              transition={{ duration: 0.3, delay: 0.3 + i * 0.1 }}
             >
               <div className="flex items-start gap-3">
                 <div className="w-6 h-6 rounded-full bg-gradient-to-br from-violet-500/20 to-blue-500/20 flex items-center justify-center flex-shrink-0">

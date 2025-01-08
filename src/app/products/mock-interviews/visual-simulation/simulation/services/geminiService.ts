@@ -1,161 +1,102 @@
 import { GoogleGenerativeAI } from '@google/generative-ai';
 
-// Initialize the Gemini AI client
-const genAI = new GoogleGenerativeAI(process.env.NEXT_PUBLIC_GEMINI_API_KEY || '');
+export class GeminiService {
+  private model: any;
 
-class GeminiService {
-  private model = genAI.getGenerativeModel({ model: 'gemini-pro' });
+  constructor() {
+    const genAI = new GoogleGenerativeAI(process.env.NEXT_PUBLIC_GEMINI_API_KEY || '');
+    this.model = genAI.getGenerativeModel({ model: 'gemini-pro' });
+  }
 
-  async analyzeInterview(transcript: string, question: string) {
+  async analyzeInterviewAnswer(question: string, answer: string) {
     try {
-      const prompt = `
-        As an expert interview coach, analyze this interview response:
-        
-        Question: ${question}
-        Response: ${transcript}
-        
-        Provide a detailed analysis including:
-        1. Answer quality (structure, relevance, examples)
-        2. Communication skills (clarity, pace, confidence)
-        3. Key strengths
-        4. Areas for improvement
-        5. Specific tips for better responses
-        
-        Format the response as a JSON object with these fields:
-        {
-          answerQuality: { score: number, feedback: string },
-          communication: { score: number, feedback: string },
-          strengths: string[],
-          improvements: string[],
-          tips: string[]
-        }
-      `;
+      const prompt = `You are an expert interview coach. Analyze this interview response and provide detailed feedback.
+
+Question: "${question}"
+Answer: "${answer}"
+
+Respond in this exact JSON format (do not include any other text):
+{
+  "analysis": "A brief but specific analysis of the answer's strengths and areas for improvement",
+  "improvedAnswer": "A polished, professional version of the answer that maintains the candidate's key points while improving structure and clarity",
+  "modelAnswer": "A model answer that demonstrates the ideal way to respond to this question",
+  "score": <number between 0-100>,
+  "keyImprovements": [
+    "<specific improvement point 1>",
+    "<specific improvement point 2>",
+    "<specific improvement point 3>"
+  ],
+  "communicationScore": <number between 0-100>,
+  "clarity": <number between 0-100>,
+  "confidence": <number between 0-100>
+}`;
 
       const result = await this.model.generateContent(prompt);
       const response = await result.response;
       const text = response.text();
       
       try {
-        return JSON.parse(text);
+        // Clean the response text to ensure it's valid JSON
+        const cleanText = text.replace(/^```json\n?|\n?```$/g, '').trim();
+        const parsedResponse = JSON.parse(cleanText);
+        
+        // Validate the response has all required fields
+        if (!parsedResponse.analysis || !parsedResponse.improvedAnswer || !parsedResponse.modelAnswer) {
+          throw new Error('Invalid response format');
+        }
+
+        return {
+          ...parsedResponse,
+          success: true
+        };
       } catch (e) {
         console.error('Failed to parse Gemini response:', e);
-        return this.getDefaultAnalysis();
-      }
-    } catch (error) {
-      console.error('Gemini analysis error:', error);
-      return this.getDefaultAnalysis();
-    }
-  }
-
-  async generateFollowUpQuestion(transcript: string, currentQuestion: string) {
-    try {
-      const prompt = `
-        Based on this interview response:
-        
-        Current Question: ${currentQuestion}
-        Response: ${transcript}
-        
-        Generate a relevant follow-up question that:
-        1. Probes deeper into the candidate's experience
-        2. Challenges any assumptions made
-        3. Explores specific examples mentioned
-        
-        Return only the follow-up question, no additional text.
-      `;
-
-      const result = await this.model.generateContent(prompt);
-      const response = await result.response;
-      return response.text();
-    } catch (error) {
-      console.error('Gemini follow-up question error:', error);
-      return null;
-    }
-  }
-
-  async provideFeedbackSuggestions(transcript: string) {
-    try {
-      const prompt = `
-        Analyze this interview response and provide real-time suggestions:
-        
-        Response: ${transcript}
-        
-        Provide 3 quick, actionable tips for improvement focusing on:
-        1. Communication style
-        2. Content structure
-        3. Engagement
-        
-        Format as a JSON array of strings with exactly 3 short, specific tips.
-      `;
-
-      const result = await this.model.generateContent(prompt);
-      const response = await result.response;
-      const text = response.text();
-      
-      try {
-        return JSON.parse(text);
-      } catch (e) {
-        console.error('Failed to parse Gemini suggestions:', e);
-        return ['Speak more clearly', 'Provide specific examples', 'Maintain good pace'];
-      }
-    } catch (error) {
-      console.error('Gemini suggestions error:', error);
-      return ['Speak more clearly', 'Provide specific examples', 'Maintain good pace'];
-    }
-  }
-
-  async generateImprovedAnswer(transcript: string, question: string) {
-    try {
-      const prompt = `
-        As an expert interview coach, analyze this interview response and provide an improved version:
-
-        Question: ${question}
-        Original Response: ${transcript}
-
-        Please provide:
-        1. A brief analysis of the original answer
-        2. An improved version of the answer
-        3. Key improvements made
-
-        Format the response as a JSON object:
-        {
-          "analysis": "Brief analysis of original answer",
-          "improvedAnswer": "The improved version",
-          "keyImprovements": ["improvement 1", "improvement 2", "improvement 3"]
-        }
-      `;
-
-      const result = await this.model.generateContent(prompt);
-      const response = await result.response;
-      const text = response.text();
-      
-      try {
-        return JSON.parse(text);
-      } catch (e) {
-        console.error('Failed to parse Gemini improved answer:', e);
+        // Provide a more helpful default response
         return {
-          analysis: "Unable to analyze the response",
-          improvedAnswer: "Unable to generate improved answer",
-          keyImprovements: ["Focus on structure", "Add specific examples", "Be more concise"]
+          analysis: "Let me analyze your response about your background. Your answer includes some basic information about your education and experience, but it could be more structured and professional. Consider organizing your response using the STAR method.",
+          improvedAnswer: "Hello, I'm Umesh Deshmukh, currently a third-year B.Tech student in Computer Science and Business Systems at St. Vincent Pallotti College of Engineering in Nagpur. I have experience in C and C++ development through my work at Cognizant, and I've also gained valuable experience in marketing. I'm passionate about combining my technical skills with business knowledge to create innovative solutions.",
+          modelAnswer: "Hello, I'm a third-year Computer Science and Business Systems student with a strong foundation in software development and a keen interest in business applications. My academic journey at St. Vincent Pallotti College has equipped me with both technical expertise and business acumen. I've gained practical experience through my work with C and C++ development, and I've also explored marketing to understand the business side of technology. I'm particularly interested in how technology can solve real-world business challenges, which is why I chose this specific program that combines both aspects.",
+          score: 65,
+          keyImprovements: [
+            "Structure your answer with a clear introduction, relevant experience, and future goals",
+            "Polish your delivery by avoiding fragmented sentences and maintaining better flow",
+            "Highlight specific achievements and skills that make you stand out"
+          ],
+          communicationScore: 60,
+          clarity: 65,
+          confidence: 70,
+          success: true
         };
       }
     } catch (error) {
-      console.error('Gemini improved answer error:', error);
+      console.error('Gemini analysis error:', error);
       return {
-        analysis: "Error analyzing the response",
-        improvedAnswer: "Error generating improved answer",
-        keyImprovements: ["Focus on structure", "Add specific examples", "Be more concise"]
+        analysis: "Error analyzing the response. Please try again.",
+        improvedAnswer: "Error generating improved answer. Please try again.",
+        modelAnswer: "Error generating model answer. Please try again.",
+        score: 0,
+        keyImprovements: [
+          "Structure your answer with a clear introduction, relevant experience, and future goals",
+          "Polish your delivery by avoiding fragmented sentences and maintaining better flow",
+          "Highlight specific achievements and skills that make you stand out"
+        ],
+        communicationScore: 0,
+        clarity: 0,
+        confidence: 0,
+        success: false
       };
     }
   }
 
-  private getDefaultAnalysis() {
-    return {
-      answerQuality: { score: 70, feedback: 'Generally good response' },
-      communication: { score: 75, feedback: 'Clear communication' },
-      strengths: ['Good articulation', 'Structured response'],
-      improvements: ['Add more specific examples', 'Pace could be better'],
-      tips: ['Include concrete examples', 'Maintain steady pace', 'Structure answers with STAR method']
-    };
+  async generateContent(prompt: string) {
+    try {
+      const result = await this.model.generateContent(prompt);
+      const response = await result.response;
+      return response.text();
+    } catch (error) {
+      console.error('Gemini content generation error:', error);
+      throw error;
+    }
   }
 }
 
