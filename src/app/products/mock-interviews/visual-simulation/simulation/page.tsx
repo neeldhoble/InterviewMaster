@@ -13,15 +13,17 @@ import { recordingService } from './services/recordingService';
 import { aiAnalysisService } from './services/aiAnalysisService';
 import { enhancedAnalysisService } from './services/enhancedAnalysisService';
 import { MessageSquare, Activity, Lightbulb, CheckCircle } from 'lucide-react';
+import { AnswerAnalysis } from './components/analysis';
 
 export default function SimulationPage() {
   const [isRecording, setIsRecording] = useState(false);
-  const [timeElapsed, setTimeElapsed] = useState(0);
   const [currentQuestion, setCurrentQuestion] = useState(0);
-  const [isAISpeaking, setIsAISpeaking] = useState(false);
   const [questions, setQuestions] = useState(interviewQuestions);
-  const [isMuted, setIsMuted] = useState(false);
-  const [isVideoOn, setIsVideoOn] = useState(true);
+  const [transcript, setTranscript] = useState({
+    final: '',
+    interim: '',
+    segments: [] as { text: string; timestamp: number }[]
+  });
   const [analysis, setAnalysis] = useState({
     communicationScore: 0,
     bodyLanguageScore: 0,
@@ -39,8 +41,15 @@ export default function SimulationPage() {
       fillerWords: 0,
       confidence: 0
     },
-    tips: ['Start speaking to see real-time feedback']
+    tips: ['Start speaking to see real-time feedback'],
+    answerQuality: {
+      feedback: '',
+    }
   });
+  const [timeElapsed, setTimeElapsed] = useState(0);
+  const [isAISpeaking, setIsAISpeaking] = useState(false);
+  const [isMuted, setIsMuted] = useState(false);
+  const [isVideoOn, setIsVideoOn] = useState(true);
   const [recordings, setRecordings] = useState<Array<{
     id: string;
     timestamp: Date;
@@ -52,11 +61,6 @@ export default function SimulationPage() {
     blob?: Blob;
   }>>([]);
   const [recognition, setRecognition] = useState<any>(null);
-  const [transcript, setTranscript] = useState({
-    final: '',
-    interim: '',
-    segments: [] as { text: string; timestamp: number }[]
-  });
 
   useEffect(() => {
     let interval: NodeJS.Timeout;
@@ -761,37 +765,35 @@ export default function SimulationPage() {
                   </div>
                 </div>
               </div>
-              
-              {/* Overall Score */}
-<div className="flex items-center gap-6">
-  <div className="text-center">
-    <div className="relative w-20 h-20">
-      <div className="absolute inset-0 rounded-full bg-gradient-to-br from-emerald-500/20 via-blue-500/20 to-violet-500/20 animate-pulse" />
-      <div className="absolute inset-1 rounded-full bg-black/50 flex items-center justify-center">
-        <div className="text-center">
-          <span className="text-2xl font-bold text-white">
-            {Math.round(
-              analysis.communicationScore * 0.4 +
-              analysis.speechMetrics.clarity * 0.3 +
-              Math.min(100, (analysis.speechMetrics.pace / 150) * 100) * 0.3
-            )}
-          </span>
-          <span className="text-sm font-medium text-emerald-500">/100</span>
-        </div>
-      </div>
-    </div>
-    <div className="mt-1 space-y-0.5">
-      <span className="text-sm font-medium text-white/80 block">Overall Score</span>
-      <div className="flex items-center justify-center gap-1 text-[10px]">
-        <span className="text-emerald-400">Comm 40%</span>
-        <span className="text-white/20">·</span>
-        <span className="text-blue-400">Clarity 30%</span>
-        <span className="text-white/20">·</span>
-        <span className="text-violet-400">Pace 30%</span>
-      </div>
-    </div>
-  </div>
-</div>
+　　 　 　 <div className="flex items-center gap-6">
+                <div className="text-center">
+                  <div className="relative w-20 h-20">
+                    <div className="absolute inset-0 rounded-full bg-gradient-to-br from-emerald-500/20 via-blue-500/20 to-violet-500/20 animate-pulse" />
+                    <div className="absolute inset-1 rounded-full bg-black/50 flex items-center justify-center">
+                      <div className="text-center">
+                        <span className="text-2xl font-bold text-white">
+                          {Math.round(
+                            analysis.communicationScore * 0.4 +
+                            analysis.speechMetrics.clarity * 0.3 +
+                            Math.min(100, (analysis.speechMetrics.pace / 150) * 100) * 0.3
+                          )}
+                        </span>
+                        <span className="text-sm font-medium text-emerald-500">/100</span>
+                      </div>
+                    </div>
+                  </div>
+                  <div className="mt-2 space-y-0.5">
+                    <span className="text-sm font-medium text-white/80 block">Overall Score</span>
+                    <div className="flex items-center justify-center gap-1 text-[10px]">
+                      <span className="text-emerald-400">Comm 40%</span>
+                      <span className="text-white/20">·</span>
+                      <span className="text-blue-400">Clarity 30%</span>
+                      <span className="text-white/20">·</span>
+                      <span className="text-violet-400">Pace 30%</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
 
@@ -898,6 +900,27 @@ export default function SimulationPage() {
             </div>
           </div>
         </div>
+
+        {/* Answer Analysis with AI */}
+<div className="mt-8">
+  <div className="p-6 bg-gradient-to-br from-white/5 via-violet-500/5 to-blue-500/5 border border-white/10 rounded-xl backdrop-blur-lg relative overflow-hidden">
+    {/* Background Effects */}
+    <div className="absolute inset-0 bg-[radial-gradient(circle_at_30%_20%,#8b5cf610_0%,transparent_50%)]" />
+    <div className="absolute inset-0 bg-[linear-gradient(to_right,#80808012_1px,transparent_1px),linear-gradient(to_bottom,#80808012_1px,transparent_1px)] bg-[size:24px_24px]" />
+    
+    {/* Content */}
+    <div className="relative">
+      <AnswerAnalysis
+        isRecording={isRecording}
+        currentQuestion={questions[currentQuestion]?.text || ''}
+        transcript={{
+          final: transcript.final,
+          interim: transcript.interim
+        }}
+      />
+    </div>
+  </div>
+</div>
 
         {/* Past Recordings */}
         {recordings.length > 0 && (
