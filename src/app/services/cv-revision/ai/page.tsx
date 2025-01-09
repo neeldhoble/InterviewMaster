@@ -8,21 +8,23 @@ import { useCVAnalysis } from './hooks/useCVAnalysis';
 import { FileUpload } from './components/FileUpload';
 
 export default function CVRevisionPage() {
-  const [file, setFile] = useState<File | null>(null);
   const [showResults, setShowResults] = useState(false);
-  const { analyzeCv, loading, error, result } = useCVAnalysis();
+  const { analyzeCV, isAnalyzing, error, result } = useCVAnalysis();
 
   const handleFileContent = async (content: string) => {
     try {
-      await analyzeCv(content);
+      await analyzeCV(content);
       setShowResults(true);
     } catch (err) {
       console.error('Analysis error:', err);
     }
   };
 
+  const handleError = (error: string) => {
+    console.error('File upload error:', error);
+  };
+
   const handleReset = () => {
-    setFile(null);
     setShowResults(false);
   };
 
@@ -49,85 +51,285 @@ export default function CVRevisionPage() {
           <h1 className="text-4xl md:text-5xl font-bold mb-6 bg-gradient-to-r from-[#fcba28] via-[#fcd978] to-[#fcba28] text-transparent bg-clip-text">
             AI CV Analysis
           </h1>
-          <p className="text-xl text-gray-300">
-            Get instant feedback and recommendations to improve your CV
+          <p className="text-gray-400 text-lg max-w-2xl mx-auto">
+            Upload your CV and get instant insights powered by AI. Our analysis covers ATS compatibility,
+            skills assessment, and actionable recommendations.
           </p>
         </div>
 
         {/* Main Content */}
-        <AnimatePresence mode="wait">
-          {!showResults ? (
-            <motion.div
-              key="form"
-              initial={{ opacity: 0, x: -20 }}
-              animate={{ opacity: 1, x: 0 }}
-              exit={{ opacity: 0, x: 20 }}
-              transition={{ duration: 0.5 }}
-            >
-              <FileUpload 
-                onFileContent={handleFileContent}
-                onError={(message) => console.error(message)}
-              />
-            </motion.div>
-          ) : (
-            <motion.div
-              key="results"
-              initial={{ opacity: 0, x: 20 }}
-              animate={{ opacity: 1, x: 0 }}
-              exit={{ opacity: 0, x: -20 }}
-              transition={{ duration: 0.5 }}
-              className="space-y-8"
-            >
-              <div className="flex justify-between items-center">
-                <div className="flex items-center space-x-4">
-                  <FileText className="w-5 h-5 text-[#fcba28]" />
-                  <span className="text-gray-300">{file?.name}</span>
+        <div className="relative">
+          <AnimatePresence mode="wait">
+            {!showResults ? (
+              <motion.div
+                key="upload"
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -20 }}
+                className="max-w-2xl mx-auto"
+              >
+                <FileUpload 
+                  onFileContent={handleFileContent}
+                  onError={handleError}
+                />
+              </motion.div>
+            ) : (
+              <motion.div
+                key="results"
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -20 }}
+                className="relative"
+              >
+                {/* Back Button */}
+                <Button
+                  onClick={handleReset}
+                  variant="ghost"
+                  className="absolute -top-16 left-0 text-gray-400 hover:text-white"
+                >
+                  <ArrowLeft className="w-4 h-4 mr-2" />
+                  Upload Another CV
+                </Button>
+
+                <div className="space-y-8">
+                  {result && (
+                    <div className="container mx-auto p-4 space-y-8">
+                      {/* ATS Score Card */}
+                      <div className="bg-[#fcba28]/5 border border-[#fcba28]/20 rounded-lg p-8">
+                        <h3 className="text-xl font-semibold text-[#fcba28] mb-6">ATS Compatibility Score</h3>
+                        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
+                          {Object.entries(result.atsScores).map(([key, score]) => (
+                            <div key={key} className="bg-black/20 p-4 rounded-lg">
+                              <div className="relative h-24 w-24 mx-auto mb-3">
+                                <div className="absolute inset-0 flex items-center justify-center">
+                                  <div className="text-2xl font-bold text-[#fcba28]">
+                                    {score}%
+                                  </div>
+                                </div>
+                                <svg className="transform -rotate-90 w-24 h-24">
+                                  <circle
+                                    className="text-[#fcba28]/20"
+                                    strokeWidth="4"
+                                    stroke="currentColor"
+                                    fill="transparent"
+                                    r="38"
+                                    cx="48"
+                                    cy="48"
+                                  />
+                                  <circle
+                                    className="text-[#fcba28]"
+                                    strokeWidth="4"
+                                    strokeLinecap="round"
+                                    stroke="currentColor"
+                                    fill="transparent"
+                                    r="38"
+                                    cx="48"
+                                    cy="48"
+                                    strokeDasharray={`${2.64 * Math.PI * 38 * score/100} ${2.64 * Math.PI * 38}`}
+                                  />
+                                </svg>
+                              </div>
+                              <div className="text-sm text-center text-gray-400 capitalize">
+                                {key.replace(/_/g, ' ')}
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+
+                      {/* Priority Improvements */}
+                      <div className="bg-[#fcba28]/5 border border-[#fcba28]/20 rounded-lg p-8">
+                        <h3 className="text-xl font-semibold text-[#fcba28] mb-6">Priority Improvements</h3>
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                          {[
+                            { title: 'Critical', color: 'text-red-500', type: 'critical' },
+                            { title: 'Important', color: 'text-yellow-500', type: 'important' },
+                            { title: 'Recommended', color: 'text-green-500', type: 'recommended' }
+                          ].map((priority) => (
+                            <div key={priority.type} className="bg-black/20 p-6 rounded-lg">
+                              <h4 className={`text-lg font-medium ${priority.color} mb-4`}>
+                                {priority.title}
+                              </h4>
+                              <div className="space-y-3">
+                                {result.improvements[priority.type].map((improvement, idx) => (
+                                  <div key={idx} className="flex items-start space-x-3">
+                                    <div className={`w-6 h-6 rounded-full bg-${priority.color}/20 flex items-center justify-center flex-shrink-0`}>
+                                      <span className={priority.color}>{idx + 1}</span>
+                                    </div>
+                                    <div>
+                                      <p className="text-gray-300">{improvement.point}</p>
+                                      {improvement.solution && (
+                                        <p className="text-gray-400 text-sm mt-1">{improvement.solution}</p>
+                                      )}
+                                    </div>
+                                  </div>
+                                ))}
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+
+                      {/* Skills Analysis */}
+                      <div className="bg-[#fcba28]/5 border border-[#fcba28]/20 rounded-lg p-8">
+                        <h3 className="text-xl font-semibold text-[#fcba28] mb-6">Skills Analysis</h3>
+                        <div className="space-y-6">
+                          <div>
+                            <h4 className="text-lg font-medium text-[#fcba28]/90 mb-4">Technical Skills</h4>
+                            <div className="space-y-3">
+                              {result.skills.technical.map((skill, idx) => (
+                                <div key={idx} className="flex items-center justify-between">
+                                  <span className="text-gray-300">{skill.name}</span>
+                                  <div className="w-32 h-2 bg-black/20 rounded-full overflow-hidden">
+                                    <div
+                                      className="h-full bg-[#fcba28]"
+                                      style={{ width: `${parseInt(skill.proficiency)}%` }}
+                                    />
+                                  </div>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                          <div>
+                            <h4 className="text-lg font-medium text-[#fcba28]/90 mb-4">Missing Critical Skills</h4>
+                            <div className="space-y-2">
+                              {result.skills.missing.map((skill, idx) => (
+                                <div key={idx} className="flex items-start space-x-3">
+                                  <div className="w-2 h-2 rounded-full bg-red-500 mt-2 flex-shrink-0" />
+                                  <div>
+                                    <p className="text-gray-300">{skill.name}</p>
+                                    <p className="text-gray-400 text-sm">{skill.importance}</p>
+                                  </div>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Experience Analysis */}
+                      <div className="bg-[#fcba28]/5 border border-[#fcba28]/20 rounded-lg p-8">
+                        <h3 className="text-xl font-semibold text-[#fcba28] mb-6">Experience Analysis</h3>
+                        <div className="space-y-6">
+                          {result.experience.map((position, idx) => (
+                            <div key={idx} className="border-l-2 border-[#fcba28]/50 pl-4">
+                              <h4 className="text-lg font-medium text-[#fcba28]/90">{position.title}</h4>
+                              <p className="text-sm text-gray-400 mb-2">
+                                {position.company} • {position.duration}
+                              </p>
+                              <div className="space-y-2">
+                                {position.achievements.map((achievement, aidx) => (
+                                  <div key={aidx} className="flex items-start space-x-3">
+                                    <div className="w-2 h-2 rounded-full bg-[#fcba28] mt-2 flex-shrink-0" />
+                                    <p className="text-gray-300">{achievement}</p>
+                                  </div>
+                                ))}
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+
+                      {/* Market Insights */}
+                      <div className="bg-[#fcba28]/5 border border-[#fcba28]/20 rounded-lg p-8">
+                        <h3 className="text-xl font-semibold text-[#fcba28] mb-6">Market Insights</h3>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                          <div>
+                            <h4 className="text-lg font-medium text-[#fcba28]/90 mb-4">Industry Trends</h4>
+                            <div className="space-y-3">
+                              {result.sections.find(s => s.title.includes('MARKET'))?.content
+                                .split('\n')
+                                .filter(line => line.trim().startsWith('-'))
+                                .map((trend, idx) => (
+                                  <div key={idx} className="flex items-start space-x-3">
+                                    <div className="w-2 h-2 rounded-full bg-[#fcba28] mt-2 flex-shrink-0" />
+                                    <p className="text-gray-300">{trend.substring(1).trim()}</p>
+                                  </div>
+                                ))}
+                            </div>
+                          </div>
+                          <div>
+                            <h4 className="text-lg font-medium text-[#fcba28]/90 mb-4">Keyword Optimization</h4>
+                            <div className="space-y-3">
+                              {result.sections.find(s => s.title.includes('MARKET'))?.content
+                                .split('\n')
+                                .filter(line => line.includes('occurrences'))
+                                .map((keyword, idx) => {
+                                  const [word, count] = keyword.split('-').map(s => s.trim());
+                                  return (
+                                    <div key={idx} className="flex items-center justify-between">
+                                      <span className="text-gray-300">{word}</span>
+                                      <span className="text-sm text-[#fcba28]">{count}</span>
+                                    </div>
+                                  );
+                                })}
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Action Plan */}
+                      <div className="bg-[#fcba28]/5 border border-[#fcba28]/20 rounded-lg p-8">
+                        <h3 className="text-xl font-semibold text-[#fcba28] mb-6">Action Plan</h3>
+                        <div className="space-y-6">
+                          {[
+                            { title: 'Immediate Actions', timeframe: 'Next 24-48 hours', type: 'immediate' },
+                            { title: 'Short-term Goals', timeframe: '1-2 weeks', type: 'shortTerm' },
+                            { title: 'Long-term Development', timeframe: '1-3 months', type: 'longTerm' }
+                          ].map((section) => (
+                            <div key={section.type}>
+                              <div className="flex items-center justify-between mb-4">
+                                <h4 className="text-lg font-medium text-[#fcba28]/90">{section.title}</h4>
+                                <span className="text-sm text-gray-400">{section.timeframe}</span>
+                              </div>
+                              <div className="space-y-3">
+                                {result.actionPlan[section.type].map((action, idx) => (
+                                  <div key={idx} className="flex items-start space-x-3">
+                                    <div className="w-6 h-6 rounded-full bg-[#fcba28]/20 flex items-center justify-center flex-shrink-0">
+                                      <span className="text-[#fcba28] text-sm">{idx + 1}</span>
+                                    </div>
+                                    <p className="text-gray-300">{action.action}</p>
+                                  </div>
+                                ))}
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+
+                      {/* Detailed Analysis */}
+                      <div className="bg-[#fcba28]/5 border border-[#fcba28]/20 rounded-lg p-8">
+                        <h3 className="text-xl font-semibold text-[#fcba28] mb-6">Detailed Analysis</h3>
+                        <div className="prose max-w-none">
+                          <pre className="text-gray-300 whitespace-pre-wrap text-sm">
+                            {result.rawContent}
+                          </pre>
+                        </div>
+                      </div>
+                    </div>
+                  )}
                 </div>
-                <div className="flex space-x-4">
-                  <Button
-                    onClick={handleReset}
-                    variant="outline"
-                    className="text-[#fcba28] border-[#fcba28] hover:bg-[#fcba28]/10"
-                  >
-                    <ArrowLeft className="w-4 h-4 mr-2" />
-                    Analyze Another CV
-                  </Button>
-                  <Button
-                    onClick={() => window.print()}
-                    className="bg-[#fcba28] hover:bg-[#fcba28]/90 text-black"
-                  >
-                    <Download className="w-4 h-4 mr-2" />
-                    Download Analysis
-                  </Button>
-                </div>
-              </div>
-              <div className="bg-[#fcba28]/5 border border-[#fcba28]/20 rounded-lg p-8">
-                <pre className="whitespace-pre-wrap text-gray-300 font-mono text-sm">
-                  {result}
-                </pre>
-              </div>
-            </motion.div>
-          )}
-        </AnimatePresence>
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </div>
 
         {/* Loading Overlay */}
         <AnimatePresence>
-          {loading && (
+          {isAnalyzing && (
             <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50"
             >
-              <div className="bg-black/80 p-8 rounded-xl shadow-xl text-center backdrop-blur-lg border border-[#fcba28]/20">
-                <div className="relative w-16 h-16 mx-auto mb-4">
-                  <motion.div
-                    className="absolute inset-0 rounded-full border-4 border-[#fcba28] border-t-transparent"
-                    animate={{ rotate: 360 }}
-                    transition={{ duration: 1.5, repeat: Infinity, ease: "linear" }}
-                  />
-                </div>
-                <p className="text-lg text-[#fcba28]">Analyzing your CV...</p>
+              <div className="text-[#fcba28] flex flex-col items-center space-y-4">
+                <motion.div
+                  className="w-12 h-12 border-4 border-[#fcba28] border-t-transparent rounded-full"
+                  animate={{ rotate: 360 }}
+                  transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+                />
+                <p className="text-lg font-medium">Analyzing your CV...</p>
               </div>
             </motion.div>
           )}
@@ -140,7 +342,7 @@ export default function CVRevisionPage() {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -20 }}
-              className="bg-red-500/10 border border-red-500/20 rounded-lg p-6 mt-4 text-center backdrop-blur-sm"
+              className="fixed bottom-8 left-1/2 -translate-x-1/2 bg-red-500/20 border border-red-500/50 rounded-lg px-6 py-4 text-center"
             >
               <div className="text-red-400 mb-2 text-lg font-semibold">
                 Error Processing Request
