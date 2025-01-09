@@ -1,192 +1,273 @@
 "use client";
 
-import { motion, AnimatePresence } from "framer-motion";
+import { motion } from "framer-motion";
 import { useState } from "react";
-import { Check, FileText, Download } from "lucide-react";
+import { Wand2, Download, Settings } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { generateAndDownloadResume } from "../../utils/docxTemplates";
 import { useResume } from "../../context/ResumeContext";
-import { ProfessionalTemplate } from "./examples/ProfessionalTemplate";
-import { CreativeTemplate } from "./examples/CreativeTemplate";
-import { MinimalTemplate } from "./examples/MinimalTemplate";
-import { ModernTemplate } from "./examples/ModernTemplate";
-import { ExecutiveTemplate } from "./examples/ExecutiveTemplate";
-import { GeminiTemplate } from "./examples/GeminiTemplate";
 import { ErrorBoundary } from "./examples/ErrorBoundary";
+import { generateDynamicTemplate } from "./utils/templateGenerator";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 interface TemplateSelectorProps {
   selectedTemplate: number;
   onSelect: (id: number) => void;
 }
 
-interface Template {
-  id: number;
-  name: string;
-  description: string;
-  component: React.ComponentType<any>;
-  docxTemplate: string;
-  tags: string[];
+interface CustomizationOptions {
+  targetRole: string;
+  industry: string;
+  experienceLevel: string;
+  preferences: string;
+  templateStyle: string;
+  pageCount: number;
+  resumeTool: string;
 }
 
-const templates: Template[] = [
-  {
-    id: 1,
-    name: "Modern Professional",
-    description: "Clean and contemporary layout with a focus on readability",
-    component: ModernTemplate,
-    docxTemplate: "modern",
-    tags: ["Modern", "Clean", "Professional"],
-  },
-  {
-    id: 2,
-    name: "Executive Classic",
-    description: "Traditional format perfect for senior roles",
-    component: ExecutiveTemplate,
-    docxTemplate: "professional",
-    tags: ["Executive", "Traditional", "Formal"],
-  },
-  {
-    id: 3,
-    name: "Creative Impact",
-    description: "Stand out with a unique and bold design",
-    component: CreativeTemplate,
-    docxTemplate: "creative",
-    tags: ["Creative", "Bold", "Unique"],
-  },
-  {
-    id: 4,
-    name: "Minimal Clean",
-    description: "Simple and elegant design that lets your content shine",
-    component: MinimalTemplate,
-    docxTemplate: "minimal",
-    tags: ["Minimal", "Clean", "Simple"],
-  },
-  {
-    id: 5,
-    name: "Professional Classic",
-    description: "Time-tested format trusted by professionals",
-    component: ProfessionalTemplate,
-    docxTemplate: "classic",
-    tags: ["Professional", "Traditional", "Classic"],
-  },
-  {
-    id: 6,
-    name: "Gemini AI",
-    description: "Modern AI-powered template with smart formatting",
-    component: GeminiTemplate,
-    docxTemplate: "gemini",
-    tags: ["Modern", "AI", "Smart"],
-  },
+const industries = [
+  "Technology",
+  "Finance",
+  "Healthcare",
+  "Education",
+  "Marketing",
+  "Creative",
+  "Engineering",
+  "Sales",
+  "Other"
+];
+
+const experienceLevels = [
+  "Entry Level",
+  "Junior",
+  "Mid-Level",
+  "Senior",
+  "Lead",
+  "Executive"
+];
+
+const templateStyles = [
+  "Modern",
+  "Classic",
+  "Creative",
+  "Minimalist",
+  "Professional",
+  "Executive"
+];
+
+const resumeTools = [
+  "Gemini AI",
+  "ChatGPT",
+  "Resume.io",
+  "Novoresume",
+  "Canva",
+  "VisualCV",
+  "Standard ATS"
 ];
 
 export function TemplateSelector({ selectedTemplate, onSelect }: TemplateSelectorProps) {
-  const [hoveredTemplate, setHoveredTemplate] = useState<number | null>(null);
+  const [isGenerating, setIsGenerating] = useState(false);
+  const [generatedTemplate, setGeneratedTemplate] = useState<any>(null);
+  const [customOptions, setCustomOptions] = useState<CustomizationOptions>({
+    targetRole: "",
+    industry: "",
+    experienceLevel: "",
+    preferences: "",
+    templateStyle: "Modern",
+    pageCount: 1,
+    resumeTool: "Gemini AI"
+  });
   const { resumeData, updateTemplateId } = useResume();
 
-  const handleDownload = async (template: Template) => {
-    await generateAndDownloadResume(template.docxTemplate, resumeData);
+  const handleGenerateTemplate = async () => {
+    setIsGenerating(true);
+    try {
+      const template = await generateDynamicTemplate(resumeData, customOptions);
+      setGeneratedTemplate(template);
+      updateTemplateId(Date.now());
+    } catch (error) {
+      console.error("Failed to generate template:", error);
+    }
+    setIsGenerating(false);
   };
 
-  const handleTemplateSelect = (id: number) => {
-    updateTemplateId(id);
-    onSelect(id);
+  const handleDownload = async () => {
+    if (generatedTemplate) {
+      await generateAndDownloadResume("dynamic", resumeData);
+    }
   };
 
   return (
     <div className="space-y-8">
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {templates.map((template) => {
-          const isHovered = hoveredTemplate === template.id;
-          const isSelected = selectedTemplate === template.id;
-          const TemplateComponent = template.component;
+      {/* Customization Options */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 bg-white/5 p-6 rounded-lg">
+        <div className="space-y-4">
+          <div>
+            <Label htmlFor="targetRole">Target Role</Label>
+            <Input
+              id="targetRole"
+              placeholder="e.g., Senior Software Engineer"
+              value={customOptions.targetRole}
+              onChange={(e) => setCustomOptions({ ...customOptions, targetRole: e.target.value })}
+              className="bg-white/10"
+            />
+          </div>
 
-          return (
-            <motion.div
-              key={template.id}
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -20 }}
-              transition={{ duration: 0.3 }}
-              onMouseEnter={() => setHoveredTemplate(template.id)}
-              onMouseLeave={() => setHoveredTemplate(null)}
-              onClick={() => handleTemplateSelect(template.id)}
-              className={`relative group rounded-xl overflow-hidden border ${
-                isSelected ? "border-[#fcba28]" : "border-white/10"
-              } bg-white/5 backdrop-blur-sm hover:bg-white/10 transition-all cursor-pointer`}
+          <div>
+            <Label htmlFor="industry">Industry</Label>
+            <Select
+              value={customOptions.industry}
+              onValueChange={(value) => setCustomOptions({ ...customOptions, industry: value })}
             >
-              {/* Preview */}
-              <div className="relative aspect-[210/297] w-full bg-white">
-                <div className="absolute inset-0 flex items-center justify-center">
-                  <ErrorBoundary>
-                    <TemplateComponent data={resumeData} scale={0.2} />
-                  </ErrorBoundary>
-                </div>
-              </div>
+              <SelectTrigger className="bg-white/10">
+                <SelectValue placeholder="Select Industry" />
+              </SelectTrigger>
+              <SelectContent>
+                {industries.map((industry) => (
+                  <SelectItem key={industry} value={industry.toLowerCase()}>
+                    {industry}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
 
-              {/* Template Info */}
-              <div className="p-4">
-                <div className="flex items-center justify-between mb-2">
-                  <h3 className="text-lg font-semibold">{template.name}</h3>
-                  {isSelected && (
-                    <motion.div
-                      initial={{ scale: 0 }}
-                      animate={{ scale: 1 }}
-                      className="w-6 h-6 rounded-full bg-[#fcba28] flex items-center justify-center"
-                    >
-                      <Check className="w-4 h-4 text-black" />
-                    </motion.div>
-                  )}
-                </div>
-                <p className="text-sm text-gray-400 mb-3">{template.description}</p>
-                <div className="flex flex-wrap gap-2">
-                  {template.tags.map((tag, index) => (
-                    <span
-                      key={index}
-                      className="px-2 py-1 text-xs rounded-full bg-white/5 text-gray-300"
-                    >
-                      {tag}
-                    </span>
-                  ))}
-                </div>
-              </div>
+          <div>
+            <Label htmlFor="experienceLevel">Experience Level</Label>
+            <Select
+              value={customOptions.experienceLevel}
+              onValueChange={(value) => setCustomOptions({ ...customOptions, experienceLevel: value })}
+            >
+              <SelectTrigger className="bg-white/10">
+                <SelectValue placeholder="Select Experience Level" />
+              </SelectTrigger>
+              <SelectContent>
+                {experienceLevels.map((level) => (
+                  <SelectItem key={level} value={level.toLowerCase()}>
+                    {level}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
 
-              {/* Actions */}
-              <AnimatePresence>
-                {isHovered && (
-                  <motion.div
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    exit={{ opacity: 0 }}
-                    className="absolute inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center gap-4"
-                  >
-                    <Button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handleTemplateSelect(template.id);
-                      }}
-                      className="bg-[#fcba28] hover:bg-[#fcba28]/90 text-black"
-                    >
-                      <FileText className="w-4 h-4 mr-2" />
-                      Select
-                    </Button>
-                    <Button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handleDownload(template);
-                      }}
-                      variant="outline"
-                      className="border-white/20 hover:bg-white/10"
-                    >
-                      <Download className="w-4 h-4 mr-2" />
-                      Download
-                    </Button>
-                  </motion.div>
-                )}
-              </AnimatePresence>
-            </motion.div>
-          );
-        })}
+          <div>
+            <Label htmlFor="resumeTool">Resume Tool</Label>
+            <Select
+              value={customOptions.resumeTool}
+              onValueChange={(value) => setCustomOptions({ ...customOptions, resumeTool: value })}
+            >
+              <SelectTrigger className="bg-white/10">
+                <SelectValue placeholder="Select Resume Tool" />
+              </SelectTrigger>
+              <SelectContent>
+                {resumeTools.map((tool) => (
+                  <SelectItem key={tool} value={tool.toLowerCase()}>
+                    {tool}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+        </div>
+
+        <div className="space-y-4">
+          <div>
+            <Label htmlFor="templateStyle">Template Style</Label>
+            <Select
+              value={customOptions.templateStyle}
+              onValueChange={(value) => setCustomOptions({ ...customOptions, templateStyle: value })}
+            >
+              <SelectTrigger className="bg-white/10">
+                <SelectValue placeholder="Select Template Style" />
+              </SelectTrigger>
+              <SelectContent>
+                {templateStyles.map((style) => (
+                  <SelectItem key={style} value={style.toLowerCase()}>
+                    {style}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div>
+            <Label>Number of Pages</Label>
+            <div className="flex items-center gap-4">
+              <Input
+                type="number"
+                min={1}
+                max={3}
+                value={customOptions.pageCount}
+                onChange={(e) => {
+                  const value = parseInt(e.target.value);
+                  if (value >= 1 && value <= 3) {
+                    setCustomOptions({ ...customOptions, pageCount: value });
+                  }
+                }}
+                className="bg-white/10 w-20"
+              />
+              <span className="text-sm text-gray-400">(1-3 pages)</span>
+            </div>
+          </div>
+
+          <div>
+            <Label htmlFor="preferences">Additional Preferences</Label>
+            <Textarea
+              id="preferences"
+              placeholder="Any specific style preferences or requirements..."
+              value={customOptions.preferences}
+              onChange={(e) => setCustomOptions({ ...customOptions, preferences: e.target.value })}
+              className="bg-white/10 min-h-[100px]"
+            />
+          </div>
+        </div>
       </div>
+
+      {/* Action Buttons */}
+      <div className="flex justify-center gap-4">
+        <Button
+          onClick={handleGenerateTemplate}
+          className="bg-[#fcba28] hover:bg-[#fcba28]/90 text-black flex items-center gap-2 px-6 py-3 text-lg"
+          disabled={isGenerating}
+        >
+          <Wand2 className="w-5 h-5" />
+          {isGenerating ? "Generating..." : "Generate Template"}
+        </Button>
+        {generatedTemplate && (
+          <Button
+            onClick={handleDownload}
+            className="bg-white/10 hover:bg-white/20 flex items-center gap-2 px-6 py-3 text-lg"
+          >
+            <Download className="w-5 h-5" />
+            Download
+          </Button>
+        )}
+      </div>
+
+      {/* Template Preview */}
+      {generatedTemplate && (
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="bg-white rounded-lg shadow-xl overflow-hidden"
+        >
+          <div className="p-8 max-w-[1000px] mx-auto">
+            <ErrorBoundary>
+              {generatedTemplate}
+            </ErrorBoundary>
+          </div>
+        </motion.div>
+      )}
     </div>
   );
 }

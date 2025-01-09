@@ -465,9 +465,123 @@ export const generateAndDownloadResume = async (
         template = generateModernTemplate(data);
     }
 
-    const doc = new Document(template);
-    const blob = await doc.save("blob");
-    saveAs(blob, `${data.personalInfo.fullName.replace(/\s+/g, "_")}_resume.docx`);
+    const content = [];
+
+    // Header
+    content.push(`${data.personalInfo.name}`);
+    content.push(`${data.personalInfo.title}`);
+    content.push(`${data.personalInfo.email} | ${data.personalInfo.phone} | ${data.personalInfo.location}`);
+    content.push('\n');
+
+    // Summary
+    if (data.personalInfo.summary) {
+      content.push('Professional Summary');
+      content.push(data.personalInfo.summary);
+      content.push('\n');
+    }
+
+    // Experience
+    if (data.experiences.length > 0) {
+      content.push('Professional Experience');
+      data.experiences.forEach(exp => {
+        content.push(`${exp.title}`);
+        content.push(`${exp.company}`);
+        content.push(`${exp.startDate} - ${exp.current ? 'Present' : exp.endDate}`);
+        content.push(exp.description);
+        content.push('\n');
+      });
+    }
+
+    // Education
+    if (data.education.length > 0) {
+      content.push('Education');
+      data.education.forEach(edu => {
+        content.push(`${edu.degree}`);
+        content.push(`${edu.school}`);
+        content.push(`${edu.startDate} - ${edu.current ? 'Present' : edu.endDate}`);
+        if (edu.description) content.push(edu.description);
+        content.push('\n');
+      });
+    }
+
+    // Skills
+    if (data.skills.length > 0) {
+      content.push('Skills');
+      content.push(data.skills.join(', '));
+      content.push('\n');
+    }
+
+    // Projects
+    if (data.projects.length > 0) {
+      content.push('Projects');
+      data.projects.forEach(project => {
+        content.push(`${project.name} - ${project.role}`);
+        content.push(project.description);
+        content.push(`Technologies: ${project.technologies.join(', ')}`);
+        if (project.githubUrl) content.push(`GitHub: ${project.githubUrl}`);
+        if (project.liveUrl) content.push(`Live Demo: ${project.liveUrl}`);
+        content.push('\n');
+      });
+    }
+
+    // Certifications
+    if (data.certifications.length > 0) {
+      content.push('Certifications');
+      data.certifications.forEach(cert => {
+        content.push(`${cert.name} - ${cert.issuer}`);
+        content.push(`Date: ${cert.date}`);
+        content.push('\n');
+      });
+    }
+
+    // Languages
+    if (data.languages.length > 0) {
+      content.push('Languages');
+      content.push(data.languages.map(lang => lang.name).join(', '));
+      content.push('\n');
+    }
+
+    // Volunteer Work
+    if (data.volunteerWork.length > 0) {
+      content.push('Volunteer Experience');
+      data.volunteerWork.forEach(vol => {
+        content.push(`${vol.role} at ${vol.organization}`);
+        content.push(`${vol.startDate} - ${vol.current ? 'Present' : vol.endDate}`);
+        content.push(vol.description);
+        if (vol.impact) content.push(`Impact: ${vol.impact}`);
+        content.push('\n');
+      });
+    }
+
+    // Achievements
+    if (data.achievements.length > 0) {
+      content.push('Achievements');
+      data.achievements.forEach(achievement => {
+        content.push(`• ${achievement.name}`);
+      });
+      content.push('\n');
+    }
+
+    // Declaration
+    if (data.declaration) {
+      content.push('Declaration');
+      content.push(data.declaration);
+    }
+
+    // Create a Blob with the content
+    const blob = new Blob([content.join('\n')], { type: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' });
+  
+    // Create download link
+    const url = window.URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.setAttribute('download', `${data.personalInfo.name.replace(/\s+/g, '_')}_Resume.docx`);
+  
+    // Trigger download
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    window.URL.revokeObjectURL(url);
     return true;
   } catch (error) {
     console.error("Error generating resume:", error);
@@ -581,8 +695,8 @@ export const generatePreviewHtml = (template: string, data: ResumeData): string 
             <div class="item">
               <div class="item-header">
                 <div>
-                  <div class="item-title">${exp.company}</div>
-                  <div class="item-subtitle">${exp.title}</div>
+                  <div class="item-title">${exp.title}</div>
+                  <div class="item-subtitle">${exp.company}</div>
                 </div>
                 <div class="dates">${formatDateRange(exp.startDate, exp.endDate, exp.current)}</div>
               </div>
@@ -599,8 +713,8 @@ export const generatePreviewHtml = (template: string, data: ResumeData): string 
             <div class="item">
               <div class="item-header">
                 <div>
-                  <div class="item-title">${edu.school}</div>
-                  <div class="item-subtitle">${edu.degree}</div>
+                  <div class="item-title">${edu.degree}</div>
+                  <div class="item-subtitle">${edu.school}</div>
                 </div>
                 <div class="dates">${formatDateRange(edu.startDate, edu.endDate, edu.current)}</div>
               </div>
@@ -676,8 +790,8 @@ export const generatePreviewHtml = (template: string, data: ResumeData): string 
             <div class="item">
               <div class="item-header">
                 <div>
-                  <div class="item-title">${vol.organization}</div>
-                  <div class="item-subtitle">${vol.role}</div>
+                  <div class="item-title">${vol.role}</div>
+                  <div class="item-subtitle">${vol.organization}</div>
                 </div>
                 <div class="dates">${formatDateRange(vol.startDate, vol.endDate, vol.current)}</div>
               </div>

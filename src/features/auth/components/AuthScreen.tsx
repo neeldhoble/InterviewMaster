@@ -6,6 +6,7 @@ import { AuthFlow } from "@/features/auth/lib/types";
 import { SignInCard } from "./SignInCard";
 import { SignUpCard } from "./SignUpCard";
 import { Button } from "@/components/ui/button";
+import { Separator } from "@/components/ui/separator";
 import { X } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
@@ -61,101 +62,66 @@ export const AuthScreen = ({ onClose }: AuthScreenProps) => {
   };
 
   return (
-    <section className="relative flex flex-col items-center justify-center p-8 rounded-2xl min-h-[500px]">
-      {/* Close button with glow effect */}
-      {onClose && (
-        <motion.button
-          whileHover={{ scale: 1.1 }}
-          whileTap={{ scale: 0.9 }}
-          onClick={onClose}
-          className="absolute right-6 top-6 p-2.5 rounded-full bg-white/5 hover:bg-white/10 transition-colors z-50 group"
-        >
-          <X className="h-5 w-5 text-[#fcba28] opacity-70 group-hover:opacity-100 transition-opacity" />
-          <div className="absolute inset-0 bg-[#fcba28]/20 rounded-full blur-md opacity-0 group-hover:opacity-100 transition-opacity" />
-        </motion.button>
-      )}
-
-      <motion.div 
-        variants={contentVariants}
-        initial="hidden"
-        animate="visible"
-        exit="exit"
-        className="w-full max-w-[420px] space-y-8"
+    <section className="fixed inset-0 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm z-50">
+      <motion.div
+        initial={{ opacity: 0, scale: 0.95 }}
+        animate={{ opacity: 1, scale: 1 }}
+        exit={{ opacity: 0, scale: 0.95 }}
+        transition={{ duration: 0.2 }}
+        className="relative w-full max-w-[280px] mx-auto"
       >
-        <AnimatePresence mode="wait">
-          <motion.div
-            key={authFlow}
-            variants={itemVariants}
-            initial="hidden"
-            animate="visible"
-            exit="exit"
-            className="relative"
+        {/* Close button with enhanced glow effect */}
+        {onClose && (
+          <motion.button
+            whileHover={{ scale: 1.1, rotate: 90 }}
+            whileTap={{ scale: 0.9 }}
+            onClick={onClose}
+            className="absolute -right-2 -top-2 p-1.5 rounded-full bg-white/10 hover:bg-white/15 transition-all duration-300 z-50 group"
           >
-            {authFlow === "signIn" ? (
-              <SignInCard setState={setAuthFlow} />
-            ) : (
-              <SignUpCard setState={setAuthFlow} />
-            )}
-          </motion.div>
-        </AnimatePresence>
-        
+            <X className="h-3.5 w-3.5 text-[#fcba28] opacity-80 group-hover:opacity-100 transition-all duration-300" />
+            <div className="absolute inset-0 bg-[#fcba28]/30 rounded-full blur-lg opacity-0 group-hover:opacity-100 transition-all duration-300" />
+          </motion.button>
+        )}
+
         <motion.div 
-          variants={itemVariants}
-          className="space-y-6"
+          variants={contentVariants}
+          initial="hidden"
+          animate="visible"
+          exit="exit"
+          className="space-y-3"
         >
-          <div className="relative">
-            <div className="absolute inset-0 flex items-center">
-              <span className="w-full border-t border-[#fcba28]/10" />
-            </div>
-            <div className="relative flex justify-center text-xs uppercase">
-              <span className="px-4 text-[#fcba28]/60 bg-background/40 backdrop-blur-xl">
-                Or continue with
-              </span>
-            </div>
-          </div>
-          
+          {/* Brand Header */}
           <motion.div
             variants={itemVariants}
-            className="relative group"
+            className="text-center space-y-0.5"
           >
-            <Button
-              variant="outline"
-              onClick={handleContinueWithoutLogin}
-              className="w-full bg-[#fcba28]/5 border border-[#fcba28]/20 hover:bg-[#fcba28]/10 hover:border-[#fcba28]/30 text-[#fcba28] relative overflow-hidden group"
-            >
-              <span className="relative z-10">
-                Continue Without Login
-                <span className="text-xs text-[#fcba28]/60 ml-2 group-hover:text-[#fcba28]/80 transition-colors">
-                  (Limited Access)
-                </span>
-              </span>
-              <div className="absolute inset-0 bg-gradient-to-r from-[#fcba28]/0 via-[#fcba28]/5 to-[#fcba28]/0 group-hover:translate-x-full transition-transform duration-1000" />
-            </Button>
-            {/* Subtle glow effect */}
-            <div className="absolute inset-0 bg-[#fcba28]/5 blur-xl opacity-0 group-hover:opacity-100 transition-opacity" />
+            <h1 className="text-lg font-bold bg-gradient-to-r from-[#fcba28] via-[#fcba28]/90 to-[#fcba28]/70 bg-clip-text text-transparent">
+              InterviewMaster.ai
+            </h1>
+            <p className="text-xs text-muted-foreground/80">Your path to success</p>
           </motion.div>
 
-          <div className="mt-4 text-center">
-            <div className="relative">
-              <div className="absolute inset-0 flex items-center">
-                <div className="w-full border-t border-gray-700"></div>
-              </div>
-              <div className="relative flex justify-center text-sm">
-                <span className="px-2 bg-black text-gray-400">Or</span>
-              </div>
-            </div>
-
-            <button
-              onClick={handleContinueAsGuest}
-              className="mt-4 w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-black bg-[#fcba28] hover:bg-[#fcba28]/90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#fcba28]"
+          <AnimatePresence mode="wait">
+            <motion.div
+              key={authFlow}
+              variants={{
+                hidden: { opacity: 0, y: 10 },
+                visible: { opacity: 1, y: 0 },
+                exit: { opacity: 0, y: -10 }
+              }}
+              initial="hidden"
+              animate="visible"
+              exit="exit"
+              transition={{ duration: 0.2 }}
+              className="relative"
             >
-              Continue as Guest
-            </button>
-
-            <p className="mt-2 text-xs text-gray-500">
-              You can sign in later to save your progress
-            </p>
-          </div>
+              {authFlow === "signIn" ? (
+                <SignInCard setState={setAuthFlow} />
+              ) : (
+                <SignUpCard setState={setAuthFlow} />
+              )}
+            </motion.div>
+          </AnimatePresence>
         </motion.div>
       </motion.div>
     </section>

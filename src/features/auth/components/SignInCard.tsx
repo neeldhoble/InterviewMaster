@@ -69,131 +69,97 @@ export const SignInCard = ({ setState }: SignInCardProps) => {
     }
 
     return (
-        <Card className="border-none shadow-2xl bg-gradient-to-b from-background/80 to-background/60 backdrop-blur-xl">
-            <CardHeader className="space-y-4">
-                <div className="flex justify-center">
-                    <Logo className="h-12 animate-pulse" />
-                </div>
-                <CardTitle className="text-2xl text-center bg-gradient-to-r from-[#fcba28] to-[#fcba28]/70 bg-clip-text text-transparent font-bold">
-                    Welcome Back!
-                </CardTitle>
-                <CardDescription className="text-center text-[#fcba28]/70">
-                    Sign in to continue your journey
-                </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-6">
+        <Card className="border border-white/10 shadow-lg bg-black/40 backdrop-blur-sm">
+            <CardContent className="space-y-3 p-3">
                 {error && (
                     <motion.div
                         initial={{ opacity: 0, y: -10 }}
                         animate={{ opacity: 1, y: 0 }}
-                        className="flex items-center gap-2 p-3 text-sm text-red-500 bg-red-500/10 rounded-lg border border-red-500/20"
+                        className="flex items-start gap-1.5 p-1.5 text-[11px] text-red-500/90 bg-red-500/10 rounded-md border border-red-500/20"
                     >
-                        <TriangleAlert className="h-4 w-4" />
+                        <TriangleAlert className="h-3 w-3 flex-shrink-0 mt-0.5" />
                         <p>{error}</p>
                     </motion.div>
                 )}
 
-                <form onSubmit={signInByEmail} className="space-y-4">
-                    <div className="space-y-2">
+                <form onSubmit={signInByEmail} className="space-y-2">
+                    <div className="space-y-1.5">
                         <Input
                             type="email"
                             placeholder="Email"
                             value={account.email}
-                            onChange={(e) => {
-                                setError(null);
-                                setAccount({ ...account, email: e.target.value });
-                            }}
-                            disabled={pending}
-                            required
-                            className="bg-white/5 border-[#fcba28]/20 focus:border-[#fcba28] transition-colors"
+                            onChange={(e) => setAccount({ ...account, email: e.target.value })}
+                            className="h-8 text-sm bg-white/5 border-white/10 focus:border-[#fcba28]/50 focus:ring-[#fcba28]/30 transition-all duration-300"
                         />
-                    </div>
-
-                    <div className="space-y-2">
                         <div className="relative">
                             <Input
                                 type={showPassword ? "text" : "password"}
                                 placeholder="Password"
                                 value={account.password}
-                                onChange={(e) => {
-                                    setError(null);
-                                    setAccount({ ...account, password: e.target.value });
-                                }}
-                                disabled={pending}
-                                required
-                                className="bg-white/5 border-[#fcba28]/20 focus:border-[#fcba28] transition-colors"
+                                onChange={(e) => setAccount({ ...account, password: e.target.value })}
+                                className="h-8 text-sm bg-white/5 border-white/10 focus:border-[#fcba28]/50 focus:ring-[#fcba28]/30 transition-all duration-300 pr-10"
                             />
                             <button
                                 type="button"
                                 onClick={() => setShowPassword(!showPassword)}
-                                className="absolute right-3 top-1/2 -translate-y-1/2 text-[#fcba28]/70 hover:text-[#fcba28] transition-colors"
+                                className="absolute right-2 top-1/2 -translate-y-1/2 text-[10px] text-[#fcba28]/70 hover:text-[#fcba28] transition-colors"
                             >
                                 {showPassword ? "Hide" : "Show"}
                             </button>
                         </div>
                     </div>
 
-                    <motion.div
-                        whileHover={{ scale: 1.01 }}
-                        whileTap={{ scale: 0.99 }}
+                    <Button
+                        type="submit"
+                        disabled={pending}
+                        className="w-full h-8 text-sm bg-[#fcba28] hover:bg-[#fcba28]/90 text-background font-medium transition-all duration-300"
                     >
-                        <Button
-                            type="submit"
-                            className="w-full bg-[#fcba28] hover:bg-[#fcba28]/90 text-background font-medium"
-                            disabled={pending}
-                        >
-                            {pending ? (
-                                <span className="flex items-center gap-2">
-                                    <span className="h-4 w-4 border-2 border-background/30 border-t-background animate-spin rounded-full" />
-                                    Signing in...
-                                </span>
-                            ) : (
-                                "Sign in"
-                            )}
-                        </Button>
-                    </motion.div>
+                        {pending ? "Signing in..." : "Sign in"}
+                    </Button>
                 </form>
 
                 <div className="relative">
                     <div className="absolute inset-0 flex items-center">
-                        <span className="w-full border-t border-[#fcba28]/20" />
+                        <span className="w-full border-t border-white/10" />
                     </div>
-                    <div className="relative flex justify-center text-xs uppercase">
-                        <span className="bg-background px-2 text-[#fcba28]/70">Or continue with</span>
+                    <div className="relative flex justify-center text-[10px] uppercase">
+                        <span className="px-2 bg-background text-[#fcba28]/70">
+                            Or continue with
+                        </span>
                     </div>
                 </div>
 
-                <div className="grid grid-cols-2 gap-4">
-                    <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
-                        <Button
-                            variant="outline"
-                            onClick={() => signInByOAuth("google")}
-                            disabled={pending}
-                            className="w-full bg-white/5 border-[#fcba28]/20 hover:bg-[#fcba28]/10 hover:border-[#fcba28]/30 transition-colors"
-                        >
-                            <FcGoogle className="mr-2 h-5 w-5" />
-                            Google
-                        </Button>
-                    </motion.div>
-                    <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
-                        <Button
-                            variant="outline"
-                            onClick={() => signInByOAuth("github")}
-                            disabled={pending}
-                            className="w-full bg-white/5 border-[#fcba28]/20 hover:bg-[#fcba28]/10 hover:border-[#fcba28]/30 transition-colors"
-                        >
-                            <FaGithub className="mr-2 h-5 w-5" />
-                            GitHub
-                        </Button>
-                    </motion.div>
-                </div>
-
-                <div className="text-center text-sm">
-                    <span className="text-[#fcba28]/70">Don't have an account?</span>{" "}
-                    <button
-                        onClick={() => setState("signUp")}
-                        className="text-[#fcba28] hover:text-[#fcba28]/90 font-medium hover:underline transition-colors"
+                <div className="grid grid-cols-2 gap-1.5">
+                    <Button
+                        type="button"
+                        variant="outline"
+                        onClick={() => signInByOAuth("google")}
                         disabled={pending}
+                        className="h-8 text-xs bg-white/5 border-white/10 hover:bg-white/10 hover:border-white/20 transition-all duration-300"
+                    >
+                        <FcGoogle className="h-3.5 w-3.5 mr-1.5" />
+                        Google
+                    </Button>
+                    <Button
+                        type="button"
+                        variant="outline"
+                        onClick={() => signInByOAuth("github")}
+                        disabled={pending}
+                        className="h-8 text-xs bg-white/5 border-white/10 hover:bg-white/10 hover:border-white/20 transition-all duration-300"
+                    >
+                        <FaGithub className="h-3.5 w-3.5 mr-1.5" />
+                        GitHub
+                    </Button>
+                </div>
+
+                <div className="text-center text-[11px]">
+                    <span className="text-muted-foreground">
+                        Don't have an account?{" "}
+                    </span>
+                    <button
+                        type="button"
+                        onClick={() => setState("signUp")}
+                        className="text-[#fcba28] hover:text-[#fcba28]/80 font-medium transition-colors"
                     >
                         Sign up
                     </button>
