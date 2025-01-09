@@ -61,6 +61,19 @@ export default function SimulationPage() {
     blob?: Blob;
   }>>([]);
   const [recognition, setRecognition] = useState<any>(null);
+  const [notepadContent, setNotepadContent] = useState('');
+  const [fontSize, setFontSize] = useState('normal');
+  const [showWordCount, setShowWordCount] = useState(false);
+
+  const getWordCount = (text: string) => {
+    return text.trim().split(/\s+/).filter(word => word.length > 0).length;
+  };
+
+  const handleClearNotes = () => {
+    if (window.confirm('Are you sure you want to clear all notes?')) {
+      setNotepadContent('');
+    }
+  };
 
   useEffect(() => {
     let interval: NodeJS.Timeout;
@@ -450,43 +463,144 @@ export default function SimulationPage() {
               </button>
             </div>
 
+            {/* Notepad */}
+            <div className="mt-4 p-4 bg-white/5 border border-white/10 rounded-xl backdrop-blur-lg col-span-full">
+              <div className="flex items-center justify-between mb-2">
+                <div className="flex items-center gap-2">
+                  <MessageCircle className="w-5 h-5 text-[#fcba28]" />
+                  <h4 className="text-white font-medium">Practice Notes</h4>
+                </div>
+                <div className="flex items-center gap-3">
+                  <select
+                    value={fontSize}
+                    onChange={(e) => setFontSize(e.target.value)}
+                    className="bg-black/20 text-white border border-white/10 rounded-lg px-2 py-1 text-sm focus:outline-none focus:border-[#fcba28]/50"
+                  >
+                    <option value="small">Small</option>
+                    <option value="normal">Normal</option>
+                    <option value="large">Large</option>
+                  </select>
+                  <button
+                    onClick={() => setShowWordCount(!showWordCount)}
+                    className="px-3 py-1 bg-black/20 text-white/80 rounded-lg text-sm hover:bg-black/30 transition-colors"
+                  >
+                    {showWordCount ? 'Hide Count' : 'Show Count'}
+                  </button>
+                  <button
+                    onClick={handleClearNotes}
+                    className="px-3 py-1 bg-red-500/20 text-red-400 rounded-lg text-sm hover:bg-red-500/30 transition-colors"
+                  >
+                    Clear
+                  </button>
+                </div>
+              </div>
+              <div className="relative">
+                <textarea
+                  value={notepadContent}
+                  onChange={(e) => setNotepadContent(e.target.value)}
+                  placeholder="Write your practice notes here..."
+                  className={`w-full h-40 p-3 bg-black/20 border border-white/10 rounded-lg text-white placeholder-white/40 resize-none focus:outline-none focus:border-[#fcba28]/50 ${
+                    fontSize === 'small' ? 'text-sm' : 
+                    fontSize === 'large' ? 'text-lg' : 'text-base'
+                  }`}
+                />
+                {showWordCount && (
+                  <div className="absolute bottom-2 right-2 px-2 py-1 bg-black/40 rounded-md text-xs text-white/60">
+                    {getWordCount(notepadContent)} words
+                  </div>
+                )}
+              </div>
+              <div className="mt-2 flex justify-between items-center text-xs text-white/40">
+                <span>Tip: Use this space to prepare and refine your answers before recording</span>
+                <span>{notepadContent.length}/2000 characters</span>
+              </div>
+            </div>
+
             {/* Stats Grid */}
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-              <div className="p-4 bg-white/5 border border-white/10 rounded-xl backdrop-blur-lg">
-                <div className="flex items-center gap-2 mb-2">
-                  <MessageSquare className="w-5 h-5 text-[#fcba28]" />
-                  <h4 className="text-white font-medium">Response Time</h4>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-6">
+              <div className="p-4 bg-white/5 border border-white/10 rounded-xl backdrop-blur-lg transform hover:scale-105 transition-all">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <div className="p-2 rounded-lg bg-[#fcba28]/20">
+                      <Clock className="w-5 h-5 text-[#fcba28]" />
+                    </div>
+                    <h4 className="text-white font-medium">Response Time</h4>
+                  </div>
                 </div>
-                <p className="text-2xl font-bold text-[#fcba28]">
-                  {formatTime(timeElapsed)}
-                </p>
+                <div className="mt-4 text-center">
+                  <p className="text-3xl font-bold text-[#fcba28]">
+                    {formatTime(timeElapsed)}
+                  </p>
+                  <p className="text-xs text-white/60 mt-1">
+                    {isRecording ? 'Recording in progress' : 'Ready to start'}
+                  </p>
+                </div>
               </div>
-              <div className="p-4 bg-white/5 border border-white/10 rounded-xl backdrop-blur-lg">
-                <div className="flex items-center gap-2 mb-2">
-                  <BarChart className="w-5 h-5 text-[#fcba28]" />
-                  <h4 className="text-white font-medium">Confidence</h4>
+
+              <div className="p-4 bg-white/5 border border-white/10 rounded-xl backdrop-blur-lg transform hover:scale-105 transition-all">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <div className="p-2 rounded-lg bg-[#fcba28]/20">
+                      <Activity className="w-5 h-5 text-[#fcba28]" />
+                    </div>
+                    <h4 className="text-white font-medium">Confidence</h4>
+                  </div>
                 </div>
-                <p className="text-2xl font-bold text-[#fcba28]">
-                  {isRecording ? "85%" : "--"}
-                </p>
+                <div className="mt-4 text-center">
+                  <p className="text-3xl font-bold text-[#fcba28]">
+                    {isRecording ? "85%" : "--"}
+                  </p>
+                  <div className="w-full h-1.5 bg-white/10 rounded-full mt-2">
+                    <div 
+                      className="h-full bg-[#fcba28] rounded-full transition-all duration-500"
+                      style={{ width: isRecording ? "85%" : "0%" }}
+                    />
+                  </div>
+                </div>
               </div>
-              <div className="p-4 bg-white/5 border border-white/10 rounded-xl backdrop-blur-lg">
-                <div className="flex items-center gap-2 mb-2">
-                  <Mic className="w-5 h-5 text-[#fcba28]" />
-                  <h4 className="text-white font-medium">Audio Quality</h4>
+
+              <div className="p-4 bg-white/5 border border-white/10 rounded-xl backdrop-blur-lg transform hover:scale-105 transition-all">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <div className="p-2 rounded-lg bg-[#fcba28]/20">
+                      <Mic className="w-5 h-5 text-[#fcba28]" />
+                    </div>
+                    <h4 className="text-white font-medium">Audio Quality</h4>
+                  </div>
                 </div>
-                <p className="text-2xl font-bold text-[#fcba28]">
-                  {isRecording ? "Good" : "--"}
-                </p>
+                <div className="mt-4 text-center">
+                  <p className="text-3xl font-bold text-[#fcba28]">
+                    {isRecording ? "Good" : "--"}
+                  </p>
+                  <div className="w-full h-1.5 bg-white/10 rounded-full mt-2">
+                    <div 
+                      className="h-full bg-[#fcba28] rounded-full transition-all duration-500"
+                      style={{ width: isRecording ? "75%" : "0%" }}
+                    />
+                  </div>
+                </div>
               </div>
-              <div className="p-4 bg-white/5 border border-white/10 rounded-xl backdrop-blur-lg">
-                <div className="flex items-center gap-2 mb-2">
-                  <Camera className="w-5 h-5 text-[#fcba28]" />
-                  <h4 className="text-white font-medium">Video Quality</h4>
+
+              <div className="p-4 bg-white/5 border border-white/10 rounded-xl backdrop-blur-lg transform hover:scale-105 transition-all">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <div className="p-2 rounded-lg bg-[#fcba28]/20">
+                      <Camera className="w-5 h-5 text-[#fcba28]" />
+                    </div>
+                    <h4 className="text-white font-medium">Video Quality</h4>
+                  </div>
                 </div>
-                <p className="text-2xl font-bold text-[#fcba28]">
-                  {isRecording ? "HD" : "--"}
-                </p>
+                <div className="mt-4 text-center">
+                  <p className="text-3xl font-bold text-[#fcba28]">
+                    {isRecording ? "HD" : "--"}
+                  </p>
+                  <div className="w-full h-1.5 bg-white/10 rounded-full mt-2">
+                    <div 
+                      className="h-full bg-[#fcba28] rounded-full transition-all duration-500"
+                      style={{ width: isRecording ? "90%" : "0%" }}
+                    />
+                  </div>
+                </div>
               </div>
             </div>
           </div>
@@ -509,18 +623,13 @@ export default function SimulationPage() {
           </div>
         </div>
         <div className="space-y-1">
-          <h3 className="text-2xl font-semibold text-white flex items-center gap-3">
-            AI Interview Feedback
-            <span className="text-xs font-normal px-2 py-1 rounded-full bg-[#fcba28]/20 text-[#fcba28]">
-              Advanced Analysis
-            </span>
-          </h3>
-          {isRecording && (
+          <h3 className="text-2xl font-semibold text-white">AI Interview Feedback</h3>
+          <div className="flex items-center gap-3">
             <div className="flex items-center gap-2">
-              <div className="w-2 h-2 rounded-full bg-[#fcba28] animate-[ping_1.5s_infinite]" />
+              <div className="w-2 h-2 rounded-full bg-[#fcba28] animate-pulse" />
               <span className="text-white/60 text-sm">Real-time analysis in progress...</span>
             </div>
-          )}
+          </div>
         </div>
       </div>
 
@@ -540,7 +649,7 @@ export default function SimulationPage() {
                 <span className="text-3xl font-bold bg-gradient-to-br from-[#fcba28] to-emerald-500 text-transparent bg-clip-text">
                   {Math.round((analysis.communicationScore + analysis.bodyLanguageScore + analysis.answerQualityScore) / 3)}
                 </span>
-                <span className="text-sm font-medium text-[#fcba28]">/100</span>
+                <span className="text-sm font-medium text-emerald-500">/100</span>
               </div>
             </div>
           </div>
@@ -741,6 +850,7 @@ export default function SimulationPage() {
     </div>
   </div>
 </div>
+
         {/* Live Transcript Section */}
         <div className="mt-6 grid grid-cols-1 gap-6">
           {/* Header Section */}
@@ -765,7 +875,7 @@ export default function SimulationPage() {
                   </div>
                 </div>
               </div>
-　　 　 　 <div className="flex items-center gap-6">
+              <div className="flex items-center gap-6">
                 <div className="text-center">
                   <div className="relative w-20 h-20">
                     <div className="absolute inset-0 rounded-full bg-gradient-to-br from-emerald-500/20 via-blue-500/20 to-violet-500/20 animate-pulse" />
