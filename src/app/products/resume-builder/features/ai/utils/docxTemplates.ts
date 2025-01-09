@@ -264,11 +264,208 @@ export const generateModernTemplate = (data: ResumeData) => {
   return doc;
 };
 
+// Gemini template
+export const generateGeminiTemplate = (data: ResumeData) => {
+  const doc = createBaseDocument();
+  const children: (Paragraph | Table)[] = [];
+
+  // Header with contact info
+  children.push(
+    new Paragraph({
+      alignment: AlignmentType.CENTER,
+      spacing: {
+        after: 240,
+      },
+      children: [
+        new TextRun({
+          text: data.personalInfo.fullName,
+          ...styles.heading1,
+          break: 2,
+        }),
+        new TextRun({
+          text: `${data.personalInfo.email} | ${data.personalInfo.phone} | ${data.personalInfo.location}`,
+          ...styles.normal,
+          break: 1,
+        }),
+      ],
+    })
+  );
+
+  // Summary
+  if (data.personalInfo.summary) {
+    children.push(
+      new Paragraph({
+        spacing: {
+          before: 240,
+          after: 240,
+        },
+        children: [
+          new TextRun({
+            text: "Professional Summary",
+            ...styles.heading2,
+          }),
+        ],
+      }),
+      new Paragraph({
+        children: [
+          new TextRun({
+            text: data.personalInfo.summary,
+            ...styles.normal,
+          }),
+        ],
+      })
+    );
+  }
+
+  // Experience section
+  if (data.experiences.length > 0) {
+    children.push(
+      new Paragraph({
+        spacing: {
+          before: 360,
+          after: 240,
+        },
+        children: [
+          new TextRun({
+            text: "Experience",
+            ...styles.heading2,
+          }),
+        ],
+      })
+    );
+
+    data.experiences.forEach((exp) => {
+      children.push(
+        new Paragraph({
+          spacing: {
+            before: 240,
+          },
+          children: [
+            new TextRun({
+              text: exp.company,
+              ...styles.heading3,
+            }),
+          ],
+        }),
+        new Paragraph({
+          children: [
+            new TextRun({
+              text: `${exp.position} | ${exp.startDate} - ${exp.endDate}`,
+              ...styles.normal,
+              italics: true,
+            }),
+          ],
+        }),
+        new Paragraph({
+          spacing: {
+            after: 240,
+          },
+          children: [
+            new TextRun({
+              text: exp.description,
+              ...styles.normal,
+            }),
+          ],
+        })
+      );
+    });
+  }
+
+  // Education section
+  if (data.education.length > 0) {
+    children.push(
+      new Paragraph({
+        spacing: {
+          before: 360,
+          after: 240,
+        },
+        children: [
+          new TextRun({
+            text: "Education",
+            ...styles.heading2,
+          }),
+        ],
+      })
+    );
+
+    data.education.forEach((edu) => {
+      children.push(
+        new Paragraph({
+          spacing: {
+            before: 240,
+          },
+          children: [
+            new TextRun({
+              text: edu.institution,
+              ...styles.heading3,
+            }),
+          ],
+        }),
+        new Paragraph({
+          children: [
+            new TextRun({
+              text: `${edu.degree} in ${edu.field} | ${edu.startDate} - ${edu.endDate}`,
+              ...styles.normal,
+              italics: true,
+            }),
+          ],
+        })
+      );
+    });
+  }
+
+  // Skills section
+  if (data.skills.length > 0) {
+    children.push(
+      new Paragraph({
+        spacing: {
+          before: 360,
+          after: 240,
+        },
+        children: [
+          new TextRun({
+            text: "Skills",
+            ...styles.heading2,
+          }),
+        ],
+      }),
+      new Paragraph({
+        children: [
+          new TextRun({
+            text: data.skills.join(" • "),
+            ...styles.normal,
+          }),
+        ],
+      })
+    );
+  }
+
+  doc.addSection({
+    children: children,
+  });
+
+  return doc;
+};
+
 // Function to generate and download the document
-export const generateAndDownloadResume = async (template: string, data: ResumeData) => {
-  let doc;
+export const generateAndDownloadResume = async (
+  templateType: string,
+  data: ResumeData
+) => {
   try {
-    doc = generateModernTemplate(data);
+    let template;
+    switch (templateType) {
+      case "modern":
+        template = generateModernTemplate(data);
+        break;
+      case "gemini":
+        template = generateGeminiTemplate(data);
+        break;
+      default:
+        template = generateModernTemplate(data);
+    }
+
+    const doc = new Document(template);
     const blob = await doc.save("blob");
     saveAs(blob, `${data.personalInfo.fullName.replace(/\s+/g, "_")}_resume.docx`);
     return true;
@@ -303,39 +500,70 @@ export const generatePreviewHtml = (template: string, data: ResumeData): string 
       padding-bottom: 0.5rem;
       border-bottom: 2px solid #E5E9F0;
     }
-    .experience-item, .education-item {
+    .item {
       margin-bottom: 1.5rem;
     }
-    .company, .institution {
+    .item-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin-bottom: 0.5rem;
+    }
+    .item-title {
       font-weight: bold;
       color: #434C5E;
     }
-    .position, .degree {
+    .item-subtitle {
       font-style: italic;
       color: #4C566A;
     }
     .dates {
       color: #4C566A;
       font-size: 0.9rem;
+      white-space: nowrap;
     }
-    .skills {
+    .tags {
       display: flex;
       flex-wrap: wrap;
       gap: 0.5rem;
+      margin-top: 0.5rem;
     }
-    .skill {
+    .tag {
       background: #E5E9F0;
       padding: 0.25rem 0.75rem;
       border-radius: 1rem;
       font-size: 0.9rem;
     }
+    .links {
+      margin-top: 0.5rem;
+      font-size: 0.9rem;
+    }
+    .links a {
+      color: #5E81AC;
+      text-decoration: none;
+      margin-right: 1rem;
+    }
+    .links a:hover {
+      text-decoration: underline;
+    }
   `;
+
+  const formatDate = (date: string) => {
+    if (!date) return '';
+    const d = new Date(date);
+    return d.toLocaleDateString('en-US', { month: 'short', year: 'numeric' });
+  };
+
+  const formatDateRange = (startDate: string, endDate: string, current: boolean) => {
+    return `${formatDate(startDate)} - ${current ? 'Present' : formatDate(endDate)}`;
+  };
 
   return `
     <style>${commonStyles}</style>
     <div class="preview-container">
       <div class="header">
-        <h1>${data.personalInfo.fullName}</h1>
+        <h1>${data.personalInfo.name}</h1>
+        <p>${data.personalInfo.title}</p>
         <p>${data.personalInfo.email} | ${data.personalInfo.phone} | ${data.personalInfo.location}</p>
       </div>
 
@@ -350,10 +578,14 @@ export const generatePreviewHtml = (template: string, data: ResumeData): string 
         <div class="section">
           <h2 class="section-title">Experience</h2>
           ${data.experiences.map(exp => `
-            <div class="experience-item">
-              <div class="company">${exp.company}</div>
-              <div class="position">${exp.position}</div>
-              <div class="dates">${exp.startDate} - ${exp.endDate}</div>
+            <div class="item">
+              <div class="item-header">
+                <div>
+                  <div class="item-title">${exp.company}</div>
+                  <div class="item-subtitle">${exp.title}</div>
+                </div>
+                <div class="dates">${formatDateRange(exp.startDate, exp.endDate, exp.current)}</div>
+              </div>
               <p>${exp.description}</p>
             </div>
           `).join('')}
@@ -364,10 +596,46 @@ export const generatePreviewHtml = (template: string, data: ResumeData): string 
         <div class="section">
           <h2 class="section-title">Education</h2>
           ${data.education.map(edu => `
-            <div class="education-item">
-              <div class="institution">${edu.institution}</div>
-              <div class="degree">${edu.degree} in ${edu.field}</div>
-              <div class="dates">${edu.startDate} - ${edu.endDate}</div>
+            <div class="item">
+              <div class="item-header">
+                <div>
+                  <div class="item-title">${edu.school}</div>
+                  <div class="item-subtitle">${edu.degree}</div>
+                </div>
+                <div class="dates">${formatDateRange(edu.startDate, edu.endDate, edu.current)}</div>
+              </div>
+              ${edu.description ? `<p>${edu.description}</p>` : ''}
+            </div>
+          `).join('')}
+        </div>
+      ` : ''}
+
+      ${data.projects.length > 0 ? `
+        <div class="section">
+          <h2 class="section-title">Projects</h2>
+          ${data.projects.map(project => `
+            <div class="item">
+              <div class="item-header">
+                <div>
+                  <div class="item-title">${project.name}</div>
+                  <div class="item-subtitle">${project.role}</div>
+                </div>
+                <div class="dates">${formatDateRange(project.startDate, project.endDate, project.current)}</div>
+              </div>
+              <p>${project.description}</p>
+              ${project.technologies.length > 0 ? `
+                <div class="tags">
+                  ${project.technologies.map(tech => `
+                    <span class="tag">${tech}</span>
+                  `).join('')}
+                </div>
+              ` : ''}
+              ${project.githubUrl || project.liveUrl ? `
+                <div class="links">
+                  ${project.githubUrl ? `<a href="${project.githubUrl}" target="_blank">GitHub</a>` : ''}
+                  ${project.liveUrl ? `<a href="${project.liveUrl}" target="_blank">Live Demo</a>` : ''}
+                </div>
+              ` : ''}
             </div>
           `).join('')}
         </div>
@@ -376,11 +644,83 @@ export const generatePreviewHtml = (template: string, data: ResumeData): string 
       ${data.skills.length > 0 ? `
         <div class="section">
           <h2 class="section-title">Skills</h2>
-          <div class="skills">
+          <div class="tags">
             ${data.skills.map(skill => `
-              <span class="skill">${skill}</span>
+              <span class="tag">${skill}</span>
             `).join('')}
           </div>
+        </div>
+      ` : ''}
+
+      ${data.certifications.length > 0 ? `
+        <div class="section">
+          <h2 class="section-title">Certifications</h2>
+          ${data.certifications.map(cert => `
+            <div class="item">
+              <div class="item-header">
+                <div>
+                  <div class="item-title">${cert.name}</div>
+                  <div class="item-subtitle">${cert.issuer}</div>
+                </div>
+                <div class="dates">${formatDate(cert.date)}</div>
+              </div>
+            </div>
+          `).join('')}
+        </div>
+      ` : ''}
+
+      ${data.volunteerWork.length > 0 ? `
+        <div class="section">
+          <h2 class="section-title">Volunteer Experience</h2>
+          ${data.volunteerWork.map(vol => `
+            <div class="item">
+              <div class="item-header">
+                <div>
+                  <div class="item-title">${vol.organization}</div>
+                  <div class="item-subtitle">${vol.role}</div>
+                </div>
+                <div class="dates">${formatDateRange(vol.startDate, vol.endDate, vol.current)}</div>
+              </div>
+              <p>${vol.description}</p>
+              ${vol.impact ? `<p><strong>Impact:</strong> ${vol.impact}</p>` : ''}
+              ${vol.causes.length > 0 ? `
+                <div class="tags">
+                  ${vol.causes.map(cause => `
+                    <span class="tag">${cause}</span>
+                  `).join('')}
+                </div>
+              ` : ''}
+            </div>
+          `).join('')}
+        </div>
+      ` : ''}
+
+      ${data.languages.length > 0 ? `
+        <div class="section">
+          <h2 class="section-title">Languages</h2>
+          <div class="tags">
+            ${data.languages.map(lang => `
+              <span class="tag">${lang.name}</span>
+            `).join('')}
+          </div>
+        </div>
+      ` : ''}
+
+      ${data.achievements.length > 0 ? `
+        <div class="section">
+          <h2 class="section-title">Achievements</h2>
+          ${data.achievements.map(achievement => `
+            <div class="item">
+              <div class="item-title">${achievement.name}</div>
+            </div>
+          `).join('')}
+        </div>
+      ` : ''}
+
+      ${data.declaration ? `
+        <div class="section">
+          <h2 class="section-title">Declaration</h2>
+          <p>${data.declaration}</p>
         </div>
       ` : ''}
     </div>

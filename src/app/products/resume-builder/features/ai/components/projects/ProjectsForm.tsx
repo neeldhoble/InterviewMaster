@@ -48,8 +48,8 @@ const popularTechnologies = [
   "TensorFlow",
 ];
 
-export const ProjectsForm = ({ onSave, initialData }: ProjectsFormProps) => {
-  const [projects, setProjects] = useState<Project[]>(initialData || []);
+export const ProjectsForm = ({ onSave, initialData = [] }: ProjectsFormProps) => {
+  const [projects, setProjects] = useState<Project[]>(initialData);
   const [newTechnology, setNewTechnology] = useState("");
   const { generateAISuggestions } = useResume();
 

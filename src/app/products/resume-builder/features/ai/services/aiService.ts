@@ -139,3 +139,116 @@ export const generateKeywords = async (role: string, industry: string): Promise<
     throw new Error('Failed to generate keywords');
   }
 };
+
+// Gemini AI enhancement options
+export interface EnhancementOptions {
+  style: 'professional' | 'creative' | 'executive' | 'technical';
+  focus: string[];
+  tone: 'formal' | 'conversational' | 'confident' | 'humble';
+  keywords: string[];
+}
+
+export interface EnhancementResult {
+  enhancedContent: string;
+  suggestions: {
+    category: string;
+    text: string;
+  }[];
+  score: number;
+  keywords: string[];
+}
+
+export const enhanceWithGemini = async (
+  section: string,
+  content: string,
+  options: Partial<EnhancementOptions>
+): Promise<EnhancementResult> => {
+  try {
+    // TODO: Replace with actual Gemini AI API call
+    // For now, returning enhanced placeholder content
+    const enhancedContent = `${content}\n[Enhanced with ${options.style} style]`;
+    
+    return {
+      enhancedContent,
+      suggestions: [
+        {
+          category: 'Content',
+          text: 'Consider adding more quantifiable achievements'
+        },
+        {
+          category: 'Style',
+          text: 'The language could be more action-oriented'
+        },
+        {
+          category: 'Keywords',
+          text: 'Include more industry-specific terminology'
+        }
+      ],
+      score: 85,
+      keywords: ['leadership', 'innovation', 'strategy']
+    };
+  } catch (error) {
+    console.error('Error enhancing with Gemini:', error);
+    throw new Error('Failed to enhance with Gemini AI');
+  }
+};
+
+export const analyzeResumeWithGemini = async (resumeData: any): Promise<{
+  overallScore: number;
+  sectionScores: Record<string, number>;
+  suggestions: {
+    section: string;
+    suggestions: string[];
+  }[];
+  keywords: string[];
+  marketAlignment: {
+    industry: string;
+    score: number;
+    gaps: string[];
+  };
+}> => {
+  try {
+    // TODO: Replace with actual Gemini AI API call
+    return {
+      overallScore: 85,
+      sectionScores: {
+        summary: 90,
+        experience: 85,
+        education: 80,
+        skills: 88
+      },
+      suggestions: [
+        {
+          section: 'summary',
+          suggestions: [
+            'Make your value proposition more clear',
+            'Add more industry-specific keywords'
+          ]
+        },
+        {
+          section: 'experience',
+          suggestions: [
+            'Include more quantifiable achievements',
+            'Use stronger action verbs'
+          ]
+        }
+      ],
+      keywords: [
+        'leadership',
+        'project management',
+        'innovation'
+      ],
+      marketAlignment: {
+        industry: 'Technology',
+        score: 82,
+        gaps: [
+          'Cloud certification',
+          'Agile methodology experience'
+        ]
+      }
+    };
+  } catch (error) {
+    console.error('Error analyzing with Gemini:', error);
+    throw new Error('Failed to analyze with Gemini AI');
+  }
+};

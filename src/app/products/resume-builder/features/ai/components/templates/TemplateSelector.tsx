@@ -11,6 +11,8 @@ import { CreativeTemplate } from "./examples/CreativeTemplate";
 import { MinimalTemplate } from "./examples/MinimalTemplate";
 import { ModernTemplate } from "./examples/ModernTemplate";
 import { ExecutiveTemplate } from "./examples/ExecutiveTemplate";
+import { GeminiTemplate } from "./examples/GeminiTemplate";
+import { ErrorBoundary } from "./examples/ErrorBoundary";
 
 interface TemplateSelectorProps {
   selectedTemplate: number;
@@ -53,33 +55,41 @@ const templates: Template[] = [
   },
   {
     id: 4,
-    name: "Minimalist Edge",
-    description: "Simple and elegant with perfect whitespace balance",
+    name: "Minimal Clean",
+    description: "Simple and elegant design that lets your content shine",
     component: MinimalTemplate,
-    docxTemplate: "modern",
+    docxTemplate: "minimal",
     tags: ["Minimal", "Clean", "Simple"],
   },
   {
     id: 5,
-    name: "Professional Plus",
-    description: "Modern design with a technical edge",
+    name: "Professional Classic",
+    description: "Time-tested format trusted by professionals",
     component: ProfessionalTemplate,
-    docxTemplate: "professional",
-    tags: ["Technical", "Modern", "Detailed"],
+    docxTemplate: "classic",
+    tags: ["Professional", "Traditional", "Classic"],
+  },
+  {
+    id: 6,
+    name: "Gemini AI",
+    description: "Modern AI-powered template with smart formatting",
+    component: GeminiTemplate,
+    docxTemplate: "gemini",
+    tags: ["Modern", "AI", "Smart"],
   },
 ];
 
 export function TemplateSelector({ selectedTemplate, onSelect }: TemplateSelectorProps) {
-  const [previewTemplate, setPreviewTemplate] = useState<Template | null>(null);
-  const { resumeData } = useResume();
   const [hoveredTemplate, setHoveredTemplate] = useState<number | null>(null);
-
-  const handlePreview = (template: Template) => {
-    setPreviewTemplate(template);
-  };
+  const { resumeData, updateTemplateId } = useResume();
 
   const handleDownload = async (template: Template) => {
     await generateAndDownloadResume(template.docxTemplate, resumeData);
+  };
+
+  const handleTemplateSelect = (id: number) => {
+    updateTemplateId(id);
+    onSelect(id);
   };
 
   return (
@@ -95,46 +105,44 @@ export function TemplateSelector({ selectedTemplate, onSelect }: TemplateSelecto
               key={template.id}
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -20 }}
               transition={{ duration: 0.3 }}
+              onMouseEnter={() => setHoveredTemplate(template.id)}
+              onMouseLeave={() => setHoveredTemplate(null)}
+              onClick={() => handleTemplateSelect(template.id)}
               className={`relative group rounded-xl overflow-hidden border ${
                 isSelected ? "border-[#fcba28]" : "border-white/10"
               } bg-white/5 backdrop-blur-sm hover:bg-white/10 transition-all cursor-pointer`}
-              onClick={() => onSelect(template.id)}
-              onMouseEnter={() => setHoveredTemplate(template.id)}
-              onMouseLeave={() => setHoveredTemplate(null)}
             >
-              {/* Template Preview */}
-              <div className="aspect-[8.5/11] relative">
-                <div className="absolute inset-0 transform scale-[0.2] origin-top-left">
-                  <TemplateComponent data={resumeData} isPreview />
-                </div>
-
-                {/* Hover Overlay */}
-                <div
-                  className={`absolute inset-0 bg-black/50 backdrop-blur-sm transition-opacity ${
-                    isHovered || isSelected ? "opacity-100" : "opacity-0"
-                  }`}
-                >
-                  <div className="absolute inset-0 flex items-center justify-center">
-                    <div className="px-4 py-2 bg-white/20 rounded-full backdrop-blur-sm font-medium">
-                      {isSelected ? "Selected Template" : "Preview Template"}
-                    </div>
-                  </div>
+              {/* Preview */}
+              <div className="relative aspect-[210/297] w-full bg-white">
+                <div className="absolute inset-0 flex items-center justify-center">
+                  <ErrorBoundary>
+                    <TemplateComponent data={resumeData} scale={0.2} />
+                  </ErrorBoundary>
                 </div>
               </div>
 
               {/* Template Info */}
-              <div className="p-4 space-y-2">
-                <h3 className="text-lg font-semibold flex items-center gap-2">
-                  {isSelected && <Check className="w-5 h-5 text-[#fcba28]" />}
-                  {template.name}
-                </h3>
-                <p className="text-sm text-muted-foreground">{template.description}</p>
+              <div className="p-4">
+                <div className="flex items-center justify-between mb-2">
+                  <h3 className="text-lg font-semibold">{template.name}</h3>
+                  {isSelected && (
+                    <motion.div
+                      initial={{ scale: 0 }}
+                      animate={{ scale: 1 }}
+                      className="w-6 h-6 rounded-full bg-[#fcba28] flex items-center justify-center"
+                    >
+                      <Check className="w-4 h-4 text-black" />
+                    </motion.div>
+                  )}
+                </div>
+                <p className="text-sm text-gray-400 mb-3">{template.description}</p>
                 <div className="flex flex-wrap gap-2">
-                  {template.tags.map((tag) => (
+                  {template.tags.map((tag, index) => (
                     <span
-                      key={tag}
-                      className="px-2 py-1 text-xs rounded-full bg-white/5 border border-white/10"
+                      key={index}
+                      className="px-2 py-1 text-xs rounded-full bg-white/5 text-gray-300"
                     >
                       {tag}
                     </span>
@@ -142,64 +150,43 @@ export function TemplateSelector({ selectedTemplate, onSelect }: TemplateSelecto
                 </div>
               </div>
 
-              {/* Action Buttons */}
-              <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                <div className="flex gap-2">
-                  <Button
-                    size="icon"
-                    variant="outline"
-                    className="bg-black/50 border-white/20 backdrop-blur-sm"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      handlePreview(template);
-                    }}
+              {/* Actions */}
+              <AnimatePresence>
+                {isHovered && (
+                  <motion.div
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={{ opacity: 0 }}
+                    className="absolute inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center gap-4"
                   >
-                    <FileText className="w-4 h-4" />
-                  </Button>
-                  <Button
-                    size="icon"
-                    variant="outline"
-                    className="bg-black/50 border-white/20 backdrop-blur-sm"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      handleDownload(template);
-                    }}
-                  >
-                    <Download className="w-4 h-4" />
-                  </Button>
-                </div>
-              </div>
+                    <Button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleTemplateSelect(template.id);
+                      }}
+                      className="bg-[#fcba28] hover:bg-[#fcba28]/90 text-black"
+                    >
+                      <FileText className="w-4 h-4 mr-2" />
+                      Select
+                    </Button>
+                    <Button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleDownload(template);
+                      }}
+                      variant="outline"
+                      className="border-white/20 hover:bg-white/10"
+                    >
+                      <Download className="w-4 h-4 mr-2" />
+                      Download
+                    </Button>
+                  </motion.div>
+                )}
+              </AnimatePresence>
             </motion.div>
           );
         })}
       </div>
-
-      {/* Preview Modal */}
-      <AnimatePresence>
-        {previewTemplate && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4"
-            onClick={() => setPreviewTemplate(null)}
-          >
-            <motion.div
-              initial={{ scale: 0.9 }}
-              animate={{ scale: 1 }}
-              exit={{ scale: 0.9 }}
-              className="bg-background rounded-xl overflow-hidden max-w-4xl w-full max-h-[90vh] overflow-y-auto"
-              onClick={(e) => e.stopPropagation()}
-            >
-              <div className="p-6">
-                <div className="prose prose-invert max-w-none">
-                  <previewTemplate.component data={resumeData} />
-                </div>
-              </div>
-            </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
     </div>
   );
 }

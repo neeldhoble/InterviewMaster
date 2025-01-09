@@ -13,6 +13,7 @@ import {
   Tag,
 } from "lucide-react";
 import { useResume } from "../../context/ResumeContext";
+import { Button } from "@/components/ui/button";
 
 interface VolunteerWork {
   id: string;
@@ -61,13 +62,12 @@ const popularSkills = [
   "Grant Writing",
 ];
 
-export const VolunteerForm = ({ onSave, initialData }: VolunteerFormProps) => {
-  const [volunteerWork, setVolunteerWork] = useState<VolunteerWork[]>(
-    initialData || []
-  );
+export const VolunteerForm = ({ onSave, initialData = [] }: VolunteerFormProps) => {
+  const [volunteerWork, setVolunteerWork] = useState<VolunteerWork[]>(initialData);
   const [newCause, setNewCause] = useState("");
   const [newSkill, setNewSkill] = useState("");
-  const { generateAISuggestions } = useResume();
+  const [isLoading, setIsLoading] = useState(false);
+  const { generateAISuggestions, resumeData, updateVolunteerWork } = useResume();
 
   const addVolunteerWork = () => {
     const newWork: VolunteerWork = {
@@ -83,39 +83,50 @@ export const VolunteerForm = ({ onSave, initialData }: VolunteerFormProps) => {
       causes: [],
       skills: [],
     };
-    setVolunteerWork([...volunteerWork, newWork]);
+    const updatedWork = [...volunteerWork, newWork];
+    setVolunteerWork(updatedWork);
+    updateVolunteerWork(updatedWork);
   };
 
   const removeVolunteerWork = (id: string) => {
-    setVolunteerWork(volunteerWork.filter((work) => work.id !== id));
+    const updatedWork = volunteerWork.filter((work) => work.id !== id);
+    setVolunteerWork(updatedWork);
+    updateVolunteerWork(updatedWork);
   };
 
-  const updateVolunteerWork = (
+  const updateVolunteerWorkItem = (
     id: string,
     field: keyof VolunteerWork,
     value: any
   ) => {
-    setVolunteerWork(
-      volunteerWork.map((work) =>
-        work.id === id ? { ...work, [field]: value } : work
-      )
+    const updatedWork = volunteerWork.map((work) =>
+      work.id === id ? { ...work, [field]: value } : work
     );
+    setVolunteerWork(updatedWork);
+    updateVolunteerWork(updatedWork);
   };
 
   const handleAISuggestion = async (id: string) => {
-    const work = volunteerWork.find((w) => w.id === id);
-    if (!work) return;
+    try {
+      setIsLoading(true);
+      const work = volunteerWork.find((w) => w.id === id);
+      if (!work) return;
 
-    const prompt = `Generate a compelling description for volunteer work as ${work.role} at ${work.organization}. Focus on impact and skills developed.`;
-    const suggestion = await generateAISuggestions("volunteer", prompt);
-    updateVolunteerWork(id, "description", suggestion);
+      const prompt = `Generate a compelling description for volunteer work as ${work.role} at ${work.organization}. Focus on impact and skills developed.`;
+      const suggestion = await generateAISuggestions("volunteer", prompt);
+      updateVolunteerWorkItem(id, "description", suggestion);
+    } catch (error) {
+      console.error("Error generating AI suggestions:", error);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const addCause = (id: string, cause: string) => {
     const work = volunteerWork.find((w) => w.id === id);
     if (!work || work.causes.includes(cause)) return;
 
-    updateVolunteerWork(id, "causes", [...work.causes, cause]);
+    updateVolunteerWorkItem(id, "causes", [...work.causes, cause]);
     setNewCause("");
   };
 
@@ -123,7 +134,7 @@ export const VolunteerForm = ({ onSave, initialData }: VolunteerFormProps) => {
     const work = volunteerWork.find((w) => w.id === id);
     if (!work) return;
 
-    updateVolunteerWork(
+    updateVolunteerWorkItem(
       id,
       "causes",
       work.causes.filter((c) => c !== cause)
@@ -134,7 +145,7 @@ export const VolunteerForm = ({ onSave, initialData }: VolunteerFormProps) => {
     const work = volunteerWork.find((w) => w.id === id);
     if (!work || work.skills.includes(skill)) return;
 
-    updateVolunteerWork(id, "skills", [...work.skills, skill]);
+    updateVolunteerWorkItem(id, "skills", [...work.skills, skill]);
     setNewSkill("");
   };
 
@@ -142,7 +153,7 @@ export const VolunteerForm = ({ onSave, initialData }: VolunteerFormProps) => {
     const work = volunteerWork.find((w) => w.id === id);
     if (!work) return;
 
-    updateVolunteerWork(
+    updateVolunteerWorkItem(
       id,
       "skills",
       work.skills.filter((s) => s !== skill)
@@ -170,15 +181,18 @@ export const VolunteerForm = ({ onSave, initialData }: VolunteerFormProps) => {
               <label className="block text-sm font-medium mb-2">
                 Organization
               </label>
-              <input
-                type="text"
-                value={work.organization}
-                onChange={(e) =>
-                  updateVolunteerWork(work.id, "organization", e.target.value)
-                }
-                className="w-full bg-white/5 border border-white/10 rounded-lg py-2 px-4 focus:outline-none focus:border-[#fcba28] focus:ring-1 focus:ring-[#fcba28] backdrop-blur-sm transition-colors"
-                placeholder="e.g. Red Cross"
-              />
+              <div className="relative">
+                <Heart className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-white/40" />
+                <input
+                  type="text"
+                  value={work.organization}
+                  onChange={(e) =>
+                    updateVolunteerWorkItem(work.id, "organization", e.target.value)
+                  }
+                  className="w-full bg-white/5 border border-white/10 rounded-lg py-2 pl-10 pr-4 focus:outline-none focus:border-[#fcba28] focus:ring-1 focus:ring-[#fcba28] backdrop-blur-sm transition-colors"
+                  placeholder="e.g. Red Cross"
+                />
+              </div>
             </div>
 
             {/* Role */}
@@ -188,7 +202,7 @@ export const VolunteerForm = ({ onSave, initialData }: VolunteerFormProps) => {
                 type="text"
                 value={work.role}
                 onChange={(e) =>
-                  updateVolunteerWork(work.id, "role", e.target.value)
+                  updateVolunteerWorkItem(work.id, "role", e.target.value)
                 }
                 className="w-full bg-white/5 border border-white/10 rounded-lg py-2 px-4 focus:outline-none focus:border-[#fcba28] focus:ring-1 focus:ring-[#fcba28] backdrop-blur-sm transition-colors"
                 placeholder="e.g. Youth Mentor"
@@ -201,28 +215,34 @@ export const VolunteerForm = ({ onSave, initialData }: VolunteerFormProps) => {
                 <label className="block text-sm font-medium mb-2">
                   Start Date
                 </label>
-                <input
-                  type="month"
-                  value={work.startDate}
-                  onChange={(e) =>
-                    updateVolunteerWork(work.id, "startDate", e.target.value)
-                  }
-                  className="w-full bg-white/5 border border-white/10 rounded-lg py-2 px-4 focus:outline-none focus:border-[#fcba28] focus:ring-1 focus:ring-[#fcba28] backdrop-blur-sm transition-colors"
-                />
+                <div className="relative">
+                  <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-white/40" />
+                  <input
+                    type="month"
+                    value={work.startDate}
+                    onChange={(e) =>
+                      updateVolunteerWorkItem(work.id, "startDate", e.target.value)
+                    }
+                    className="w-full bg-white/5 border border-white/10 rounded-lg py-2 pl-10 pr-4 focus:outline-none focus:border-[#fcba28] focus:ring-1 focus:ring-[#fcba28] backdrop-blur-sm transition-colors"
+                  />
+                </div>
               </div>
               <div>
                 <label className="block text-sm font-medium mb-2">
                   End Date
                 </label>
-                <input
-                  type="month"
-                  value={work.endDate}
-                  onChange={(e) =>
-                    updateVolunteerWork(work.id, "endDate", e.target.value)
-                  }
-                  disabled={work.current}
-                  className="w-full bg-white/5 border border-white/10 rounded-lg py-2 px-4 focus:outline-none focus:border-[#fcba28] focus:ring-1 focus:ring-[#fcba28] backdrop-blur-sm transition-colors disabled:opacity-50"
-                />
+                <div className="relative">
+                  <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-white/40" />
+                  <input
+                    type="month"
+                    value={work.endDate}
+                    onChange={(e) =>
+                      updateVolunteerWorkItem(work.id, "endDate", e.target.value)
+                    }
+                    disabled={work.current}
+                    className="w-full bg-white/5 border border-white/10 rounded-lg py-2 pl-10 pr-4 focus:outline-none focus:border-[#fcba28] focus:ring-1 focus:ring-[#fcba28] backdrop-blur-sm transition-colors disabled:opacity-50"
+                  />
+                </div>
               </div>
             </div>
 
@@ -233,16 +253,16 @@ export const VolunteerForm = ({ onSave, initialData }: VolunteerFormProps) => {
                   type="checkbox"
                   checked={work.current}
                   onChange={(e) =>
-                    updateVolunteerWork(work.id, "current", e.target.checked)
+                    updateVolunteerWorkItem(work.id, "current", e.target.checked)
                   }
                   className="rounded border-white/10 bg-white/5 text-[#fcba28] focus:ring-[#fcba28]"
                 />
-                <span className="text-sm">I currently volunteer here</span>
+                <span className="text-sm">This is a current role</span>
               </label>
             </div>
 
             {/* Location */}
-            <div className="col-span-full">
+            <div>
               <label className="block text-sm font-medium mb-2">Location</label>
               <div className="relative">
                 <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-white/40" />
@@ -250,7 +270,7 @@ export const VolunteerForm = ({ onSave, initialData }: VolunteerFormProps) => {
                   type="text"
                   value={work.location}
                   onChange={(e) =>
-                    updateVolunteerWork(work.id, "location", e.target.value)
+                    updateVolunteerWorkItem(work.id, "location", e.target.value)
                   }
                   className="w-full bg-white/5 border border-white/10 rounded-lg py-2 pl-10 pr-4 focus:outline-none focus:border-[#fcba28] focus:ring-1 focus:ring-[#fcba28] backdrop-blur-sm transition-colors"
                   placeholder="e.g. San Francisco, CA"
@@ -267,7 +287,7 @@ export const VolunteerForm = ({ onSave, initialData }: VolunteerFormProps) => {
                 <textarea
                   value={work.description}
                   onChange={(e) =>
-                    updateVolunteerWork(work.id, "description", e.target.value)
+                    updateVolunteerWorkItem(work.id, "description", e.target.value)
                   }
                   rows={4}
                   className="w-full bg-white/5 border border-white/10 rounded-lg py-2 px-4 focus:outline-none focus:border-[#fcba28] focus:ring-1 focus:ring-[#fcba28] backdrop-blur-sm transition-colors"
@@ -277,6 +297,7 @@ export const VolunteerForm = ({ onSave, initialData }: VolunteerFormProps) => {
                   type="button"
                   onClick={() => handleAISuggestion(work.id)}
                   className="absolute right-3 top-3 p-2 rounded-lg bg-[#fcba28]/10 hover:bg-[#fcba28]/20 text-[#fcba28] transition-colors"
+                  disabled={isLoading}
                 >
                   <Sparkles className="w-4 h-4" />
                 </button>
@@ -285,17 +306,15 @@ export const VolunteerForm = ({ onSave, initialData }: VolunteerFormProps) => {
 
             {/* Impact */}
             <div className="col-span-full">
-              <label className="block text-sm font-medium mb-2">
-                Impact & Results
-              </label>
-              <input
-                type="text"
+              <label className="block text-sm font-medium mb-2">Impact</label>
+              <textarea
                 value={work.impact}
                 onChange={(e) =>
-                  updateVolunteerWork(work.id, "impact", e.target.value)
+                  updateVolunteerWorkItem(work.id, "impact", e.target.value)
                 }
+                rows={2}
                 className="w-full bg-white/5 border border-white/10 rounded-lg py-2 px-4 focus:outline-none focus:border-[#fcba28] focus:ring-1 focus:ring-[#fcba28] backdrop-blur-sm transition-colors"
-                placeholder="e.g. Mentored 20+ youth, Raised $10,000 for the cause"
+                placeholder="Describe the impact of your volunteer work..."
               />
             </div>
 
@@ -309,7 +328,6 @@ export const VolunteerForm = ({ onSave, initialData }: VolunteerFormProps) => {
                       key={cause}
                       className="px-3 py-1 bg-[#fcba28]/10 text-[#fcba28] rounded-full text-sm flex items-center gap-2"
                     >
-                      <Heart className="w-3 h-3" />
                       {cause}
                       <button
                         onClick={() => removeCause(work.id, cause)}
@@ -321,26 +339,33 @@ export const VolunteerForm = ({ onSave, initialData }: VolunteerFormProps) => {
                   ))}
                 </div>
                 <div className="flex gap-2">
-                  <input
-                    type="text"
-                    value={newCause}
-                    onChange={(e) => setNewCause(e.target.value)}
-                    onKeyDown={(e) => {
-                      if (e.key === "Enter" && newCause) {
-                        e.preventDefault();
+                  <div className="relative flex-1">
+                    <Tag className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-white/40" />
+                    <input
+                      type="text"
+                      value={newCause}
+                      onChange={(e) => setNewCause(e.target.value)}
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter" && newCause) {
+                          e.preventDefault();
+                          addCause(work.id, newCause);
+                        }
+                      }}
+                      className="w-full bg-white/5 border border-white/10 rounded-lg py-2 pl-10 pr-4 focus:outline-none focus:border-[#fcba28] focus:ring-1 focus:ring-[#fcba28] backdrop-blur-sm transition-colors"
+                      placeholder="Add cause..."
+                    />
+                  </div>
+                  <Button
+                    onClick={() => {
+                      if (newCause) {
                         addCause(work.id, newCause);
                       }
                     }}
-                    className="flex-1 bg-white/5 border border-white/10 rounded-lg py-2 px-4 focus:outline-none focus:border-[#fcba28] focus:ring-1 focus:ring-[#fcba28] backdrop-blur-sm transition-colors"
-                    placeholder="Add cause..."
-                  />
-                  <button
-                    type="button"
-                    onClick={() => newCause && addCause(work.id, newCause)}
-                    className="px-4 py-2 bg-[#fcba28]/10 border border-[#fcba28]/20 rounded-lg text-[#fcba28] hover:bg-[#fcba28]/20 transition-colors"
+                    variant="outline"
+                    className="border-[#fcba28] text-[#fcba28] hover:bg-[#fcba28]/10"
                   >
                     Add
-                  </button>
+                  </Button>
                 </div>
                 <div className="flex flex-wrap gap-2">
                   {popularCauses.map((cause) => (
@@ -358,9 +383,7 @@ export const VolunteerForm = ({ onSave, initialData }: VolunteerFormProps) => {
 
             {/* Skills */}
             <div className="col-span-full">
-              <label className="block text-sm font-medium mb-2">
-                Skills Developed
-              </label>
+              <label className="block text-sm font-medium mb-2">Skills</label>
               <div className="space-y-3">
                 <div className="flex flex-wrap gap-2">
                   {work.skills.map((skill) => (
@@ -368,7 +391,6 @@ export const VolunteerForm = ({ onSave, initialData }: VolunteerFormProps) => {
                       key={skill}
                       className="px-3 py-1 bg-[#fcba28]/10 text-[#fcba28] rounded-full text-sm flex items-center gap-2"
                     >
-                      <Tag className="w-3 h-3" />
                       {skill}
                       <button
                         onClick={() => removeSkill(work.id, skill)}
@@ -380,26 +402,33 @@ export const VolunteerForm = ({ onSave, initialData }: VolunteerFormProps) => {
                   ))}
                 </div>
                 <div className="flex gap-2">
-                  <input
-                    type="text"
-                    value={newSkill}
-                    onChange={(e) => setNewSkill(e.target.value)}
-                    onKeyDown={(e) => {
-                      if (e.key === "Enter" && newSkill) {
-                        e.preventDefault();
+                  <div className="relative flex-1">
+                    <Tag className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-white/40" />
+                    <input
+                      type="text"
+                      value={newSkill}
+                      onChange={(e) => setNewSkill(e.target.value)}
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter" && newSkill) {
+                          e.preventDefault();
+                          addSkill(work.id, newSkill);
+                        }
+                      }}
+                      className="w-full bg-white/5 border border-white/10 rounded-lg py-2 pl-10 pr-4 focus:outline-none focus:border-[#fcba28] focus:ring-1 focus:ring-[#fcba28] backdrop-blur-sm transition-colors"
+                      placeholder="Add skill..."
+                    />
+                  </div>
+                  <Button
+                    onClick={() => {
+                      if (newSkill) {
                         addSkill(work.id, newSkill);
                       }
                     }}
-                    className="flex-1 bg-white/5 border border-white/10 rounded-lg py-2 px-4 focus:outline-none focus:border-[#fcba28] focus:ring-1 focus:ring-[#fcba28] backdrop-blur-sm transition-colors"
-                    placeholder="Add skill..."
-                  />
-                  <button
-                    type="button"
-                    onClick={() => newSkill && addSkill(work.id, newSkill)}
-                    className="px-4 py-2 bg-[#fcba28]/10 border border-[#fcba28]/20 rounded-lg text-[#fcba28] hover:bg-[#fcba28]/20 transition-colors"
+                    variant="outline"
+                    className="border-[#fcba28] text-[#fcba28] hover:bg-[#fcba28]/10"
                   >
                     Add
-                  </button>
+                  </Button>
                 </div>
                 <div className="flex flex-wrap gap-2">
                   {popularSkills.map((skill) => (
@@ -416,7 +445,7 @@ export const VolunteerForm = ({ onSave, initialData }: VolunteerFormProps) => {
             </div>
           </div>
 
-          {/* Remove Volunteer Work Button */}
+          {/* Remove Button */}
           <button
             type="button"
             onClick={() => removeVolunteerWork(work.id)}
@@ -427,34 +456,26 @@ export const VolunteerForm = ({ onSave, initialData }: VolunteerFormProps) => {
         </motion.div>
       ))}
 
-      {/* Add Volunteer Work Button */}
-      <motion.button
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: volunteerWork.length * 0.1 }}
-        type="button"
+      {/* Add Button */}
+      <Button
         onClick={addVolunteerWork}
-        className="w-full py-3 border-2 border-dashed border-white/10 rounded-xl text-white/60 hover:text-white/80 hover:border-white/20 transition-colors flex items-center justify-center gap-2"
+        className="w-full bg-[#fcba28] hover:bg-[#fcba28]/90 text-black"
       >
-        <Plus className="w-5 h-5" />
+        <Plus className="w-5 h-5 mr-2" />
         Add Volunteer Work
-      </motion.button>
+      </Button>
 
       {/* Save Button */}
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: volunteerWork.length * 0.1 + 0.1 }}
-        className="flex justify-end"
-      >
-        <button
-          type="button"
-          onClick={() => onSave(volunteerWork)}
-          className="px-6 py-2 bg-[#fcba28] text-black rounded-lg font-medium hover:bg-[#fcba28]/90 transition-colors"
+      <div className="flex justify-end">
+        <Button
+          onClick={() => {
+            onSave(volunteerWork);
+          }}
+          className="bg-[#fcba28] hover:bg-[#fcba28]/90 text-black"
         >
           Save & Continue
-        </button>
-      </motion.div>
+        </Button>
+      </div>
     </div>
   );
 };

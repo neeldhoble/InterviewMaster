@@ -4,6 +4,7 @@ import { motion } from "framer-motion";
 import { useState } from "react";
 import { Plus, Trash2, Star, Sparkles } from "lucide-react";
 import { useResume } from "../../context/ResumeContext";
+import { Button } from "@/components/ui/button";
 
 interface Skill {
   id: string;
@@ -28,6 +29,7 @@ const skillCategories = [
 
 export const SkillsForm = ({ onSave, initialData }: SkillsFormProps) => {
   const [skills, setSkills] = useState<Skill[]>(initialData || []);
+  const [isLoading, setIsLoading] = useState(false);
   const { generateAISuggestions } = useResume();
 
   const addSkill = () => {
@@ -53,16 +55,29 @@ export const SkillsForm = ({ onSave, initialData }: SkillsFormProps) => {
   };
 
   const handleAISuggestions = async () => {
-    const prompt = "Suggest relevant skills for my profile based on my experience";
-    const suggestion = await generateAISuggestions("skills", prompt);
-    // Parse and add suggested skills
-    const suggestedSkills = suggestion.split(",").map((skill) => ({
-      id: Date.now().toString() + Math.random(),
-      name: skill.trim(),
-      level: 3,
-      category: "Technical",
-    }));
-    setSkills([...skills, ...suggestedSkills]);
+    try {
+      setIsLoading(true);
+      const prompt = "Suggest relevant skills for my profile based on my experience";
+      const suggestion = await generateAISuggestions("skills", prompt);
+      
+      // Parse and add suggested skills
+      const suggestedSkills = suggestion.split(",").map((skill) => ({
+        id: Date.now().toString() + Math.random(),
+        name: skill.trim(),
+        level: 3,
+        category: "Technical",
+      }));
+
+      // Filter out duplicates
+      const existingSkillNames = new Set(skills.map(s => s.name.toLowerCase()));
+      const newSkills = suggestedSkills.filter(s => !existingSkillNames.has(s.name.toLowerCase()));
+
+      setSkills([...skills, ...newSkills]);
+    } catch (error) {
+      console.error("Error generating AI suggestions:", error);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -100,24 +115,23 @@ export const SkillsForm = ({ onSave, initialData }: SkillsFormProps) => {
                     />
                     <div className="flex items-center gap-1">
                       {[1, 2, 3, 4, 5].map((level) => (
-                        <button
+                        <Star
                           key={level}
-                          onClick={() => updateSkill(skill.id, "level", level)}
-                          className={`p-1 rounded-full transition-colors ${
+                          size={16}
+                          className={`cursor-pointer transition-colors ${
                             level <= skill.level
                               ? "text-[#fcba28]"
                               : "text-white/20"
                           }`}
-                        >
-                          <Star className="w-4 h-4" />
-                        </button>
+                          onClick={() => updateSkill(skill.id, "level", level)}
+                        />
                       ))}
                     </div>
                     <button
                       onClick={() => removeSkill(skill.id)}
-                      className="p-1 text-red-400 hover:text-red-300 transition-colors"
+                      className="p-1 hover:bg-white/10 rounded transition-colors"
                     >
-                      <Trash2 className="w-4 h-4" />
+                      <Trash2 size={16} className="text-red-400" />
                     </button>
                   </motion.div>
                 ))}
@@ -127,44 +141,25 @@ export const SkillsForm = ({ onSave, initialData }: SkillsFormProps) => {
         })}
       </div>
 
-      {/* Add Skill Button */}
-      <div className="flex gap-4">
-        <motion.button
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          type="button"
+      {/* Actions */}
+      <div className="flex items-center gap-4">
+        <Button
           onClick={addSkill}
-          className="flex-1 py-3 border-2 border-dashed border-white/10 rounded-xl text-white/60 hover:text-white/80 hover:border-white/20 transition-colors flex items-center justify-center gap-2"
+          className="bg-[#fcba28] hover:bg-[#fcba28]/90 text-black"
         >
-          <Plus className="w-5 h-5" />
+          <Plus size={16} className="mr-2" />
           Add Skill
-        </motion.button>
-        <motion.button
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          type="button"
+        </Button>
+        <Button
           onClick={handleAISuggestions}
-          className="px-4 py-3 bg-[#fcba28]/10 border border-[#fcba28]/20 rounded-xl text-[#fcba28] hover:bg-[#fcba28]/20 transition-colors flex items-center gap-2"
+          variant="outline"
+          className="border-[#fcba28] text-[#fcba28] hover:bg-[#fcba28]/10"
+          disabled={isLoading}
         >
-          <Sparkles className="w-5 h-5" />
-          AI Suggestions
-        </motion.button>
+          <Sparkles size={16} className="mr-2" />
+          {isLoading ? "Generating..." : "Get AI Suggestions"}
+        </Button>
       </div>
-
-      {/* Save Button */}
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="flex justify-end"
-      >
-        <button
-          type="button"
-          onClick={() => onSave(skills)}
-          className="px-6 py-2 bg-[#fcba28] text-black rounded-lg font-medium hover:bg-[#fcba28]/90 transition-colors"
-        >
-          Save & Continue
-        </button>
-      </motion.div>
     </div>
   );
 };
