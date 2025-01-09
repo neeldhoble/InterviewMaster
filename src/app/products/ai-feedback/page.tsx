@@ -48,11 +48,25 @@ export default function AIFeedbackPage() {
     setError('');
     
     try {
+      // Input validation
+      if (!selectedType) {
+        throw new Error('Please select a response type');
+      }
+      if (!selectedLevel) {
+        throw new Error('Please select your experience level');
+      }
+      if (!role.trim()) {
+        throw new Error('Please enter the target role');
+      }
+      if (!response.trim()) {
+        throw new Error('Please enter your interview response');
+      }
+
       // Simulate API call
       await new Promise(resolve => setTimeout(resolve, 2000));
       
       // Mock feedback data
-      setFeedback({
+      const result = {
         score: 85,
         metrics: {
           confidence: 80,
@@ -84,11 +98,19 @@ export default function AIFeedbackPage() {
           'Designing Data-Intensive Applications',
           'Advanced Algorithm Courses on Coursera'
         ]
-      });
-      
+      };
+
+      // Validate the feedback object
+      if (!result || typeof result.score !== 'number' || !Array.isArray(result.strengths)) {
+        throw new Error('Invalid feedback received. Please try again.');
+      }
+
+      setFeedback(result);
       setActiveTab('analysis');
     } catch (err) {
-      setError('Failed to analyze response. Please try again.');
+      console.error('Analysis error:', err);
+      setError(err instanceof Error ? err.message : 'An unexpected error occurred. Please try again.');
+      setActiveTab('input'); // Stay on input tab when there's an error
     } finally {
       setIsLoading(false);
     }
