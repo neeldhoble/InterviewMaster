@@ -8,16 +8,22 @@ module.exports = {
     ignoreBuildErrors: true,
   },
 
+  // Webpack configuration
   webpack: (config, { isServer }) => {
+    // Add src directory alias for easier imports
     config.resolve.alias['@'] = `${__dirname}/src`;
     config.resolve.alias['@interview-types'] = `${__dirname}/src/app/products/interview-questions/types.ts`;
 
-    // Handle PDF.js worker
+    // Handle client-side modules
     if (!isServer) {
       config.resolve.fallback = {
         ...config.resolve.fallback,
         canvas: false,
-        encoding: false
+        encoding: false,
+        fs: false,
+        path: false,
+        stream: false,
+        util: false,
       };
     }
 
@@ -45,10 +51,44 @@ module.exports = {
   },
 
 
+  // ESLint configuration
   eslint: {
     ignoreDuringBuilds: true,  // Ensure ESLint warnings don't block the build
   },
 
+  // Image domains
+  images: {
+    domains: [
+      'lh3.googleusercontent.com',
+      'avatars.githubusercontent.com',
+      'images.unsplash.com',
+      'www.gravatar.com',
+      'res.cloudinary.com',
+      'i.pravatar.cc',
+      'firebasestorage.googleapis.com',
+      'storage.googleapis.com',
+      'platform-lookaside.fbsbx.com',
+      'i.ibb.co',
+      'media.licdn.com',
+      'pbs.twimg.com',
+      'img.youtube.com',
+      'img.freepik.com',
+      'images.pexels.com',
+      'images.ctfassets.net',
+      'img.icons8.com',
+      'cdn.pixabay.com',
+      'cdn.jsdelivr.net',
+      'cdn.dribbble.com',
+      'cdn.shopify.com',
+      'cdn.discordapp.com',
+      'cdn.sanity.io',
+      'cdn.hashnode.com',
+      'cdn.buymeacoffee.com',
+    ],
+  },
+
+
+  // Environment variables
   env: {
     NEXT_PUBLIC_CONVEX_URL: process.env.NEXT_PUBLIC_CONVEX_URL,
     CONVEX_DEPLOYMENT: process.env.CONVEX_DEPLOYMENT,

@@ -1,7 +1,13 @@
 import { GoogleGenerativeAI } from "@google/generative-ai";
 
 // Initialize the Gemini API with your API key
-const genAI = new GoogleGenerativeAI(process.env.NEXT_PUBLIC_GEMINI_API_KEY || '');
+const getGeminiClient = () => {
+  const apiKey = process.env.NEXT_PUBLIC_GEMINI_API_KEY;
+  if (!apiKey) {
+    throw new Error('Gemini API key is not configured');
+  }
+  return new GoogleGenerativeAI(apiKey);
+};
 
 interface ATSScore {
   score: number;
@@ -101,22 +107,22 @@ const calculateATSScores = (text: string): ATSScores => {
 
   // Check paragraph length
   const paragraphs = text.split(/\n\s*\n/);
-  const avgLinesPerParagraph = paragraphs.reduce((acc, para) => 
-    acc + para.split('\n').length, 0) / paragraphs.length;
+  const avgWordsPerParagraph = paragraphs.reduce((acc, para) => 
+    acc + para.trim().split(/\s+/).length, 0) / paragraphs.length;
 
-  if (avgLinesPerParagraph <= 6) readabilityScore.score += 30;
+  if (avgWordsPerParagraph <= 50) readabilityScore.score += 30;
   else readabilityScore.improvements.push('Break down long paragraphs');
 
-  // Check for passive voice
-  const passiveVoiceCount = (text.match(/\b(was|were|been|being|is|are|am|had been|has been|have been|will be|will have been)\s+\w+ed\b/g) || []).length;
-  if (passiveVoiceCount <= 5) readabilityScore.score += 30;
+  // Check active voice
+  const passiveVoiceCount = (text.match(/was|were|been|being|is|are|am|\w+ed by/g) || []).length;
+  if (passiveVoiceCount < text.split(/\s+/).length * 0.1) readabilityScore.score += 30;
   else readabilityScore.improvements.push('Use more active voice');
 
   readabilityScore.feedback = readabilityScore.score >= 80
-    ? 'Excellent readability'
-    : 'Improve readability for better comprehension';
+    ? 'Content is clear and easy to read'
+    : 'Improve readability with shorter sentences and active voice';
 
-  // Relevance Score
+  // Relevance Score (simplified)
   const relevanceScore = {
     score: Math.min(keywordScore.score + formatScore.score, 100) / 2,
     feedback: '',
@@ -139,11 +145,10 @@ const calculateATSScores = (text: string): ATSScores => {
     improvements: [] as string[]
   };
 
-  overallScore.feedback = overallScore.score >= 80
-    ? 'Your CV is well-optimized for ATS systems'
-    : 'Your CV needs improvements for better ATS performance';
-
-  if (overallScore.score < 70) {
+  if (overallScore.score >= 80) {
+    overallScore.feedback = 'CV is well-optimized for ATS systems';
+  } else {
+    overallScore.feedback = 'CV needs improvements for better ATS compatibility';
     overallScore.improvements = [
       ...formatScore.improvements,
       ...keywordScore.improvements,
@@ -163,7 +168,16 @@ const calculateATSScores = (text: string): ATSScores => {
 
 export async function analyzeCV(cvText: string): Promise<any> {
   try {
+    if (!cvText?.trim()) {
+      throw new Error('CV text is empty or invalid');
+    }
+
+    console.log('Initializing Gemini client...'); // Debug log
+    const genAI = getGeminiClient();
+    console.log('Getting Gemini model...'); // Debug log
     const model = genAI.getGenerativeModel({ model: "gemini-pro" });
+
+    console.log('Calculating ATS scores...'); // Debug log
     const atsScores = calculateATSScores(cvText);
 
     const prompt = `As an expert CV/Resume analyzer, provide a comprehensive analysis of the following CV. Focus on specific, actionable feedback.
@@ -248,11 +262,14 @@ Long-term Development (1-3 months):
 
 Ensure each point is specific to the CV content, includes metrics where possible, and provides actionable recommendations.`;
 
+    console.log('Generating content with Gemini...'); // Debug log
     const result = await model.generateContent(prompt);
+    console.log('Got response from Gemini...'); // Debug log
     const response = await result.response;
     const text = response.text();
     
     // Process the text response into sections
+    console.log('Processing response sections...'); // Debug log
     const sections = text.split(/\d+\.\s+/).filter(Boolean).map(section => {
       const [title, ...content] = section.split('\n');
       return {
@@ -379,6 +396,7 @@ Ensure each point is specific to the CV content, includes metrics where possible
       });
     }
 
+    console.log('Analysis complete, returning results...'); // Debug log
     return {
       type: 'detailed',
       atsScores,
@@ -392,6 +410,6 @@ Ensure each point is specific to the CV content, includes metrics where possible
 
   } catch (error) {
     console.error('Error analyzing CV with Gemini:', error);
-    throw error;
+    throw new Error(error instanceof Error ? error.message : 'Failed to analyze CV');
   }
 }
