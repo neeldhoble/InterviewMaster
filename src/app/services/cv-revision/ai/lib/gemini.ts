@@ -3,9 +3,168 @@ import { GoogleGenerativeAI } from "@google/generative-ai";
 // Initialize the Gemini API with your API key
 const genAI = new GoogleGenerativeAI(process.env.NEXT_PUBLIC_GEMINI_API_KEY || '');
 
+interface ATSScore {
+  score: number;
+  feedback: string;
+  improvements: string[];
+}
+
+interface ATSScores {
+  overall: ATSScore;
+  format: ATSScore;
+  keyword: ATSScore;
+  relevance: ATSScore;
+  readability: ATSScore;
+}
+
+const calculateATSScores = (text: string): ATSScores => {
+  // Format Score
+  const formatScore = {
+    score: 0,
+    feedback: '',
+    improvements: [] as string[]
+  };
+  
+  // Check proper sections
+  const hasProperSections = /education|experience|skills/i.test(text);
+  if (hasProperSections) formatScore.score += 20;
+  else formatScore.improvements.push('Add clear section headings (Education, Experience, Skills)');
+
+  // Check bullet points
+  const hasBulletPoints = /•|-|\*/g.test(text);
+  if (hasBulletPoints) formatScore.score += 20;
+  else formatScore.improvements.push('Use bullet points to list achievements and responsibilities');
+
+  // Check contact info
+  const hasContactInfo = /email|phone|linkedin/i.test(text);
+  if (hasContactInfo) formatScore.score += 20;
+  else formatScore.improvements.push('Include complete contact information');
+
+  // Check consistent formatting
+  const hasConsistentFormatting = !/[^\x00-\x7F]/g.test(text); // Check for special characters
+  if (hasConsistentFormatting) formatScore.score += 20;
+  else formatScore.improvements.push('Remove special characters and ensure consistent formatting');
+
+  // Check proper spacing
+  const hasProperSpacing = !/\n{3,}/g.test(text);
+  if (hasProperSpacing) formatScore.score += 20;
+  else formatScore.improvements.push('Maintain consistent spacing between sections');
+
+  formatScore.feedback = formatScore.score >= 80 
+    ? 'Excellent formatting that meets ATS requirements'
+    : 'Format needs improvement for better ATS compatibility';
+
+  // Keyword Score
+  const keywordScore = {
+    score: 0,
+    feedback: '',
+    improvements: [] as string[]
+  };
+
+  const commonKeywords = [
+    'experience', 'skills', 'education', 'project', 'achievement',
+    'developed', 'managed', 'created', 'implemented', 'led',
+    'team', 'analysis', 'solution', 'improvement', 'success'
+  ];
+
+  let keywordCount = 0;
+  commonKeywords.forEach(keyword => {
+    const regex = new RegExp(keyword, 'gi');
+    const matches = text.match(regex);
+    if (matches) keywordCount += matches.length;
+  });
+
+  keywordScore.score = Math.min(Math.round((keywordCount / 10) * 100), 100);
+  if (keywordScore.score < 60) {
+    keywordScore.improvements.push('Include more relevant industry keywords');
+    keywordScore.improvements.push('Add specific technical skills and tools');
+  }
+
+  keywordScore.feedback = keywordScore.score >= 80
+    ? 'Strong keyword optimization'
+    : 'Consider adding more relevant keywords';
+
+  // Readability Score
+  const readabilityScore = {
+    score: 0,
+    feedback: '',
+    improvements: [] as string[]
+  };
+
+  // Check sentence length
+  const sentences = text.split(/[.!?]+/);
+  const avgWordsPerSentence = sentences.reduce((acc, sent) => 
+    acc + sent.trim().split(/\s+/).length, 0) / sentences.length;
+
+  if (avgWordsPerSentence <= 20) readabilityScore.score += 40;
+  else readabilityScore.improvements.push('Shorten sentences for better readability');
+
+  // Check paragraph length
+  const paragraphs = text.split(/\n\s*\n/);
+  const avgLinesPerParagraph = paragraphs.reduce((acc, para) => 
+    acc + para.split('\n').length, 0) / paragraphs.length;
+
+  if (avgLinesPerParagraph <= 6) readabilityScore.score += 30;
+  else readabilityScore.improvements.push('Break down long paragraphs');
+
+  // Check for passive voice
+  const passiveVoiceCount = (text.match(/\b(was|were|been|being|is|are|am|had been|has been|have been|will be|will have been)\s+\w+ed\b/g) || []).length;
+  if (passiveVoiceCount <= 5) readabilityScore.score += 30;
+  else readabilityScore.improvements.push('Use more active voice');
+
+  readabilityScore.feedback = readabilityScore.score >= 80
+    ? 'Excellent readability'
+    : 'Improve readability for better comprehension';
+
+  // Relevance Score
+  const relevanceScore = {
+    score: Math.min(keywordScore.score + formatScore.score, 100) / 2,
+    feedback: '',
+    improvements: [] as string[]
+  };
+
+  if (relevanceScore.score < 70) {
+    relevanceScore.improvements.push('Align content more closely with job requirements');
+    relevanceScore.improvements.push('Highlight relevant achievements and skills');
+  }
+
+  relevanceScore.feedback = relevanceScore.score >= 80
+    ? 'Content is well-aligned with typical job requirements'
+    : 'Content could be more targeted to job requirements';
+
+  // Overall Score
+  const overallScore = {
+    score: Math.round((formatScore.score + keywordScore.score + readabilityScore.score + relevanceScore.score) / 4),
+    feedback: '',
+    improvements: [] as string[]
+  };
+
+  overallScore.feedback = overallScore.score >= 80
+    ? 'Your CV is well-optimized for ATS systems'
+    : 'Your CV needs improvements for better ATS performance';
+
+  if (overallScore.score < 70) {
+    overallScore.improvements = [
+      ...formatScore.improvements,
+      ...keywordScore.improvements,
+      ...readabilityScore.improvements,
+      ...relevanceScore.improvements
+    ];
+  }
+
+  return {
+    overall: overallScore,
+    format: formatScore,
+    keyword: keywordScore,
+    relevance: relevanceScore,
+    readability: readabilityScore
+  };
+};
+
 export async function analyzeCV(cvText: string): Promise<any> {
   try {
     const model = genAI.getGenerativeModel({ model: "gemini-pro" });
+    const atsScores = calculateATSScores(cvText);
 
     const prompt = `As an expert CV/Resume analyzer, provide a comprehensive analysis of the following CV. Focus on specific, actionable feedback.
 
@@ -14,14 +173,7 @@ ${cvText}
 
 Please provide a detailed analysis in exactly this format:
 
-1. ATS COMPATIBILITY SCORE
-- Overall Score: [Score out of 100]
-- Format Score: [Score out of 100]
-- Keyword Score: [Score out of 100]
-- Relevance Score: [Score out of 100]
-- Readability Score: [Score out of 100]
-
-2. PRIORITY IMPROVEMENTS
+1. PRIORITY IMPROVEMENTS
 
 Critical:
 - [First critical improvement with specific solution]
@@ -38,7 +190,7 @@ Recommended:
 - [Second recommended improvement with suggestion]
 - [Third recommended improvement with suggestion]
 
-3. SKILLS ANALYSIS
+2. SKILLS ANALYSIS
 
 Technical Skills:
 - [Technical skill 1] - [Proficiency level] - [Where demonstrated]
@@ -49,7 +201,7 @@ Missing Critical Skills:
 - [Missing skill 1] - [Why it's important for the role]
 - [Missing skill 2] - [Why it's important for the role]
 
-4. EXPERIENCE ANALYSIS
+3. EXPERIENCE ANALYSIS
 
 [Most Recent Position]:
 Company: [Company Name]
@@ -65,7 +217,7 @@ Key Achievements:
 - [Specific achievement with metrics]
 - [Specific achievement with metrics]
 
-5. MARKET INSIGHTS
+4. MARKET INSIGHTS
 
 Industry Trends:
 - [Specific trend 1 and its relevance]
@@ -77,7 +229,7 @@ Keyword Analysis:
 - [Key skill/keyword 2] - [Number of occurrences] - [Importance level]
 - [Key skill/keyword 3] - [Number of occurrences] - [Importance level]
 
-6. ACTION PLAN
+5. ACTION PLAN
 
 Immediate Actions (24-48 hours):
 - [Specific immediate action 1]
@@ -94,7 +246,7 @@ Long-term Development (1-3 months):
 - [Specific long-term goal 2]
 - [Specific long-term goal 3]
 
-Ensure each point is specific to the CV content, includes metrics where possible, and provides actionable recommendations. Do not use any placeholders - all content should be based on actual analysis of the CV.`;
+Ensure each point is specific to the CV content, includes metrics where possible, and provides actionable recommendations.`;
 
     const result = await model.generateContent(prompt);
     const response = await result.response;
@@ -111,22 +263,6 @@ Ensure each point is specific to the CV content, includes metrics where possible
           .join('\n')
       };
     });
-
-    // Extract ATS scores
-    const atsSection = sections[0];
-    const atsScores = {};
-    if (atsSection) {
-      const scoreLines = atsSection.content.split('\n');
-      scoreLines.forEach(line => {
-        const [name, scoreStr] = line.split(':').map(s => s.trim());
-        if (name && scoreStr) {
-          const score = parseInt(scoreStr.replace(/[^0-9]/g, ''));
-          if (!isNaN(score)) {
-            atsScores[name.toLowerCase().replace(/\s+/g, '_').replace('score', '')] = score;
-          }
-        }
-      });
-    }
 
     // Structure the improvements
     const improvementsSection = sections.find(s => s.title.toLowerCase().includes('priority improvements'));

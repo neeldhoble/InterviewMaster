@@ -97,13 +97,13 @@ export default function CVRevisionPage() {
                       {/* ATS Score Card */}
                       <div className="bg-[#fcba28]/5 border border-[#fcba28]/20 rounded-lg p-8">
                         <h3 className="text-xl font-semibold text-[#fcba28] mb-6">ATS Compatibility Score</h3>
-                        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
-                          {Object.entries(result.atsScores).map(([key, score]) => (
-                            <div key={key} className="bg-black/20 p-4 rounded-lg">
-                              <div className="relative h-24 w-24 mx-auto mb-3">
+                        <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-6">
+                          {Object.entries(result.atsScores).map(([key, data]) => (
+                            <div key={key} className="bg-black/20 p-6 rounded-lg">
+                              <div className="relative h-24 w-24 mx-auto mb-4">
                                 <div className="absolute inset-0 flex items-center justify-center">
                                   <div className="text-2xl font-bold text-[#fcba28]">
-                                    {score}%
+                                    {data.score}%
                                   </div>
                                 </div>
                                 <svg className="transform -rotate-90 w-24 h-24">
@@ -125,12 +125,25 @@ export default function CVRevisionPage() {
                                     r="38"
                                     cx="48"
                                     cy="48"
-                                    strokeDasharray={`${2.64 * Math.PI * 38 * score/100} ${2.64 * Math.PI * 38}`}
+                                    strokeDasharray={`${2.4 * Math.PI * 38 * data.score/100} ${2.4 * Math.PI * 38}`}
                                   />
                                 </svg>
                               </div>
-                              <div className="text-sm text-center text-gray-400 capitalize">
-                                {key.replace(/_/g, ' ')}
+                              <div className="text-center">
+                                <div className="text-sm font-medium text-gray-300 capitalize mb-2">
+                                  {key.replace(/_/g, ' ')}
+                                </div>
+                                <p className="text-sm text-gray-400 mb-3">{data.feedback}</p>
+                                {data.improvements.length > 0 && (
+                                  <div className="text-left space-y-2">
+                                    {data.improvements.map((improvement, idx) => (
+                                      <div key={idx} className="flex items-start space-x-2 text-xs">
+                                        <div className="w-1.5 h-1.5 rounded-full bg-[#fcba28] mt-1 flex-shrink-0" />
+                                        <p className="text-gray-400">{improvement}</p>
+                                      </div>
+                                    ))}
+                                  </div>
+                                )}
                               </div>
                             </div>
                           ))}
