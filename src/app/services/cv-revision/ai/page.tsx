@@ -28,6 +28,80 @@ export default function CVRevisionPage() {
     setShowResults(false);
   };
 
+  const handleDownload = () => {
+    if (!result) return;
+
+    const analysisResult = {
+      timestamp: new Date().toLocaleString(),
+      atsScores: result.atsScores,
+      improvements: result.improvements,
+      skills: result.skills,
+      experience: result.experience,
+      actionPlan: result.actionPlan
+    };
+
+    const content = `CV Analysis Report
+Generated on: ${analysisResult.timestamp}
+
+ATS COMPATIBILITY SCORES
+${Object.entries(analysisResult.atsScores)
+  .map(([key, data]) => `
+${key.toUpperCase()} SCORE: ${data.score}%
+Feedback: ${data.feedback}
+${data.improvements.length > 0 ? '\nImprovements needed:' : ''}
+${data.improvements.map(imp => `- ${imp}`).join('\n')}
+`).join('\n')}
+
+PRIORITY IMPROVEMENTS
+
+Critical:
+${result.improvements.critical.map(imp => `- ${imp.point}${imp.solution ? `\n  Solution: ${imp.solution}` : ''}`).join('\n')}
+
+Important:
+${result.improvements.important.map(imp => `- ${imp.point}${imp.solution ? `\n  Solution: ${imp.solution}` : ''}`).join('\n')}
+
+Recommended:
+${result.improvements.recommended.map(imp => `- ${imp.point}${imp.solution ? `\n  Solution: ${imp.solution}` : ''}`).join('\n')}
+
+SKILLS ANALYSIS
+
+Technical Skills:
+${result.skills.technical.map(skill => `- ${skill.name} - ${skill.proficiency}${skill.context ? ` - ${skill.context}` : ''}`).join('\n')}
+
+Missing Critical Skills:
+${result.skills.missing.map(skill => `- ${skill.name} - ${skill.importance}`).join('\n')}
+
+EXPERIENCE ANALYSIS
+${result.experience.map(exp => `
+${exp.title}
+Company: ${exp.company}
+Duration: ${exp.duration}
+Key Achievements:
+${exp.achievements.map(achievement => `- ${achievement}`).join('\n')}
+`).join('\n')}
+
+ACTION PLAN
+
+Immediate Actions (24-48 hours):
+${result.actionPlan.immediate.map(action => `- ${action.action}`).join('\n')}
+
+Short-term Goals (1-2 weeks):
+${result.actionPlan.shortTerm.map(action => `- ${action.action}`).join('\n')}
+
+Long-term Development (1-3 months):
+${result.actionPlan.longTerm.map(action => `- ${action.action}`).join('\n')}`;
+
+    const blob = new Blob([content], { type: 'text/plain' });
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `cv-analysis-${new Date().toISOString().split('T')[0]}.txt`;
+    document.body.appendChild(a);
+    a.click();
+    window.URL.revokeObjectURL(url);
+    document.body.removeChild(a);
+  };
+
   return (
     <div className="min-h-screen bg-background text-white pt-20 px-4 md:px-8">
       {/* Background gradients */}
@@ -51,7 +125,7 @@ export default function CVRevisionPage() {
           <h1 className="text-4xl md:text-5xl font-bold mb-6 bg-gradient-to-r from-[#fcba28] via-[#fcd978] to-[#fcba28] text-transparent bg-clip-text">
             AI CV Analysis
           </h1>
-          <p className="text-gray-400 text-lg max-w-2xl mx-auto">
+          <p className="text-gray-400 text-lg max-w-2xl mx-auto mb-6">
             Upload your CV and get instant insights powered by AI. Our analysis covers ATS compatibility,
             skills assessment, and actionable recommendations.
           </p>
@@ -81,15 +155,24 @@ export default function CVRevisionPage() {
                 exit={{ opacity: 0, y: -20 }}
                 className="relative"
               >
-                {/* Back Button */}
-                <Button
-                  onClick={handleReset}
-                  variant="ghost"
-                  className="absolute -top-16 left-0 text-gray-400 hover:text-white"
-                >
-                  <ArrowLeft className="w-4 h-4 mr-2" />
-                  Upload Another CV
-                </Button>
+                {/* Results Header */}
+                <div className="flex justify-between items-center mb-8">
+                  <Button
+                    onClick={handleReset}
+                    variant="ghost"
+                    className="text-gray-400 hover:text-white"
+                  >
+                    <ArrowLeft className="w-4 h-4 mr-2" />
+                    Upload Another CV
+                  </Button>
+                  <Button
+                    onClick={handleDownload}
+                    className="bg-[#fcba28] hover:bg-[#fcba28]/90 text-black font-semibold"
+                  >
+                    <Download className="w-4 h-4 mr-2" />
+                    Download Analysis Report
+                  </Button>
+                </div>
 
                 <div className="space-y-8">
                   {result && (
