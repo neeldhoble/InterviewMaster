@@ -62,8 +62,8 @@ const navigationMenus = [
     links: [
       { href: '/products/resume-builder', label: 'Resume Builder', icon: FaFile, description: 'Create professional resumes with AI assistance' },
       { href: '/products/mock-interviews', label: 'Mock Interviews', icon: FaUserTie, description: 'Practice with AI-powered interview simulations' },
-      { href: '/products/ai-feedback', label: 'AI Feedback', icon: FaRobot, description: 'Get instant feedback on your interview responses' },
-      { href: '/products/coding-practice', label: 'Coding Practice', icon: FaCode, description: 'Improve your coding skills with practice problems' },
+      // { href: '/products/ai-feedback', label: 'AI Feedback', icon: FaRobot, description: 'Get instant feedback on your interview responses' },
+      // { href: '/products/coding-practice', label: 'Coding Practice', icon: FaCode, description: 'Improve your coding skills with practice problems' },
       { href: '/products/aptitude', label: 'Aptitude Practice', icon: FaBrain, description: 'Enhance your logical and numerical abilities' },
       { href: '/products/interview-questions', label: 'Interview Questions', icon: FaCircleQuestion, description: 'Access curated interview questions' },
       { href: '/products/Practice-Tests', label: 'Practice Tests', icon: FaClipboard, description: 'Take industry-specific practice tests' },
@@ -75,7 +75,7 @@ const navigationMenus = [
     links: [
       { href: '/services/consultation', label: 'Career Consultation', icon: FaComments, description: 'Get expert career guidance' },
       { href: '/services/cv-revision', label: 'CV Revision', icon: FaPen, description: 'Professional CV review and optimization' },
-      { href: '/services/mock-tests', label: 'Mock Tests', icon: FaListCheck, description: 'Practice with real interview scenarios' },
+      // { href: '/services/mock-tests', label: 'Mock Tests', icon: FaListCheck, description: 'Practice with real interview scenarios' },
       { href: '/services/interview-coaching', label: 'Interview Coaching', icon: FaChalkboard, description: 'One-on-one interview preparation' },
       { href: '/services/personal-branding', label: 'Personal Branding', icon: FaCircleUser, description: 'Build your professional brand' },
       { href: '/services/salary-negotiation', label: 'Salary Negotiation', icon: FaHandshake, description: 'Learn effective negotiation strategies' },

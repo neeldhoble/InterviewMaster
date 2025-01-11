@@ -25,8 +25,8 @@ const navigationMenus = [
     title: 'Products',
     links: [
       { href: '/products/mock-interviews', label: 'Mock Interviews' },
-      { href: '/products/ai-feedback', label: 'AI Feedback' },
-      { href: '/products/coding-practice', label: 'Coding Practice' },
+      // { href: '/products/ai-feedback', label: 'AI Feedback' },
+      // { href: '/products/coding-practice', label: 'Coding Practice' },
       { href: '/products/aptitude', label: 'Aptitude Practice' },
       { href: '/products/resume-builder', label: 'Resume Builder' },
       { href: '/products/interview-questions', label: 'Interview-Questions' },
@@ -38,7 +38,7 @@ const navigationMenus = [
     links: [
       { href: '/services/consultation', label: 'Career Consultation' },
       { href: '/services/cv-revision', label: 'CV Revision' },
-      { href: '/services/mock-tests', label: 'Mock Tests' },
+      // { href: '/services/mock-tests', label: 'Mock Tests' },
       { href: '/services/interview-coaching', label: 'Interview Coaching' },
       { href: '/services/personal-branding', label: 'Personal Branding' },
       { href: '/services/salary-negotiation', label: 'Salary Negotiation' },
