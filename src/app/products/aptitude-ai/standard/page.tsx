@@ -3,108 +3,238 @@
 import { motion } from "framer-motion";
 import { MaxWidthWrapper } from "@/components/MaxWidthWrapper";
 import Link from "next/link";
+import {
+  FaBrain,
+  FaCalculator,
+  FaChartLine,
+  FaTable,
+  FaPuzzlePiece,
+  FaSquareRootVariable,
+  FaClock,
+  FaTrophy,
+} from "react-icons/fa6";
 
-const TopicCard = ({ title, questionsCount, difficulty }: {
+const TopicCard = ({
+  icon: Icon,
+  title,
+  description,
+  questionCount,
+  difficulty,
+  color,
+}: {
+  icon: any;
   title: string;
-  questionsCount: number;
-  difficulty: "Easy" | "Medium" | "Hard";
-}) => {
-  const difficultyColor = {
-    Easy: "text-green-400",
-    Medium: "text-yellow-400",
-    Hard: "text-red-400"
-  }[difficulty];
+  description: string;
+  questionCount: number;
+  difficulty: string;
+  color: string;
+}) => (
+  <motion.div
+    whileHover={{ scale: 1.05, y: -5 }}
+    className="p-6 rounded-xl bg-black/40 backdrop-blur-lg border border-[#fcba28]/20 relative overflow-hidden group"
+  >
+    {/* Background glow */}
+    <div className={`absolute inset-0 bg-gradient-to-br ${color} opacity-5 group-hover:opacity-10 transition-opacity`} />
+    
+    <div className="relative z-10">
+      <div className="flex items-start justify-between mb-4">
+        <div className={`w-12 h-12 rounded-lg bg-gradient-to-br ${color} flex items-center justify-center`}>
+          <Icon className="text-white text-xl" />
+        </div>
+        <div className="text-right">
+          <span className="text-sm text-gray-400">Questions</span>
+          <p className="text-2xl font-bold text-[#fcba28]">{questionCount}</p>
+        </div>
+      </div>
+      
+      <h3 className="text-xl font-bold text-white mb-2">{title}</h3>
+      <p className="text-gray-300 mb-4">{description}</p>
+      
+      <div className="flex items-center justify-between">
+        <span className={`px-3 py-1 rounded-full text-sm ${
+          difficulty === "Easy" ? "bg-green-500/20 text-green-400" :
+          difficulty === "Medium" ? "bg-yellow-500/20 text-yellow-400" :
+          "bg-red-500/20 text-red-400"
+        }`}>
+          {difficulty}
+        </span>
+        <Link
+          href={`/products/aptitude-ai/standard/${title.toLowerCase().replace(/\s+/g, "-")}`}
+          className="text-[#fcba28] hover:text-[#ffd700] transition-colors inline-flex items-center gap-2"
+        >
+          Practice Now →
+        </Link>
+      </div>
+    </div>
+  </motion.div>
+);
 
-  return (
-    <motion.div
-      whileHover={{ scale: 1.05 }}
-      className="p-6 rounded-xl bg-black/40 backdrop-blur-lg border border-[#fcba28]/20"
-    >
-      <h3 className="text-xl font-bold text-[#fcba28] mb-2">{title}</h3>
-      <p className="text-gray-300 text-sm mb-2">{questionsCount} questions</p>
-      <p className={`${difficultyColor} text-sm`}>{difficulty}</p>
-      <Link
-        href={`/products/aptitude-ai/standard/${title.toLowerCase().replace(/\s+/g, '-')}`}
-        className="mt-4 inline-block px-4 py-2 bg-[#fcba28] text-black rounded-full text-sm font-semibold hover:bg-[#ffd700] transition-colors"
-      >
-        Practice Now
-      </Link>
-    </motion.div>
-  );
-};
+const StatsCard = ({ icon: Icon, value, label }: { icon: any; value: string; label: string }) => (
+  <motion.div
+    whileHover={{ scale: 1.05 }}
+    className="p-6 rounded-xl bg-black/40 backdrop-blur-lg border border-[#fcba28]/20 flex items-center gap-4"
+  >
+    <div className="w-12 h-12 rounded-lg bg-[#fcba28]/10 flex items-center justify-center text-[#fcba28]">
+      <Icon className="text-2xl" />
+    </div>
+    <div>
+      <p className="text-2xl font-bold text-white">{value}</p>
+      <p className="text-gray-400">{label}</p>
+    </div>
+  </motion.div>
+);
 
 export default function StandardPracticePage() {
   const topics = [
-    { title: "Numerical Ability", questionsCount: 200, difficulty: "Medium" },
-    { title: "Verbal Reasoning", questionsCount: 150, difficulty: "Hard" },
-    { title: "Logical Reasoning", questionsCount: 180, difficulty: "Medium" },
-    { title: "Data Interpretation", questionsCount: 120, difficulty: "Hard" },
-    { title: "Non-verbal Reasoning", questionsCount: 160, difficulty: "Medium" },
-    { title: "Basic Mathematics", questionsCount: 250, difficulty: "Easy" },
-  ] as const;
+    {
+      icon: FaCalculator,
+      title: "Numerical Ability",
+      description: "Master arithmetic, percentages, and mathematical concepts",
+      questionCount: 250,
+      difficulty: "Medium",
+      color: "from-blue-500 to-cyan-500",
+    },
+    {
+      icon: FaBrain,
+      title: "Verbal Reasoning",
+      description: "Improve logical deduction and verbal comprehension",
+      questionCount: 200,
+      difficulty: "Hard",
+      color: "from-purple-500 to-pink-500",
+    },
+    {
+      icon: FaPuzzlePiece,
+      title: "Logical Reasoning",
+      description: "Enhance problem-solving and analytical thinking",
+      questionCount: 180,
+      difficulty: "Medium",
+      color: "from-orange-500 to-red-500",
+    },
+    {
+      icon: FaChartLine,
+      title: "Data Interpretation",
+      description: "Analyze graphs, charts, and statistical data",
+      questionCount: 150,
+      difficulty: "Hard",
+      color: "from-green-500 to-emerald-500",
+    },
+    {
+      icon: FaTable,
+      title: "Non-verbal Reasoning",
+      description: "Practice with patterns and spatial relationships",
+      questionCount: 220,
+      difficulty: "Medium",
+      color: "from-yellow-500 to-amber-500",
+    },
+    {
+      icon: FaSquareRootVariable,
+      title: "Quantitative Aptitude",
+      description: "Advanced mathematical and statistical concepts",
+      questionCount: 280,
+      difficulty: "Hard",
+      color: "from-indigo-500 to-violet-500",
+    },
+  ];
 
   return (
     <main className="min-h-screen bg-background relative overflow-hidden">
       {/* Background Effects */}
       <div className="absolute inset-0">
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,#fcba2810_0%,transparent_65%)] blur-3xl" />
+        <motion.div
+          animate={{
+            backgroundPosition: ["0% 0%", "100% 100%"],
+          }}
+          transition={{
+            duration: 20,
+            repeat: Infinity,
+            repeatType: "reverse",
+          }}
+          className="absolute inset-0 bg-[radial-gradient(circle_at_center,#fcba2810_0%,transparent_65%)] blur-3xl"
+        />
         <div className="absolute inset-0 bg-[linear-gradient(to_right,#80808012_1px,transparent_1px),linear-gradient(to_bottom,#80808012_1px,transparent_1px)] bg-[size:24px_24px]" />
       </div>
 
       <div className="relative z-10">
         <MaxWidthWrapper>
           {/* Hero Section */}
-          <div className="flex flex-col items-center justify-center min-h-[40vh] text-center pt-20">
+          <div className="text-center py-20">
             <motion.h1
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
-              className="text-4xl md:text-5xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-[#fcba28] to-[#ffd700] mb-6"
+              className="text-5xl font-bold text-white mb-6"
             >
-              Standard Practice
+              Standard{" "}
+              <span className="bg-clip-text text-transparent bg-gradient-to-r from-[#fcba28] to-[#ffd700]">
+                Practice
+              </span>{" "}
+              Mode
             </motion.h1>
             <motion.p
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.2 }}
-              className="text-xl text-gray-300 max-w-2xl mb-12"
+              className="text-gray-200 text-xl max-w-2xl mx-auto mb-12"
             >
-              Practice with our comprehensive collection of AI-enhanced aptitude questions
+              Choose from our comprehensive collection of aptitude topics and practice at your own pace
             </motion.p>
+
+            {/* Stats Section */}
+            <div className="grid md:grid-cols-3 gap-6 mb-20">
+              <StatsCard
+                icon={FaBrain}
+                value="1,280+"
+                label="Practice Questions"
+              />
+              <StatsCard
+                icon={FaClock}
+                value="6"
+                label="Topic Categories"
+              />
+              <StatsCard
+                icon={FaTrophy}
+                value="24/7"
+                label="AI Assistance"
+              />
+            </div>
           </div>
 
           {/* Topics Grid */}
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6 py-12">
-            {topics.map((topic, index) => (
-              <motion.div
-                key={topic.title}
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.2 + index * 0.1 }}
-              >
-                <TopicCard {...topic} />
-              </motion.div>
-            ))}
-          </div>
-
-          {/* Stats Section */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.8 }}
-            className="grid md:grid-cols-3 gap-8 py-16 text-center"
+            transition={{ delay: 0.4 }}
+            className="grid md:grid-cols-2 lg:grid-cols-3 gap-8 py-12"
           >
-            <div>
-              <h3 className="text-4xl font-bold text-[#fcba28]">1000+</h3>
-              <p className="text-gray-300 mt-2">Practice Questions</p>
-            </div>
-            <div>
-              <h3 className="text-4xl font-bold text-[#fcba28]">6</h3>
-              <p className="text-gray-300 mt-2">Topic Categories</p>
-            </div>
-            <div>
-              <h3 className="text-4xl font-bold text-[#fcba28]">24/7</h3>
-              <p className="text-gray-300 mt-2">AI Assistance</p>
-            </div>
+            {topics.map((topic, index) => (
+              <TopicCard key={topic.title} {...topic} />
+            ))}
+          </motion.div>
+
+          {/* CTA Section */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            className="text-center py-20"
+          >
+            <h2 className="text-3xl font-bold text-white mb-6">
+              Ready to Start Practicing?
+            </h2>
+            <p className="text-gray-300 mb-8 max-w-2xl mx-auto">
+              Choose any topic to begin your practice session. Our AI assistant will provide instant feedback and explanations.
+            </p>
+            <Link
+              href="/products/aptitude-ai/standard/numerical-ability"
+              className="px-8 py-4 bg-[#fcba28] text-black rounded-full font-semibold inline-flex items-center gap-2 hover:bg-[#ffd700] transition-colors"
+            >
+              Start with Numerical Ability
+              <motion.span
+                animate={{ x: [0, 5, 0] }}
+                transition={{ duration: 1, repeat: Infinity }}
+              >
+                →
+              </motion.span>
+            </Link>
           </motion.div>
         </MaxWidthWrapper>
       </div>

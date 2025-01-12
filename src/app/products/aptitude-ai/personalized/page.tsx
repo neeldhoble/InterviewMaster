@@ -2,162 +2,282 @@
 
 import { motion } from "framer-motion";
 import { MaxWidthWrapper } from "@/components/MaxWidthWrapper";
-import Link from "next/link";
+import { useState } from "react";
+import { FaBrain, FaRobot, FaChartLine, FaGears } from "react-icons/fa6";
+import { generatePersonalizedTest, PersonalizedTest } from "@/services/gemini-ai";
 
-const StepCard = ({ number, title, description }: {
-  number: number;
-  title: string;
-  description: string;
+const PreferenceButton = ({ 
+  label, 
+  selected, 
+  onClick 
+}: { 
+  label: string; 
+  selected: boolean; 
+  onClick: () => void;
 }) => (
-  <motion.div
-    whileHover={{ scale: 1.02 }}
-    className="p-6 rounded-xl bg-black/40 backdrop-blur-lg border border-[#fcba28]/20 relative"
+  <motion.button
+    whileHover={{ scale: 1.05 }}
+    whileTap={{ scale: 0.95 }}
+    onClick={onClick}
+    className={`px-6 py-3 rounded-full text-sm font-semibold transition-all ${
+      selected
+        ? "bg-[#fcba28] text-black"
+        : "bg-black/20 text-white border border-[#fcba28]/20 hover:border-[#fcba28]/40"
+    }`}
   >
-    <div className="absolute -top-4 -left-4 w-12 h-12 bg-[#fcba28] rounded-full flex items-center justify-center text-black font-bold text-xl">
-      {number}
-    </div>
-    <h3 className="text-xl font-bold text-[#fcba28] mb-3 mt-2">{title}</h3>
-    <p className="text-gray-300">{description}</p>
+    {label}
+  </motion.button>
+);
+
+const LevelSelector = ({
+  currentLevel,
+  onSelect,
+}: {
+  currentLevel: string;
+  onSelect: (level: string) => void;
+}) => (
+  <div className="flex gap-4">
+    {["Beginner", "Intermediate", "Advanced"].map((level) => (
+      <motion.button
+        key={level}
+        whileHover={{ scale: 1.05 }}
+        whileTap={{ scale: 0.95 }}
+        onClick={() => onSelect(level)}
+        className={`px-8 py-4 rounded-xl font-semibold transition-all ${
+          currentLevel === level
+            ? "bg-[#fcba28] text-black"
+            : "bg-black/20 text-white border border-[#fcba28]/20 hover:border-[#fcba28]/40"
+        }`}
+      >
+        {level}
+      </motion.button>
+    ))}
+  </div>
+);
+
+const AIAnimation = () => (
+  <motion.div
+    className="relative w-full h-[400px]"
+    initial={{ opacity: 0 }}
+    animate={{ opacity: 1 }}
+  >
+    <motion.div
+      className="absolute inset-0 bg-gradient-to-r from-[#fcba28]/10 via-white/5 to-[#fcba28]/10 rounded-full blur-3xl"
+      animate={{
+        scale: [1, 1.2, 1],
+        opacity: [0.3, 0.5, 0.3],
+      }}
+      transition={{
+        duration: 4,
+        repeat: Infinity,
+        ease: "easeInOut",
+      }}
+    />
+    <motion.div
+      className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-8xl text-[#fcba28]"
+      animate={{
+        scale: [1, 1.1, 1],
+        rotate: [0, 5, -5, 0],
+      }}
+      transition={{
+        duration: 4,
+        repeat: Infinity,
+        ease: "easeInOut",
+      }}
+    >
+      <FaRobot />
+    </motion.div>
+    {/* Orbiting elements */}
+    {[0, 60, 120, 180, 240, 300].map((angle, i) => (
+      <motion.div
+        key={angle}
+        className="absolute top-1/2 left-1/2 w-8 h-8 text-white"
+        animate={{
+          x: Math.cos((angle + i * 30) * (Math.PI / 180)) * 150,
+          y: Math.sin((angle + i * 30) * (Math.PI / 180)) * 150,
+          rotate: 360,
+        }}
+        transition={{
+          duration: 10,
+          repeat: Infinity,
+          delay: i * 0.5,
+          ease: "linear",
+        }}
+      >
+        {i % 2 === 0 ? <FaBrain /> : <FaChartLine />}
+      </motion.div>
+    ))}
   </motion.div>
 );
 
 export default function PersonalizedTestPage() {
+  const [level, setLevel] = useState("");
+  const [preferences, setPreferences] = useState<string[]>([]);
+  const [isGenerating, setIsGenerating] = useState(false);
+  const [test, setTest] = useState<PersonalizedTest | null>(null);
+
+  const topics = [
+    "Numerical Ability",
+    "Verbal Reasoning",
+    "Logical Reasoning",
+    "Data Interpretation",
+    "Non-verbal Reasoning",
+    "Basic Mathematics",
+  ];
+
+  const togglePreference = (topic: string) => {
+    setPreferences((prev) =>
+      prev.includes(topic)
+        ? prev.filter((t) => t !== topic)
+        : [...prev, topic]
+    );
+  };
+
+  const generateTest = async () => {
+    if (!level || preferences.length === 0) {
+      alert("Please select your level and at least one topic preference");
+      return;
+    }
+
+    setIsGenerating(true);
+    try {
+      const testData = await generatePersonalizedTest(level, preferences);
+      setTest(testData);
+    } catch (error) {
+      console.error("Error generating test:", error);
+      alert("Failed to generate test. Please try again.");
+    } finally {
+      setIsGenerating(false);
+    }
+  };
+
   return (
     <main className="min-h-screen bg-background relative overflow-hidden">
       {/* Background Effects */}
       <div className="absolute inset-0">
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,#fcba2810_0%,transparent_65%)] blur-3xl" />
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_80%_20%,#fcba2815_0%,transparent_50%)]" />
+        <motion.div
+          animate={{
+            backgroundPosition: ["0% 0%", "100% 100%"],
+          }}
+          transition={{
+            duration: 20,
+            repeat: Infinity,
+            repeatType: "reverse",
+          }}
+          className="absolute inset-0 bg-[radial-gradient(circle_at_center,#fcba2810_0%,transparent_65%)] blur-3xl"
+        />
+        <div className="absolute inset-0 bg-[linear-gradient(to_right,#80808012_1px,transparent_1px),linear-gradient(to_bottom,#80808012_1px,transparent_1px)] bg-[size:24px_24px]" />
       </div>
 
       <div className="relative z-10">
         <MaxWidthWrapper>
           {/* Hero Section */}
-          <div className="flex flex-col items-center justify-center min-h-[40vh] text-center pt-20">
-            <motion.h1
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              className="text-4xl md:text-5xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-[#fcba28] to-[#ffd700] mb-6"
-            >
-              Personalized AI Test
-            </motion.h1>
-            <motion.p
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.2 }}
-              className="text-xl text-gray-300 max-w-2xl mb-12"
-            >
-              Take a customized aptitude test tailored to your specific needs and skill level
-            </motion.p>
+          <div className="grid lg:grid-cols-2 gap-12 items-center py-20">
+            <div>
+              <motion.h1
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="text-5xl font-bold text-white mb-6"
+              >
+                Your{" "}
+                <span className="bg-clip-text text-transparent bg-gradient-to-r from-[#fcba28] to-[#ffd700]">
+                  Personalized
+                </span>{" "}
+                Aptitude Journey
+              </motion.h1>
+              <motion.p
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.2 }}
+                className="text-gray-200 text-lg mb-8"
+              >
+                Experience a unique learning path crafted by our AI system based on your skill level and preferences.
+              </motion.p>
+            </div>
+            <AIAnimation />
           </div>
 
-          {/* Steps Section */}
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8 py-12">
-            <motion.div
-              initial={{ opacity: 0, x: -20 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ delay: 0.3 }}
-            >
-              <StepCard
-                number={1}
-                title="Initial Assessment"
-                description="Complete a brief assessment to help our AI understand your current skill level"
-              />
-            </motion.div>
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.4 }}
-            >
-              <StepCard
-                number={2}
-                title="AI Analysis"
-                description="Our AI analyzes your performance and creates a personalized test plan"
-              />
-            </motion.div>
-            <motion.div
-              initial={{ opacity: 0, x: 20 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ delay: 0.5 }}
-            >
-              <StepCard
-                number={3}
-                title="Custom Test"
-                description="Take your personalized test with questions matched to your abilities"
-              />
-            </motion.div>
-          </div>
-
-          {/* Features Grid */}
-          <div className="grid md:grid-cols-2 gap-8 py-16">
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.6 }}
-              className="p-8 rounded-xl bg-black/30 backdrop-blur-lg"
-            >
-              <h3 className="text-2xl font-bold text-[#fcba28] mb-4">Why Personalized?</h3>
-              <ul className="space-y-4 text-gray-300">
-                <li className="flex items-center gap-3">
-                  <span className="text-[#fcba28]">✓</span>
-                  Tailored difficulty level
-                </li>
-                <li className="flex items-center gap-3">
-                  <span className="text-[#fcba28]">✓</span>
-                  Focus on your weak areas
-                </li>
-                <li className="flex items-center gap-3">
-                  <span className="text-[#fcba28]">✓</span>
-                  Adaptive question selection
-                </li>
-                <li className="flex items-center gap-3">
-                  <span className="text-[#fcba28]">✓</span>
-                  Detailed performance insights
-                </li>
-              </ul>
-            </motion.div>
-
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.7 }}
-              className="p-8 rounded-xl bg-black/30 backdrop-blur-lg"
-            >
-              <h3 className="text-2xl font-bold text-[#fcba28] mb-4">What You'll Get</h3>
-              <ul className="space-y-4 text-gray-300">
-                <li className="flex items-center gap-3">
-                  <span className="text-[#fcba28]">✓</span>
-                  Personalized question set
-                </li>
-                <li className="flex items-center gap-3">
-                  <span className="text-[#fcba28]">✓</span>
-                  AI-powered explanations
-                </li>
-                <li className="flex items-center gap-3">
-                  <span className="text-[#fcba28]">✓</span>
-                  Progress tracking
-                </li>
-                <li className="flex items-center gap-3">
-                  <span className="text-[#fcba28]">✓</span>
-                  Improvement recommendations
-                </li>
-              </ul>
-            </motion.div>
-          </div>
-
-          {/* CTA Section */}
+          {/* Test Configuration Section */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.8 }}
-            className="text-center py-16"
+            transition={{ delay: 0.4 }}
+            className="max-w-3xl mx-auto py-12"
           >
-            <Link
-              href="/products/aptitude-ai/personalized/start"
-              className="px-8 py-4 bg-[#fcba28] text-black rounded-full font-semibold hover:bg-[#ffd700] transition-colors inline-block"
-            >
-              Start Your Personalized Test
-            </Link>
+            <div className="space-y-12">
+              {/* Level Selection */}
+              <div>
+                <h2 className="text-2xl font-bold text-white mb-6">Select Your Level</h2>
+                <LevelSelector currentLevel={level} onSelect={setLevel} />
+              </div>
+
+              {/* Topic Preferences */}
+              <div>
+                <h2 className="text-2xl font-bold text-white mb-6">Choose Your Focus Areas</h2>
+                <div className="flex flex-wrap gap-4">
+                  {topics.map((topic) => (
+                    <PreferenceButton
+                      key={topic}
+                      label={topic}
+                      selected={preferences.includes(topic)}
+                      onClick={() => togglePreference(topic)}
+                    />
+                  ))}
+                </div>
+              </div>
+
+              {/* Generate Button */}
+              <div className="text-center">
+                <motion.button
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                  onClick={generateTest}
+                  disabled={isGenerating}
+                  className="px-8 py-4 bg-[#fcba28] text-black rounded-full font-semibold inline-flex items-center gap-2 disabled:opacity-50"
+                >
+                  {isGenerating ? (
+                    <>
+                      <FaGears className="animate-spin" />
+                      Generating Your Test...
+                    </>
+                  ) : (
+                    <>
+                      <FaRobot />
+                      Generate Personalized Test
+                    </>
+                  )}
+                </motion.button>
+              </div>
+            </div>
+          </motion.div>
+
+          {/* Features Section */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            className="py-20"
+          >
+            <h2 className="text-3xl font-bold text-center text-white mb-12">
+              Why Choose Personalized Testing?
+            </h2>
+            <div className="grid md:grid-cols-3 gap-8">
+              <div className="p-6 rounded-xl bg-black/40 backdrop-blur-lg border border-[#fcba28]/20">
+                <FaBrain className="text-[#fcba28] text-3xl mb-4" />
+                <h3 className="text-xl font-bold text-white mb-2">Adaptive Learning</h3>
+                <p className="text-gray-200">Questions that adapt to your skill level and learning pace</p>
+              </div>
+              <div className="p-6 rounded-xl bg-black/40 backdrop-blur-lg border border-[#fcba28]/20">
+                <FaRobot className="text-[#fcba28] text-3xl mb-4" />
+                <h3 className="text-xl font-bold text-white mb-2">AI-Powered Insights</h3>
+                <p className="text-gray-200">Detailed feedback and improvement suggestions from our AI</p>
+              </div>
+              <div className="p-6 rounded-xl bg-black/40 backdrop-blur-lg border border-[#fcba28]/20">
+                <FaChartLine className="text-[#fcba28] text-3xl mb-4" />
+                <h3 className="text-xl font-bold text-white mb-2">Progress Tracking</h3>
+                <p className="text-gray-200">Monitor your improvement with detailed analytics</p>
+              </div>
+            </div>
           </motion.div>
         </MaxWidthWrapper>
       </div>
