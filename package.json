@@ -108,6 +108,7 @@
     "figma-api": "^2.0.1-beta",
     "figma-js": "^1.16.1-0",
     "postcss": "^8",
+    "sharp": "^0.33.5",
     "tailwindcss": "^3.4.1",
     "typescript": "^5"
   }

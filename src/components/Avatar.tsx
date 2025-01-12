@@ -1,18 +1,27 @@
 "use client";
 
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import { useState, useEffect } from 'react';
+import Image from 'next/image';
 
 interface AvatarProps {
-  avatarState: 'idle' | 'speaking' | 'thinking' | 'greeting';
+  avatarState: 'idle' | 'speaking' | 'thinking' | 'demonstrating';
   className?: string;
 }
 
-export default function Avatar({ avatarState = 'idle', className = '' }: AvatarProps) {
-  const [blinkInterval, setBlinkInterval] = useState<NodeJS.Timeout | null>(null);
+const robotImages = {
+  idle: '/images/robot/robot-idle.png',
+  speaking: '/images/robot/robot-speaking.png',
+  thinking: '/images/robot/robot-thinking.png',
+  demonstrating: '/images/robot/robot-demonstrating.png'
+};
 
-  // Animation variants
-  const bodyVariants = {
+export default function Avatar({ avatarState = 'idle', className = '' }: AvatarProps) {
+  const [glowIntensity, setGlowIntensity] = useState(0);
+  const [eyeColor, setEyeColor] = useState('#4ae3f0');
+
+  // Animation variants for the container
+  const containerVariants = {
     idle: {
       y: [0, -5, 0],
       transition: {
@@ -28,181 +37,120 @@ export default function Avatar({ avatarState = 'idle', className = '' }: AvatarP
         duration: 0.5,
         ease: "easeInOut"
       }
-    }
-  };
-
-  const headVariants = {
-    idle: {
-      rotate: [0, -1, 0, 1, 0],
+    },
+    thinking: {
+      rotate: [-1, 1, -1],
       transition: {
         repeat: Infinity,
-        duration: 4,
+        duration: 2,
         ease: "easeInOut"
       }
     },
-    speaking: {
-      rotate: [0, -0.5, 0, 0.5, 0],
+    demonstrating: {
+      scale: [1, 1.02, 1],
       transition: {
         repeat: Infinity,
-        duration: 0.3,
-        ease: "linear"
-      }
-    }
-  };
-
-  const mouthVariants = {
-    idle: {
-      d: "M 25,40 Q 40,43 55,40",
-      transition: {
-        duration: 0.5
-      }
-    },
-    speaking: {
-      d: [
-        "M 25,40 Q 40,43 55,40",
-        "M 25,40 Q 40,48 55,40",
-        "M 25,40 Q 40,43 55,40"
-      ],
-      transition: {
-        repeat: Infinity,
-        duration: 0.4,
+        duration: 1.5,
         ease: "easeInOut"
       }
     }
   };
 
-  const eyeVariants = {
-    open: { scaleY: 1 },
-    closed: { scaleY: 0.1 }
-  };
-
+  // Glow effect animation
   useEffect(() => {
-    // Random blinking
-    const startBlinking = () => {
-      const interval = setInterval(() => {
-        const shouldBlink = Math.random() > 0.7;
-        if (shouldBlink) {
-          setEyesOpen(false);
-          setTimeout(() => setEyesOpen(true), 150);
-        }
-      }, 2000);
+    const glowAnimation = setInterval(() => {
+      setGlowIntensity(prev => (prev + 1) % 20);
+    }, 50);
 
-      setBlinkInterval(interval);
-    };
-
-    startBlinking();
-    return () => {
-      if (blinkInterval) clearInterval(blinkInterval);
-    };
+    return () => clearInterval(glowAnimation);
   }, []);
 
-  const [eyesOpen, setEyesOpen] = useState(true);
+  // Eye color animation based on state
+  useEffect(() => {
+    const colors = {
+      idle: '#4ae3f0',
+      speaking: '#4af0a7',
+      thinking: '#f04a4a',
+      demonstrating: '#f0e54a'
+    };
+    setEyeColor(colors[avatarState]);
+  }, [avatarState]);
 
   return (
     <div className={`relative w-full h-full ${className}`}>
-      <motion.svg
-        viewBox="0 0 200 200"
-        className="w-full h-full"
-        initial="idle"
+      <motion.div
+        className="relative w-full h-full"
+        variants={containerVariants}
         animate={avatarState}
       >
-        {/* Background gradient */}
-        <defs>
-          <linearGradient id="avatarGradient" x1="0%" y1="0%" x2="100%" y2="100%">
-            <stop offset="0%" style={{ stopColor: '#fcba28', stopOpacity: 0.1 }} />
-            <stop offset="100%" style={{ stopColor: '#fcd978', stopOpacity: 0.1 }} />
-          </linearGradient>
-        </defs>
-
-        {/* Avatar body group */}
-        <motion.g
-          variants={bodyVariants}
-          style={{ originX: 0.5, originY: 0.5 }}
-        >
-          {/* Suit */}
-          <path
-            d="M 60,120 L 100,180 L 140,120 L 120,100 L 80,100 Z"
-            fill="#2c3e50"
-            stroke="#34495e"
-            strokeWidth="2"
-          />
-          
-          {/* Shirt */}
-          <path
-            d="M 80,100 L 100,120 L 120,100 L 110,90 L 90,90 Z"
-            fill="#ecf0f1"
-            stroke="#bdc3c7"
-            strokeWidth="1"
+        {/* Robot Base Image */}
+        <div className="relative w-full h-full">
+          <Image
+            src={robotImages[avatarState]}
+            alt="Robot Avatar"
+            layout="fill"
+            objectFit="contain"
+            priority
+            className="drop-shadow-2xl"
           />
 
-          {/* Tie */}
-          <path
-            d="M 97,100 L 103,100 L 100,120 Z"
-            fill="#e74c3c"
-            stroke="#c0392b"
-            strokeWidth="1"
+          {/* Glowing Effects */}
+          <div 
+            className="absolute inset-0 pointer-events-none"
+            style={{
+              background: `radial-gradient(circle at 50% 50%, ${eyeColor}${Math.floor(glowIntensity).toString(16)}, transparent 70%)`
+            }}
           />
 
-          {/* Head group */}
-          <motion.g
-            variants={headVariants}
-            style={{ originX: 0.5, originY: 0.5 }}
-          >
-            {/* Head shape */}
-            <circle
-              cx="100"
-              cy="70"
-              r="30"
-              fill="#ffd977"
-              stroke="#34495e"
-              strokeWidth="2"
-            />
+          {/* Circuit Pattern Overlay */}
+          <div className="absolute inset-0 pointer-events-none bg-[url('/images/robot/circuit-pattern.png')] opacity-10" />
+        </div>
 
-            {/* Eyes group */}
-            <motion.g
-              animate={eyesOpen ? "open" : "closed"}
-              variants={eyeVariants}
-              style={{ originY: "70%" }}
-            >
-              {/* Left eye */}
-              <circle cx="85" cy="65" r="3" fill="#34495e" />
-              {/* Right eye */}
-              <circle cx="115" cy="65" r="3" fill="#34495e" />
-            </motion.g>
-
-            {/* Eyebrows */}
-            <path
-              d="M 80,58 L 90,60"
-              stroke="#34495e"
-              strokeWidth="2"
-              strokeLinecap="round"
-            />
-            <path
-              d="M 110,60 L 120,58"
-              stroke="#34495e"
-              strokeWidth="2"
-              strokeLinecap="round"
-            />
-
-            {/* Mouth */}
-            <motion.path
-              variants={mouthVariants}
-              fill="none"
-              stroke="#34495e"
-              strokeWidth="2"
-              strokeLinecap="round"
-            />
-          </motion.g>
-        </motion.g>
-
-        {/* Professional accessories */}
-        <path
-          d="M 70,65 Q 65,60 70,55"
-          stroke="#34495e"
-          strokeWidth="2"
-          fill="none"
-        />
-      </motion.svg>
+        {/* State Indicators */}
+        <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 flex gap-2">
+          <motion.div
+            animate={{
+              opacity: [0.5, 1, 0.5],
+              scale: [1, 1.1, 1]
+            }}
+            transition={{
+              duration: 1,
+              repeat: Infinity,
+              ease: "easeInOut"
+            }}
+            className="w-2 h-2 rounded-full"
+            style={{ backgroundColor: eyeColor }}
+          />
+          <motion.div
+            animate={{
+              opacity: [0.5, 1, 0.5],
+              scale: [1, 1.1, 1]
+            }}
+            transition={{
+              duration: 1,
+              repeat: Infinity,
+              ease: "easeInOut",
+              delay: 0.3
+            }}
+            className="w-2 h-2 rounded-full"
+            style={{ backgroundColor: eyeColor }}
+          />
+          <motion.div
+            animate={{
+              opacity: [0.5, 1, 0.5],
+              scale: [1, 1.1, 1]
+            }}
+            transition={{
+              duration: 1,
+              repeat: Infinity,
+              ease: "easeInOut",
+              delay: 0.6
+            }}
+            className="w-2 h-2 rounded-full"
+            style={{ backgroundColor: eyeColor }}
+          />
+        </div>
+      </motion.div>
     </div>
   );
 }
