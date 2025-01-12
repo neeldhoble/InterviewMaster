@@ -7,6 +7,9 @@ interface Question {
   options: string[];
   correctAnswer: string;
   timeEstimate: number;
+  skillsTested?: string[];
+  category?: string;
+  subTopic?: string;
 }
 
 interface QuestionCardProps {
@@ -15,6 +18,9 @@ interface QuestionCardProps {
   selectedOption: string | null;
   onSelectOption: (option: string) => void;
   difficulty: string;
+  performanceMetrics?: {
+    streaks: { current: number; best: number };
+  };
 }
 
 export default function QuestionCard({
@@ -23,67 +29,108 @@ export default function QuestionCard({
   selectedOption,
   onSelectOption,
   difficulty,
+  performanceMetrics
 }: QuestionCardProps) {
+  const timeProgress = (timeLeft / question.timeEstimate) * 100;
+  const isTimeRunningLow = timeProgress < 30;
+
   return (
-    <div className="bg-black/40 backdrop-blur-lg rounded-xl border border-[#fcba28]/20 overflow-hidden">
+    <motion.div 
+      className="bg-black/40 backdrop-blur-lg rounded-xl border border-[#fcba28]/20 overflow-hidden"
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      exit={{ opacity: 0, y: -20 }}
+      transition={{ duration: 0.3 }}
+    >
       <div className="p-6">
         <div className="flex justify-between items-center mb-4">
-          <span className="text-sm font-medium text-gray-300">
-            Difficulty: {difficulty.charAt(0).toUpperCase() + difficulty.slice(1)}
-          </span>
-          <span className="text-sm font-medium text-gray-300">
-            Time Left: {timeLeft}s
-          </span>
+          <div className="flex items-center space-x-4">
+            <span className={`text-sm font-medium px-3 py-1 rounded-full ${
+              difficulty === 'easy' ? 'bg-green-500/20 text-green-400' :
+              difficulty === 'medium' ? 'bg-yellow-500/20 text-yellow-400' :
+              'bg-red-500/20 text-red-400'
+            }`}>
+              {difficulty.charAt(0).toUpperCase() + difficulty.slice(1)}
+            </span>
+            {performanceMetrics && (
+              <div className="flex items-center space-x-2">
+                <span className="text-sm text-gray-400">Streak:</span>
+                <span className="text-sm font-medium text-[#fcba28]">
+                  {performanceMetrics.streaks.current} 🔥
+                </span>
+                <span className="text-xs text-gray-500">
+                  (Best: {performanceMetrics.streaks.best})
+                </span>
+              </div>
+            )}
+          </div>
+          <div className="flex items-center space-x-2">
+            <span className={`text-sm font-medium ${
+              isTimeRunningLow ? 'text-red-400 animate-pulse' : 'text-gray-300'
+            }`}>
+              {timeLeft}s
+            </span>
+          </div>
         </div>
+
         <ProgressBar
-          progress={(timeLeft / question.timeEstimate) * 100}
+          progress={timeProgress}
           label="Time Remaining"
-          className="bg-[#fcba28]/20"
-          indicatorClassName="bg-[#fcba28]"
+          className={`bg-[#fcba28]/20 transition-colors ${
+            isTimeRunningLow ? 'bg-red-500/20' : ''
+          }`}
+          indicatorClassName={`transition-colors ${
+            isTimeRunningLow ? 'bg-red-500' : 'bg-[#fcba28]'
+          }`}
         />
-        <motion.p
+
+        <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="mt-6 text-lg text-white"
+          className="mt-6 space-y-6"
         >
-          {question.question}
-        </motion.p>
-      </div>
-      
-      <div className="border-t border-[#fcba28]/20 bg-black/20 p-6">
-        <div className="space-y-3">
-          {question.options.map((option, index) => (
-            <motion.div
-              key={index}
-              initial={{ opacity: 0, x: -20 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ delay: index * 0.1 }}
-            >
-              <Button
-                variant={
+          <p className="text-lg text-white leading-relaxed">{question.question}</p>
+          
+          <div className="grid grid-cols-1 gap-3">
+            {question.options.map((option, index) => (
+              <motion.button
+                key={index}
+                onClick={() => onSelectOption(option)}
+                className={`p-4 rounded-lg border text-left transition-all ${
                   selectedOption === option
-                    ? option === question.correctAnswer
-                      ? "default"
-                      : "destructive"
-                    : "outline"
-                }
-                className={`w-full justify-start text-left h-auto py-3 px-4 ${
-                  selectedOption === option
-                    ? option === question.correctAnswer
-                      ? "bg-green-500 hover:bg-green-600 text-black"
-                      : "bg-red-500 hover:bg-red-600 text-white"
-                    : "border-[#fcba28]/50 text-[#fcba28] hover:bg-[#fcba28]/10"
+                    ? 'border-[#fcba28] bg-[#fcba28]/10 text-[#fcba28]'
+                    : 'border-gray-700 hover:border-[#fcba28]/50 hover:bg-[#fcba28]/5'
                 }`}
-                onClick={() => !selectedOption && onSelectOption(option)}
-                disabled={!!selectedOption}
+                whileHover={{ scale: 1.01 }}
+                whileTap={{ scale: 0.99 }}
               >
-                <span className="mr-3">{String.fromCharCode(65 + index)}.</span>
-                {option}
-              </Button>
-            </motion.div>
-          ))}
-        </div>
+                <div className="flex items-center space-x-3">
+                  <span className="w-6 h-6 flex items-center justify-center rounded-full border border-current text-sm">
+                    {String.fromCharCode(65 + index)}
+                  </span>
+                  <span>{option}</span>
+                </div>
+              </motion.button>
+            ))}
+          </div>
+
+          {question.skillsTested && (
+            <div className="mt-6 pt-6 border-t border-gray-700">
+              <h4 className="text-sm text-gray-400 mb-2">Skills Tested:</h4>
+              <div className="flex flex-wrap gap-2">
+                {question.skillsTested.map((skill, index) => (
+                  <span
+                    key={index}
+                    className="px-2 py-1 text-xs bg-[#fcba28]/10 text-[#fcba28] rounded-full"
+                  >
+                    {skill}
+                  </span>
+                ))}
+              </div>
+            </div>
+          )}
+        </motion.div>
       </div>
-    </div>
+    </motion.div>
   );
 }

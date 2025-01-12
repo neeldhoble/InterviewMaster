@@ -20,6 +20,17 @@ interface Question {
   timeEstimate: number;
   topic: string;
   skillsTested: string[];
+  category?: string;
+  subTopic?: string;
+}
+
+interface PerformanceMetrics {
+  accuracy: number;
+  averageTimePerQuestion: number;
+  totalQuestionsAttempted: number;
+  topicWisePerformance: Record<string, { correct: number; total: number }>;
+  skillWisePerformance: Record<string, { score: number; count: number }>;
+  streaks: { current: number; best: number };
 }
 
 interface PerformanceAnalysis {
@@ -29,6 +40,8 @@ interface PerformanceAnalysis {
   recommendedTopics: string[];
   recommendedDifficulty: string;
   detailedFeedback: string;
+  suggestedResources?: string[];
+  nextSteps?: string[];
 }
 
 export default function PersonalizedAptitudePage() {
@@ -53,10 +66,168 @@ export default function PersonalizedAptitudePage() {
   const [analysis, setAnalysis] = useState<PerformanceAnalysis | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [score, setScore] = useState(0);
+  const timerRef = useRef<NodeJS.Timeout>();
+
+  const [performanceMetrics, setPerformanceMetrics] = useState<PerformanceMetrics>({
+    accuracy: 0,
+    averageTimePerQuestion: 0,
+    totalQuestionsAttempted: 0,
+    topicWisePerformance: {},
+    skillWisePerformance: {},
+    streaks: { current: 0, best: 0 }
+  });
+
+  const [userPreferences, setUserPreferences] = useState({
+    preferredTopics: [] as string[],
+    dailyGoal: 10,
+    studyReminders: false,
+    difficultyPreference: 'adaptive'
+  });
 
   const { generateQuestion, analyzePerfomance, generatePersonalizedFeedback } = useGeminiAI();
 
-  // ... (rest of the functions remain the same)
+  const clearTimer = useCallback(() => {
+    if (timerRef.current) {
+      clearInterval(timerRef.current);
+      timerRef.current = undefined;
+    }
+  }, []);
+
+  const handleAnswerSubmission = useCallback(async () => {
+    if (!selectedOption || !currentQuestion) return;
+    
+    clearTimer();
+    const timeSpent = startTime ? Math.floor((Date.now() - startTime) / 1000) : 0;
+    const isCorrect = selectedOption === currentQuestion.correctAnswer;
+    
+    setPerformanceMetrics(prev => {
+      const newMetrics = { ...prev };
+      const totalQuestions = prev.totalQuestionsAttempted + 1;
+      
+      // Update accuracy
+      const totalCorrect = (prev.accuracy * prev.totalQuestionsAttempted + (isCorrect ? 1 : 0));
+      newMetrics.accuracy = totalCorrect / totalQuestions;
+      
+      // Update average time
+      newMetrics.averageTimePerQuestion = 
+        (prev.averageTimePerQuestion * prev.totalQuestionsAttempted + timeSpent) / totalQuestions;
+      
+      // Update total questions
+      newMetrics.totalQuestionsAttempted = totalQuestions;
+      
+      // Update streaks
+      if (isCorrect) {
+        newMetrics.streaks.current += 1;
+        newMetrics.streaks.best = Math.max(newMetrics.streaks.current, newMetrics.streaks.best);
+      } else {
+        newMetrics.streaks.current = 0;
+      }
+      
+      // Update topic performance
+      if (currentQuestion?.topic) {
+        const topic = currentQuestion.topic;
+        const topicStats = prev.topicWisePerformance[topic] || { correct: 0, total: 0 };
+        newMetrics.topicWisePerformance[topic] = {
+          correct: topicStats.correct + (isCorrect ? 1 : 0),
+          total: topicStats.total + 1
+        };
+      }
+      
+      return newMetrics;
+    });
+
+    setScore(prev => prev + (isCorrect ? 1 : 0));
+    
+    try {
+      const newFeedback = await generatePersonalizedFeedback(
+        currentQuestion,
+        selectedOption,
+        timeSpent,
+        performanceMetrics
+      );
+      
+      setFeedback(newFeedback);
+      setShowExplanation(true);
+      
+      // Add to history
+      setQuestionsHistory(prev => [...prev, currentQuestion]);
+      setAnswersHistory(prev => [...prev, selectedOption]);
+      
+      // Adjust difficulty based on performance
+      if (userPreferences.difficultyPreference === 'adaptive') {
+        const recentPerformance = answersHistory.slice(-5).filter(
+          (ans, idx) => questionsHistory[idx]?.correctAnswer === ans
+        ).length;
+        
+        if (recentPerformance >= 4) {
+          setDifficulty(prev => prev === 'easy' ? 'medium' : prev === 'medium' ? 'hard' : 'hard');
+        } else if (recentPerformance <= 1) {
+          setDifficulty(prev => prev === 'hard' ? 'medium' : prev === 'medium' ? 'easy' : 'easy');
+        }
+      }
+    } catch (error) {
+      console.error('Error generating feedback:', error);
+    }
+  }, [selectedOption, currentQuestion, startTime, generatePersonalizedFeedback, performanceMetrics, userPreferences.difficultyPreference, clearTimer]);
+
+  const loadQuestion = useCallback(async () => {
+    clearTimer();
+    
+    try {
+      setIsLoading(true);
+      setSelectedOption(null);
+      setShowExplanation(false);
+      setFeedback(null);
+      
+      const newQuestion = await generateQuestion(selectedTopic, difficulty);
+      
+      if (newQuestion) {
+        setCurrentQuestion(newQuestion);
+        setTimeLeft(newQuestion.timeEstimate);
+        setStartTime(Date.now());
+      }
+    } catch (error) {
+      console.error('Error loading question:', error);
+    } finally {
+      setIsLoading(false);
+    }
+  }, [selectedTopic, difficulty, generateQuestion, clearTimer]);
+
+  useEffect(() => {
+    if (currentQuestion && timeLeft > 0 && !showExplanation) {
+      clearTimer();
+      
+      timerRef.current = setInterval(() => {
+        setTimeLeft(prev => {
+          if (prev <= 1) {
+            clearTimer();
+            handleAnswerSubmission();
+            return 0;
+          }
+          return prev - 1;
+        });
+      }, 1000);
+    }
+
+    return clearTimer;
+  }, [currentQuestion, timeLeft, showExplanation, clearTimer, handleAnswerSubmission]);
+
+  useEffect(() => {
+    if (selectedTopic) {
+      loadQuestion();
+    }
+    
+    return clearTimer;
+  }, [selectedTopic, loadQuestion, clearTimer]);
+
+  const handleNextQuestion = useCallback(() => {
+    loadQuestion();
+  }, [loadQuestion]);
+
+  // Clean up on unmount
+  useEffect(() => {
+    return clearTimer;
+  }, [clearTimer]);
 
   const renderContent = () => {
     if (!selectedTopic) {
@@ -68,6 +239,14 @@ export default function PersonalizedAptitudePage() {
         >
           <TopicSelector onSelectTopic={setSelectedTopic} />
         </motion.div>
+      );
+    }
+
+    if (isLoading) {
+      return (
+        <div className="flex items-center justify-center min-h-[400px]">
+          <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-[#fcba28]"></div>
+        </div>
       );
     }
 
@@ -117,37 +296,31 @@ export default function PersonalizedAptitudePage() {
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         exit={{ opacity: 0, y: -20 }}
-        className="space-y-6 max-w-2xl"
+        className="space-y-6"
       >
         <QuestionCard
           question={currentQuestion}
           timeLeft={timeLeft}
           selectedOption={selectedOption}
-          onSelectOption={handleOptionSelect}
+          onSelectOption={setSelectedOption}
           difficulty={difficulty}
+          performanceMetrics={performanceMetrics}
         />
-        
-        {showExplanation && (
+
+        {showExplanation && feedback && (
           <>
             <FeedbackPanel
               explanation={currentQuestion.explanation}
               feedback={feedback}
               skillsTested={currentQuestion.skillsTested}
+              performanceMetrics={performanceMetrics}
             />
-            <div className="flex gap-4">
+            <div className="flex justify-center">
               <Button
-                onClick={loadQuestion}
-                className="flex-1 bg-[#fcba28] hover:bg-[#fcba28]/90 text-black"
-                disabled={isLoading}
+                onClick={handleNextQuestion}
+                className="bg-[#fcba28] hover:bg-[#fcba28]/90 text-black px-8 py-3 text-lg"
               >
-                {isLoading ? "Loading..." : "Next Question"}
-              </Button>
-              <Button
-                variant="outline"
-                onClick={() => setSelectedTopic("")}
-                className="flex-1 border-[#fcba28]/50 text-[#fcba28] hover:bg-[#fcba28]/10"
-              >
-                Change Topic
+                Next Question
               </Button>
             </div>
           </>
