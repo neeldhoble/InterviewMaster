@@ -1,154 +1,61 @@
-import { motion } from "framer-motion";
+import { motion } from 'framer-motion';
+import { Button } from '@/components/ui/button';
+import { FaCheckCircle, FaTimesCircle } from 'react-icons/fa';
 
 interface FeedbackPanelProps {
+  isCorrect: boolean;
   explanation: string;
-  feedback: {
-    correctness: boolean;
-    timePerformance: string;
-    conceptualUnderstanding: string;
-    recommendedTopics?: string[];
-    suggestedResources?: string[];
-    nextSteps?: string[];
-    detailedExplanation: string;
-  };
-  skillsTested?: string[];
-  performanceMetrics?: {
-    accuracy: number;
-    streaks: { current: number; best: number };
-    topicWisePerformance: Record<string, { correct: number; total: number }>;
-  };
+  feedback: string | null;
+  onNext: () => void;
 }
 
 export default function FeedbackPanel({
+  isCorrect,
   explanation,
   feedback,
-  skillsTested,
-  performanceMetrics
+  onNext
 }: FeedbackPanelProps) {
   return (
     <motion.div
-      initial={{ opacity: 0, height: 0 }}
-      animate={{ opacity: 1, height: "auto" }}
-      className="space-y-6"
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      className="mt-6"
     >
-      {/* Main Explanation Panel */}
-      <div className="bg-black/40 backdrop-blur-lg rounded-xl border border-[#fcba28]/20 overflow-hidden">
-        <div className="p-6">
-          <div className="flex items-center justify-between mb-6">
-            <h3 className="text-lg font-semibold text-[#fcba28]">
-              Solution Explanation
-            </h3>
-            {feedback.correctness && (
-              <span className="px-3 py-1 bg-green-500/20 text-green-400 rounded-full text-sm">
-                Correct Answer! 🎉
-              </span>
+      <div className="relative overflow-hidden rounded-xl bg-black/40 backdrop-blur-lg border border-[#fcba28]/20 p-6">
+        <div className="absolute inset-0 bg-gradient-to-br from-[#fcba28]/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+        <div className="relative space-y-4">
+          <div className="flex items-center space-x-3">
+            {isCorrect ? (
+              <>
+                <FaCheckCircle className="text-2xl text-green-400" />
+                <h3 className="text-xl font-medium text-green-400">Correct!</h3>
+              </>
+            ) : (
+              <>
+                <FaTimesCircle className="text-2xl text-red-400" />
+                <h3 className="text-xl font-medium text-red-400">Incorrect</h3>
+              </>
             )}
           </div>
-          
-          <div className="prose prose-invert max-w-none">
-            <p className="text-gray-200 leading-relaxed">{explanation}</p>
-          </div>
 
-          {skillsTested && (
-            <div className="mt-6">
-              <h4 className="font-medium text-[#fcba28] mb-3">Skills Tested:</h4>
-              <div className="flex flex-wrap gap-2">
-                {skillsTested.map((skill, index) => (
-                  <span
-                    key={index}
-                    className="px-3 py-1 bg-[#fcba28]/10 text-[#fcba28] rounded-full text-sm border border-[#fcba28]/20"
-                  >
-                    {skill}
-                  </span>
-                ))}
-              </div>
+          {feedback && (
+            <div className="text-gray-200">
+              {feedback}
             </div>
           )}
-        </div>
-      </div>
 
-      {/* Personalized Feedback Panel */}
-      <div className="bg-black/40 backdrop-blur-lg rounded-xl border border-[#fcba28]/20 overflow-hidden">
-        <div className="p-6">
-          <h3 className="text-lg font-semibold text-[#fcba28] mb-6">
-            Personalized Feedback
-          </h3>
-          
-          <div className="space-y-6">
-            {/* Performance Metrics */}
-            {performanceMetrics && (
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <div className="bg-black/40 rounded-lg p-4 border border-[#fcba28]/20">
-                  <div className="text-sm text-gray-400 mb-1">Accuracy</div>
-                  <div className="text-2xl font-semibold text-[#fcba28]">
-                    {Math.round(performanceMetrics.accuracy * 100)}%
-                  </div>
-                </div>
-                <div className="bg-black/40 rounded-lg p-4 border border-[#fcba28]/20">
-                  <div className="text-sm text-gray-400 mb-1">Current Streak</div>
-                  <div className="text-2xl font-semibold text-[#fcba28]">
-                    {performanceMetrics.streaks.current} 🔥
-                  </div>
-                </div>
-                <div className="bg-black/40 rounded-lg p-4 border border-[#fcba28]/20">
-                  <div className="text-sm text-gray-400 mb-1">Best Streak</div>
-                  <div className="text-2xl font-semibold text-[#fcba28]">
-                    {performanceMetrics.streaks.best}
-                  </div>
-                </div>
-              </div>
-            )}
+          <div className="text-gray-200">
+            <h4 className="font-medium text-[#fcba28] mb-2">Explanation:</h4>
+            <p>{explanation}</p>
+          </div>
 
-            {/* Detailed Feedback */}
-            <div className="space-y-4">
-              <div>
-                <h4 className="text-[#fcba28] font-medium mb-2">Time Performance</h4>
-                <p className="text-gray-300">{feedback.timePerformance}</p>
-              </div>
-              
-              <div>
-                <h4 className="text-[#fcba28] font-medium mb-2">Conceptual Understanding</h4>
-                <p className="text-gray-300">{feedback.conceptualUnderstanding}</p>
-              </div>
-
-              {feedback.recommendedTopics && (
-                <div>
-                  <h4 className="text-[#fcba28] font-medium mb-2">Recommended Topics</h4>
-                  <div className="flex flex-wrap gap-2">
-                    {feedback.recommendedTopics.map((topic, index) => (
-                      <span
-                        key={index}
-                        className="px-3 py-1 bg-purple-500/20 text-purple-400 rounded-full text-sm"
-                      >
-                        {topic}
-                      </span>
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              {feedback.suggestedResources && (
-                <div>
-                  <h4 className="text-[#fcba28] font-medium mb-2">Learning Resources</h4>
-                  <ul className="list-disc list-inside space-y-2 text-gray-300">
-                    {feedback.suggestedResources.map((resource, index) => (
-                      <li key={index}>{resource}</li>
-                    ))}
-                  </ul>
-                </div>
-              )}
-
-              {feedback.nextSteps && (
-                <div>
-                  <h4 className="text-[#fcba28] font-medium mb-2">Next Steps</h4>
-                  <ul className="list-disc list-inside space-y-2 text-gray-300">
-                    {feedback.nextSteps.map((step, index) => (
-                      <li key={index}>{step}</li>
-                    ))}
-                  </ul>
-                </div>
-              )}
-            </div>
+          <div className="pt-4">
+            <Button
+              onClick={onNext}
+              className="w-full bg-[#fcba28] hover:bg-[#fcba28]/90 text-black"
+            >
+              Next Question
+            </Button>
           </div>
         </div>
       </div>

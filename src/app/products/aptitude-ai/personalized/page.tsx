@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback, useRef } from "react";
 import { motion, useScroll, useTransform } from "framer-motion";
-import { useGeminiAI } from "@/hooks/useGeminiAI";
+import { generateQuestion, generatePersonalizedFeedback, generateHint } from './utils/gemini';
 import { Button } from "@/components/ui/button";
 import { MaxWidthWrapper } from "@/components/MaxWidthWrapper";
 import TopicSelector from "./components/TopicSelector";
@@ -55,20 +55,13 @@ export default function PersonalizedAptitudePage() {
 
   const y = useTransform(scrollYProgress, [0, 1], ["0%", "50%"]);
 
-  const [selectedTopic, setSelectedTopic] = useState<string>("");
-  const [difficulty, setDifficulty] = useState<string>("medium");
+  const [selectedTopic, setSelectedTopic] = useState<string | null>(null);
   const [currentQuestion, setCurrentQuestion] = useState<Question | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
   const [selectedOption, setSelectedOption] = useState<string | null>(null);
   const [showExplanation, setShowExplanation] = useState(false);
-  const [feedback, setFeedback] = useState<any>(null);
-  const [timeLeft, setTimeLeft] = useState<number>(0);
-  const [startTime, setStartTime] = useState<number>(0);
-  const [questionsHistory, setQuestionsHistory] = useState<Question[]>([]);
-  const [answersHistory, setAnswersHistory] = useState<string[]>([]);
-  const [analysis, setAnalysis] = useState<PerformanceAnalysis | null>(null);
-  const [isLoading, setIsLoading] = useState(false);
-  const [score, setScore] = useState(0);
-  const timerRef = useRef<NodeJS.Timeout>();
+  const [feedback, setFeedback] = useState<string | null>(null);
+  const [difficulty, setDifficulty] = useState<'easy' | 'medium' | 'hard'>('easy');
 
   const [performanceMetrics, setPerformanceMetrics] = useState<PerformanceMetrics>({
     accuracy: 0,
@@ -191,216 +184,151 @@ export default function PersonalizedAptitudePage() {
     ]
   });
 
-  const { generateQuestion, analyzePerfomance, generatePersonalizedFeedback } = useGeminiAI();
-
-  const clearTimer = useCallback(() => {
-    if (timerRef.current) {
-      clearInterval(timerRef.current);
-      timerRef.current = undefined;
-    }
-  }, []);
-
-  const handleAnswerSubmission = useCallback(async () => {
-    if (!selectedOption || !currentQuestion) return;
-    
-    clearTimer();
-    const timeSpent = startTime ? Math.floor((Date.now() - startTime) / 1000) : 0;
-    const isCorrect = selectedOption === currentQuestion.correctAnswer;
-    
-    setPerformanceMetrics(prev => {
-      const newMetrics = { ...prev };
-      const totalQuestions = prev.totalQuestionsAttempted + 1;
-      
-      // Update accuracy
-      const totalCorrect = (prev.accuracy * prev.totalQuestionsAttempted + (isCorrect ? 1 : 0));
-      newMetrics.accuracy = totalCorrect / totalQuestions;
-      
-      // Update average time
-      newMetrics.averageTimePerQuestion = 
-        (prev.averageTimePerQuestion * prev.totalQuestionsAttempted + timeSpent) / totalQuestions;
-      
-      // Update total questions
-      newMetrics.totalQuestionsAttempted = totalQuestions;
-      
-      // Update streaks
-      if (isCorrect) {
-        newMetrics.streaks.current += 1;
-        newMetrics.streaks.best = Math.max(newMetrics.streaks.current, newMetrics.streaks.best);
-      } else {
-        newMetrics.streaks.current = 0;
-      }
-      
-      // Update topic performance
-      if (currentQuestion?.topic) {
-        const topic = currentQuestion.topic;
-        const topicStats = prev.topicWisePerformance[topic] || { correct: 0, total: 0 };
-        newMetrics.topicWisePerformance[topic] = {
-          correct: topicStats.correct + (isCorrect ? 1 : 0),
-          total: topicStats.total + 1
-        };
-      }
-      
-      return newMetrics;
-    });
-
-    setScore(prev => prev + (isCorrect ? 1 : 0));
-    
+  const handleTopicSelect = async (topic: string) => {
     try {
-      const newFeedback = await generatePersonalizedFeedback(
-        currentQuestion,
-        selectedOption,
-        timeSpent,
-        performanceMetrics
-      );
-      
-      setFeedback(newFeedback);
-      setShowExplanation(true);
-      
-      // Add to history
-      setQuestionsHistory(prev => [...prev, currentQuestion]);
-      setAnswersHistory(prev => [...prev, selectedOption]);
-      
-      // Adjust difficulty based on performance
-      if (userPreferences.difficultyPreference === 'adaptive') {
-        const recentPerformance = answersHistory.slice(-5).filter(
-          (ans, idx) => questionsHistory[idx]?.correctAnswer === ans
-        ).length;
-        
-        if (recentPerformance >= 4) {
-          setDifficulty(prev => prev === 'easy' ? 'medium' : prev === 'medium' ? 'hard' : 'hard');
-        } else if (recentPerformance <= 1) {
-          setDifficulty(prev => prev === 'hard' ? 'medium' : prev === 'medium' ? 'easy' : 'easy');
-        }
-      }
-    } catch (error) {
-      console.error('Error generating feedback:', error);
-    }
-  }, [selectedOption, currentQuestion, startTime, generatePersonalizedFeedback, performanceMetrics, userPreferences.difficultyPreference, clearTimer]);
-
-  const loadQuestion = useCallback(async () => {
-    clearTimer();
-    
-    try {
-      setIsLoading(true);
+      // Reset states
+      setSelectedTopic(topic);
+      setCurrentQuestion(null);
       setSelectedOption(null);
       setShowExplanation(false);
       setFeedback(null);
-      
-      const newQuestion = await generateQuestion(selectedTopic, difficulty);
-      
-      if (newQuestion) {
-        setCurrentQuestion(newQuestion);
-        setTimeLeft(newQuestion.timeEstimate);
-        setStartTime(Date.now());
+      setIsLoading(true);
+
+      // Generate question using Gemini AI
+      const prompt = `Generate a ${difficulty} level aptitude question for the topic "${topic}" in the following JSON format:
+      {
+        "question": "The actual question text",
+        "options": ["Option A", "Option B", "Option C", "Option D"],
+        "correctAnswer": "The correct option",
+        "explanation": "Detailed explanation of the solution",
+        "skillsTested": ["Skill 1", "Skill 2"],
+        "difficulty": "${difficulty}",
+        "topic": "${topic}",
+        "subtopic": "Relevant subtopic"
       }
+      
+      Make sure the question is challenging but solvable, with clear and concise language.
+      The explanation should be detailed and educational.
+      The options should be plausible but only one should be correct.`;
+
+      const response = await generateQuestion(prompt);
+      let questionData;
+      
+      try {
+        questionData = JSON.parse(response);
+      } catch (error) {
+        console.error('Error parsing Gemini response:', error);
+        throw new Error('Invalid question format');
+      }
+
+      const newQuestion = {
+        id: '1',
+        ...questionData
+      };
+
+      setCurrentQuestion(newQuestion);
     } catch (error) {
       console.error('Error loading question:', error);
+      // Show error in UI
+      setFeedback('Error loading question. Please try again.');
     } finally {
       setIsLoading(false);
     }
-  }, [selectedTopic, difficulty, generateQuestion, clearTimer]);
+  };
 
-  useEffect(() => {
-    if (currentQuestion && timeLeft > 0 && !showExplanation) {
-      clearTimer();
+  const handleAnswer = async (answer: string) => {
+    if (!currentQuestion || showExplanation) return;
+
+    setSelectedOption(answer);
+    setShowExplanation(true);
+    setIsLoading(true);
+
+    try {
+      // Generate personalized feedback using Gemini AI
+      const prompt = `Given this question:
+      "${currentQuestion.question}"
       
-      timerRef.current = setInterval(() => {
-        setTimeLeft(prev => {
-          if (prev <= 1) {
-            clearTimer();
-            handleAnswerSubmission();
-            return 0;
-          }
-          return prev - 1;
-        });
-      }, 1000);
-    }
+      The user selected: "${answer}"
+      The correct answer is: "${currentQuestion.correctAnswer}"
+      
+      Generate personalized feedback in this format:
+      {
+        "isCorrect": boolean,
+        "feedback": "Encouraging and educational feedback",
+        "conceptualExplanation": "Explanation of the core concept",
+        "commonMistakes": "If incorrect, explain common mistakes",
+        "studyTips": "Personalized tips for improvement"
+      }`;
 
-    return clearTimer;
-  }, [currentQuestion, timeLeft, showExplanation, clearTimer, handleAnswerSubmission]);
+      const response = await generatePersonalizedFeedback(prompt);
+      let feedbackData;
 
-  useEffect(() => {
-    if (selectedTopic) {
-      loadQuestion();
-    }
-    
-    return clearTimer;
-  }, [selectedTopic, loadQuestion, clearTimer]);
-
-  const handleNextQuestion = useCallback(() => {
-    loadQuestion();
-  }, [loadQuestion]);
-
-  // Clean up on unmount
-  useEffect(() => {
-    return clearTimer;
-  }, [clearTimer]);
-
-  const updateDailyProgress = useCallback(() => {
-    const today = new Date().toISOString().split('T')[0];
-    setDailyProgress(prev => {
-      const todayProgress = prev.find(p => p.date === today);
-      if (todayProgress) {
-        return prev.map(p => 
-          p.date === today
-            ? {
-                ...p,
-                accuracy: performanceMetrics.accuracy * 100,
-                questionsAttempted: performanceMetrics.totalQuestionsAttempted
-              }
-            : p
-        );
+      try {
+        feedbackData = JSON.parse(response);
+      } catch (error) {
+        console.error('Error parsing Gemini feedback:', error);
+        throw new Error('Invalid feedback format');
       }
-      return [...prev, {
-        date: today,
-        accuracy: performanceMetrics.accuracy * 100,
-        questionsAttempted: performanceMetrics.totalQuestionsAttempted
-      }];
-    });
-  }, [performanceMetrics]);
 
-  const updateAchievements = useCallback(() => {
-    setAchievements(prev => prev.map(achievement => {
-      switch (achievement.id) {
-        case 'streak_master':
-          return {
-            ...achievement,
-            progress: performanceMetrics.streaks.current,
-            earned: performanceMetrics.streaks.current >= 7
-          };
-        case 'speed_demon':
-          const fastQuestions = questionsHistory.filter((_, i) => {
-            const timeSpent = answersHistory[i] ? 
-              Math.floor((Date.now() - startTime) / 1000) : 0;
-            return timeSpent < timeLeft * 0.5;
-          }).length;
-          return {
-            ...achievement,
-            progress: fastQuestions,
-            earned: fastQuestions >= 10
-          };
-        case 'perfect_score':
-          const topicScores = Object.values(performanceMetrics.topicWisePerformance)
-            .map(({ correct, total }) => (correct / total) * 100);
-          const maxScore = Math.max(...topicScores, 0);
-          return {
-            ...achievement,
-            progress: Math.round(maxScore),
-            earned: maxScore >= 100
-          };
-        default:
-          return achievement;
-      }
-    }));
-  }, [performanceMetrics, questionsHistory, answersHistory, startTime, timeLeft]);
-
-  useEffect(() => {
-    if (showExplanation) {
-      updateDailyProgress();
-      updateAchievements();
+      setFeedback(feedbackData.feedback);
+    } catch (error) {
+      console.error('Error generating feedback:', error);
+      setFeedback('Great attempt! Let\'s move on to the next question.');
+    } finally {
+      setIsLoading(false);
     }
-  }, [showExplanation, updateDailyProgress, updateAchievements]);
+  };
 
+  const handleNext = async () => {
+    setShowExplanation(false);
+    setSelectedOption(null);
+    setIsLoading(true);
+
+    try {
+      // Generate next question using Gemini AI
+      const prompt = `Generate a ${difficulty} level aptitude question for the topic "${selectedTopic}" in the following JSON format:
+      {
+        "question": "The actual question text",
+        "options": ["Option A", "Option B", "Option C", "Option D"],
+        "correctAnswer": "The correct option",
+        "explanation": "Detailed explanation of the solution",
+        "skillsTested": ["Skill 1", "Skill 2"],
+        "difficulty": "${difficulty}",
+        "topic": "${selectedTopic}",
+        "subtopic": "Relevant subtopic"
+      }
+      
+      Make sure the question is:
+      1. Different from the previous question
+      2. Challenging but solvable
+      3. Clear and concise
+      4. Tests similar concepts but in a different way`;
+
+      const response = await generateQuestion(prompt);
+      let questionData;
+      
+      try {
+        questionData = JSON.parse(response);
+      } catch (error) {
+        console.error('Error parsing Gemini response:', error);
+        throw new Error('Invalid question format');
+      }
+
+      const newQuestion = {
+        id: String(parseInt(currentQuestion?.id || '0') + 1),
+        ...questionData
+      };
+
+      setCurrentQuestion(newQuestion);
+    } catch (error) {
+      console.error('Error loading next question:', error);
+      setFeedback('Error loading question. Please try again.');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // Main content renderer
   const renderMainContent = () => {
     switch (view) {
       case 'progress':
@@ -433,102 +361,44 @@ export default function PersonalizedAptitudePage() {
           <div className="min-h-[90vh] grid grid-cols-1 lg:grid-cols-2 gap-12 items-start">
             {/* Left Side - Content */}
             <div className="flex flex-col items-start text-left space-y-8">
-              <div>
-                <motion.div
-                  initial={{ opacity: 0, x: -50 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  transition={{ duration: 0.8 }}
-                  className="flex items-center gap-4 text-[#fcba28] mb-6"
-                >
-                  <FaBrain className="text-3xl" />
-                  <FaRobot className="text-3xl" />
-                </motion.div>
-
-                <motion.h1
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  className="text-5xl lg:text-6xl font-bold text-white mb-6"
-                >
-                  Personalized{" "}
-                  <span className="bg-clip-text text-transparent bg-gradient-to-r from-[#fcba28] to-[#ffd700]">
-                    AI-Powered
-                  </span>{" "}
-                  Practice
-                </motion.h1>
-
-                <motion.p
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.2 }}
-                  className="text-xl text-gray-200 mb-8"
-                >
-                  Experience adaptive learning that evolves with your progress. Our AI creates a unique
-                  path tailored to your learning style.
-                </motion.p>
-
-                {!selectedTopic && (
-                  <motion.div
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: 0.4 }}
-                    className="grid grid-cols-2 md:grid-cols-4 gap-6 mt-12"
-                  >
-                    <div className="relative overflow-hidden rounded-xl bg-black/40 backdrop-blur-lg border border-[#fcba28]/20 p-4 group">
-                      <div className="absolute inset-0 bg-gradient-to-br from-[#fcba28]/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
-                      <div className="relative">
-                        <p className="text-3xl font-bold text-[#fcba28]">
-                          5+
-                        </p>
-                        <p className="text-gray-200">Topics</p>
-                      </div>
-                    </div>
-                    <div className="relative overflow-hidden rounded-xl bg-black/40 backdrop-blur-lg border border-[#fcba28]/20 p-4 group">
-                      <div className="absolute inset-0 bg-gradient-to-br from-[#fcba28]/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
-                      <div className="relative">
-                        <p className="text-3xl font-bold text-[#fcba28]">3</p>
-                        <p className="text-gray-200">Difficulty Levels</p>
-                      </div>
-                    </div>
-                    <div className="relative overflow-hidden rounded-xl bg-black/40 backdrop-blur-lg border border-[#fcba28]/20 p-4 group">
-                      <div className="absolute inset-0 bg-gradient-to-br from-[#fcba28]/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
-                      <div className="relative">
-                        <p className="text-3xl font-bold text-[#fcba28]">AI</p>
-                        <p className="text-gray-200">Powered</p>
-                      </div>
-                    </div>
-                    <div className="relative overflow-hidden rounded-xl bg-black/40 backdrop-blur-lg border border-[#fcba28]/20 p-4 group">
-                      <div className="absolute inset-0 bg-gradient-to-br from-[#fcba28]/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
-                      <div className="relative">
-                        <p className="text-3xl font-bold text-[#fcba28]">24/7</p>
-                        <p className="text-gray-200">Available</p>
-                      </div>
-                    </div>
-                  </motion.div>
-                )}
-              </div>
-
-              {selectedTopic ? (
-                <div className="w-full">
-                  <QuestionCard
-                    question={currentQuestion}
-                    timeLeft={timeLeft}
-                    selectedOption={selectedOption}
-                    onSelectOption={setSelectedOption}
-                    difficulty={difficulty}
-                    performanceMetrics={performanceMetrics}
-                  />
-
-                  {showExplanation && feedback && (
-                    <FeedbackPanel
-                      explanation={currentQuestion.explanation}
-                      feedback={feedback}
-                      skillsTested={currentQuestion.skillsTested}
-                      performanceMetrics={performanceMetrics}
-                    />
-                  )}
-                </div>
+              {!selectedTopic ? (
+                <TopicSelector onSelectTopic={handleTopicSelect} />
               ) : (
-                <TopicSelector onSelectTopic={setSelectedTopic} />
+                <div className="w-full space-y-6">
+                  <div className="flex items-center justify-between">
+                    <h2 className="text-2xl font-bold text-[#fcba28]">{selectedTopic}</h2>
+                    <button
+                      onClick={() => setSelectedTopic(null)}
+                      className="text-gray-400 hover:text-[#fcba28] transition-colors"
+                    >
+                      Change Topic
+                    </button>
+                  </div>
+                  
+                  {isLoading ? (
+                    <div className="flex items-center justify-center min-h-[400px]">
+                      <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-[#fcba28]"></div>
+                    </div>
+                  ) : currentQuestion ? (
+                    <>
+                      <QuestionCard
+                        question={currentQuestion}
+                        selectedOption={selectedOption}
+                        onSelectOption={handleAnswer}
+                        showExplanation={showExplanation}
+                        isCorrect={selectedOption === currentQuestion.correctAnswer}
+                      />
+                      {showExplanation && (
+                        <FeedbackPanel
+                          isCorrect={selectedOption === currentQuestion.correctAnswer}
+                          explanation={currentQuestion.explanation}
+                          onNext={handleNext}
+                          feedback={feedback}
+                        />
+                      )}
+                    </>
+                  ) : null}
+                </div>
               )}
             </div>
 
@@ -537,7 +407,7 @@ export default function PersonalizedAptitudePage() {
               initial={{ opacity: 0, scale: 0.8 }}
               animate={{ opacity: 1, scale: 1 }}
               transition={{ duration: 0.8 }}
-              className="sticky top-8"
+              className="sticky top-8 hidden lg:block"
             >
               <HeroAnimation />
               {currentQuestion && (
@@ -549,10 +419,10 @@ export default function PersonalizedAptitudePage() {
                   <div className="absolute inset-0 bg-gradient-to-br from-[#fcba28]/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
                   <div className="relative">
                     <div className="text-3xl font-bold text-[#fcba28]">
-                      Score: {score}
+                      Question {currentQuestion.id}
                     </div>
                     <div className="text-gray-200">
-                      Question {questionsHistory.length + 1}
+                      {selectedTopic}
                     </div>
                   </div>
                 </motion.div>

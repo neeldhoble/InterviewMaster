@@ -1,135 +1,92 @@
-import { motion } from "framer-motion";
-import { Button } from "@/components/ui/button";
-import ProgressBar from "@/components/ui/progress";
+import { motion } from 'framer-motion';
+import { Button } from '@/components/ui/button';
 
 interface Question {
+  id: string;
   question: string;
   options: string[];
   correctAnswer: string;
-  timeEstimate: number;
-  skillsTested?: string[];
-  category?: string;
-  subTopic?: string;
+  explanation: string;
+  difficulty: string;
+  topic: string;
+  subtopic: string;
 }
 
 interface QuestionCardProps {
-  question: Question;
-  timeLeft: number;
+  question: Question | null;
   selectedOption: string | null;
   onSelectOption: (option: string) => void;
-  difficulty: string;
-  performanceMetrics?: {
-    streaks: { current: number; best: number };
-  };
+  showExplanation: boolean;
+  isCorrect: boolean;
 }
 
 export default function QuestionCard({
   question,
-  timeLeft,
   selectedOption,
   onSelectOption,
-  difficulty,
-  performanceMetrics
+  showExplanation,
+  isCorrect
 }: QuestionCardProps) {
-  const timeProgress = (timeLeft / question.timeEstimate) * 100;
-  const isTimeRunningLow = timeProgress < 30;
+  if (!question) return null;
 
   return (
-    <motion.div 
-      className="bg-black/40 backdrop-blur-lg rounded-xl border border-[#fcba28]/20 overflow-hidden"
+    <motion.div
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
-      exit={{ opacity: 0, y: -20 }}
-      transition={{ duration: 0.3 }}
+      className="w-full space-y-6"
     >
-      <div className="p-6">
-        <div className="flex justify-between items-center mb-4">
-          <div className="flex items-center space-x-4">
-            <span className={`text-sm font-medium px-3 py-1 rounded-full ${
-              difficulty === 'easy' ? 'bg-green-500/20 text-green-400' :
-              difficulty === 'medium' ? 'bg-yellow-500/20 text-yellow-400' :
-              'bg-red-500/20 text-red-400'
+      {/* Question */}
+      <div className="relative overflow-hidden rounded-xl bg-black/40 backdrop-blur-lg border border-[#fcba28]/20 p-6">
+        <div className="absolute inset-0 bg-gradient-to-br from-[#fcba28]/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+        <div className="relative">
+          <div className="flex items-center justify-between mb-4">
+            <span className={`text-sm px-3 py-1 rounded-full ${
+              question.difficulty === 'easy'
+                ? 'bg-green-500/20 text-green-400'
+                : question.difficulty === 'medium'
+                ? 'bg-yellow-500/20 text-yellow-400'
+                : 'bg-red-500/20 text-red-400'
             }`}>
-              {difficulty.charAt(0).toUpperCase() + difficulty.slice(1)}
+              {question.difficulty.charAt(0).toUpperCase() + question.difficulty.slice(1)}
             </span>
-            {performanceMetrics && (
-              <div className="flex items-center space-x-2">
-                <span className="text-sm text-gray-400">Streak:</span>
-                <span className="text-sm font-medium text-[#fcba28]">
-                  {performanceMetrics.streaks.current} 🔥
-                </span>
-                <span className="text-xs text-gray-500">
-                  (Best: {performanceMetrics.streaks.best})
-                </span>
-              </div>
-            )}
+            <span className="text-sm text-gray-400">{question.subtopic}</span>
           </div>
-          <div className="flex items-center space-x-2">
-            <span className={`text-sm font-medium ${
-              isTimeRunningLow ? 'text-red-400 animate-pulse' : 'text-gray-300'
-            }`}>
-              {timeLeft}s
-            </span>
-          </div>
+          <p className="text-lg text-white mb-2">{question.question}</p>
         </div>
+      </div>
 
-        <ProgressBar
-          progress={timeProgress}
-          label="Time Remaining"
-          className={`bg-[#fcba28]/20 transition-colors ${
-            isTimeRunningLow ? 'bg-red-500/20' : ''
-          }`}
-          indicatorClassName={`transition-colors ${
-            isTimeRunningLow ? 'bg-red-500' : 'bg-[#fcba28]'
-          }`}
-        />
+      {/* Options */}
+      <div className="grid grid-cols-1 gap-3">
+        {question.options.map((option, index) => {
+          const isSelected = selectedOption === option;
+          const isCorrectAnswer = showExplanation && option === question.correctAnswer;
+          const isWrongAnswer = showExplanation && isSelected && option !== question.correctAnswer;
 
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="mt-6 space-y-6"
-        >
-          <p className="text-lg text-white leading-relaxed">{question.question}</p>
-          
-          <div className="grid grid-cols-1 gap-3">
-            {question.options.map((option, index) => (
-              <motion.button
-                key={index}
-                onClick={() => onSelectOption(option)}
-                className={`p-4 rounded-lg border text-left transition-all ${
-                  selectedOption === option
-                    ? 'border-[#fcba28] bg-[#fcba28]/10 text-[#fcba28]'
-                    : 'border-gray-700 hover:border-[#fcba28]/50 hover:bg-[#fcba28]/5'
-                }`}
-                whileHover={{ scale: 1.01 }}
-                whileTap={{ scale: 0.99 }}
-              >
-                <div className="flex items-center space-x-3">
-                  <span className="w-6 h-6 flex items-center justify-center rounded-full border border-current text-sm">
-                    {String.fromCharCode(65 + index)}
-                  </span>
-                  <span>{option}</span>
-                </div>
-              </motion.button>
-            ))}
-          </div>
-
-          {question.skillsTested && (
-            <div className="mt-6 pt-6 border-t border-gray-700">
-              <h4 className="text-sm text-gray-400 mb-2">Skills Tested:</h4>
-              <div className="flex flex-wrap gap-2">
-                {question.skillsTested.map((skill, index) => (
-                  <span
-                    key={index}
-                    className="px-2 py-1 text-xs bg-[#fcba28]/10 text-[#fcba28] rounded-full"
-                  >
-                    {skill}
-                  </span>
-                ))}
+          return (
+            <Button
+              key={index}
+              onClick={() => !showExplanation && onSelectOption(option)}
+              disabled={showExplanation}
+              className={`relative overflow-hidden w-full p-4 text-left transition-all ${
+                isSelected
+                  ? isCorrectAnswer
+                    ? 'bg-green-500/20 text-green-400 border-green-500'
+                    : isWrongAnswer
+                    ? 'bg-red-500/20 text-red-400 border-red-500'
+                    : 'bg-[#fcba28]/20 text-[#fcba28] border-[#fcba28]'
+                  : isCorrectAnswer
+                  ? 'bg-green-500/20 text-green-400 border-green-500'
+                  : 'bg-black/40 text-gray-200 hover:text-[#fcba28] border-[#fcba28]/20'
+              }`}
+            >
+              <div className="absolute inset-0 bg-gradient-to-br from-[#fcba28]/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+              <div className="relative">
+                <span className="text-sm font-medium">{String.fromCharCode(65 + index)}. </span>
+                {option}
               </div>
-            </div>
-          )}
-        </motion.div>
+            </Button>
+          );
+        })}
       </div>
     </motion.div>
   );
