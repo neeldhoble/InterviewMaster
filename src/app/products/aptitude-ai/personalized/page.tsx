@@ -1,159 +1,164 @@
 "use client";
 
-import { motion } from "framer-motion";
+import { useState, useEffect, useCallback, useRef } from "react";
+import { motion, useScroll, useTransform } from "framer-motion";
+import { useGeminiAI } from "@/hooks/useGeminiAI";
+import { Button } from "@/components/ui/button";
 import { MaxWidthWrapper } from "@/components/MaxWidthWrapper";
-import { useState } from "react";
-import { FaBrain, FaRobot, FaChartLine, FaGears } from "react-icons/fa6";
-import { generatePersonalizedTest, PersonalizedTest } from "@/services/gemini-ai";
+import TopicSelector from "./components/TopicSelector";
+import QuestionCard from "./components/QuestionCard";
+import FeedbackPanel from "./components/FeedbackPanel";
+import HeroAnimation from "./components/HeroAnimation";
+import { FaBrain, FaRobot, FaChartLine, FaClock } from "react-icons/fa6";
 
-const PreferenceButton = ({ 
-  label, 
-  selected, 
-  onClick 
-}: { 
-  label: string; 
-  selected: boolean; 
-  onClick: () => void;
-}) => (
-  <motion.button
-    whileHover={{ scale: 1.05 }}
-    whileTap={{ scale: 0.95 }}
-    onClick={onClick}
-    className={`px-6 py-3 rounded-full text-sm font-semibold transition-all ${
-      selected
-        ? "bg-[#fcba28] text-black"
-        : "bg-black/20 text-white border border-[#fcba28]/20 hover:border-[#fcba28]/40"
-    }`}
-  >
-    {label}
-  </motion.button>
-);
+interface Question {
+  question: string;
+  options: string[];
+  correctAnswer: string;
+  explanation: string;
+  difficulty: string;
+  timeEstimate: number;
+  topic: string;
+  skillsTested: string[];
+}
 
-const LevelSelector = ({
-  currentLevel,
-  onSelect,
-}: {
-  currentLevel: string;
-  onSelect: (level: string) => void;
-}) => (
-  <div className="flex gap-4">
-    {["Beginner", "Intermediate", "Advanced"].map((level) => (
-      <motion.button
-        key={level}
-        whileHover={{ scale: 1.05 }}
-        whileTap={{ scale: 0.95 }}
-        onClick={() => onSelect(level)}
-        className={`px-8 py-4 rounded-xl font-semibold transition-all ${
-          currentLevel === level
-            ? "bg-[#fcba28] text-black"
-            : "bg-black/20 text-white border border-[#fcba28]/20 hover:border-[#fcba28]/40"
-        }`}
-      >
-        {level}
-      </motion.button>
-    ))}
-  </div>
-);
+interface PerformanceAnalysis {
+  overallScore: string;
+  strengths: string[];
+  weaknesses: string[];
+  recommendedTopics: string[];
+  recommendedDifficulty: string;
+  detailedFeedback: string;
+}
 
-const AIAnimation = () => (
-  <motion.div
-    className="relative w-full h-[400px]"
-    initial={{ opacity: 0 }}
-    animate={{ opacity: 1 }}
-  >
-    <motion.div
-      className="absolute inset-0 bg-gradient-to-r from-[#fcba28]/10 via-white/5 to-[#fcba28]/10 rounded-full blur-3xl"
-      animate={{
-        scale: [1, 1.2, 1],
-        opacity: [0.3, 0.5, 0.3],
-      }}
-      transition={{
-        duration: 4,
-        repeat: Infinity,
-        ease: "easeInOut",
-      }}
-    />
-    <motion.div
-      className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-8xl text-[#fcba28]"
-      animate={{
-        scale: [1, 1.1, 1],
-        rotate: [0, 5, -5, 0],
-      }}
-      transition={{
-        duration: 4,
-        repeat: Infinity,
-        ease: "easeInOut",
-      }}
-    >
-      <FaRobot />
-    </motion.div>
-    {/* Orbiting elements */}
-    {[0, 60, 120, 180, 240, 300].map((angle, i) => (
+export default function PersonalizedAptitudePage() {
+  const targetRef = useRef<HTMLDivElement>(null);
+  const { scrollYProgress } = useScroll({
+    target: targetRef,
+    offset: ["start start", "end start"],
+  });
+
+  const y = useTransform(scrollYProgress, [0, 1], ["0%", "50%"]);
+
+  const [selectedTopic, setSelectedTopic] = useState<string>("");
+  const [difficulty, setDifficulty] = useState<string>("medium");
+  const [currentQuestion, setCurrentQuestion] = useState<Question | null>(null);
+  const [selectedOption, setSelectedOption] = useState<string | null>(null);
+  const [showExplanation, setShowExplanation] = useState(false);
+  const [feedback, setFeedback] = useState<any>(null);
+  const [timeLeft, setTimeLeft] = useState<number>(0);
+  const [startTime, setStartTime] = useState<number>(0);
+  const [questionsHistory, setQuestionsHistory] = useState<Question[]>([]);
+  const [answersHistory, setAnswersHistory] = useState<string[]>([]);
+  const [analysis, setAnalysis] = useState<PerformanceAnalysis | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
+  const [score, setScore] = useState(0);
+
+  const { generateQuestion, analyzePerfomance, generatePersonalizedFeedback } = useGeminiAI();
+
+  // ... (rest of the functions remain the same)
+
+  const renderContent = () => {
+    if (!selectedTopic) {
+      return (
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0, y: -20 }}
+        >
+          <TopicSelector onSelectTopic={setSelectedTopic} />
+        </motion.div>
+      );
+    }
+
+    if (!currentQuestion) {
+      return (
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0, y: -20 }}
+          className="space-y-6 max-w-xl"
+        >
+          <div className="bg-black/40 backdrop-blur-lg rounded-xl border border-[#fcba28]/20 p-6 space-y-4">
+            <h2 className="text-2xl font-semibold text-[#fcba28]">Select Difficulty</h2>
+            <div className="space-y-4">
+              {["Easy", "Medium", "Hard"].map((d) => (
+                <Button
+                  key={d}
+                  variant={difficulty === d.toLowerCase() ? "default" : "outline"}
+                  onClick={() => {
+                    setDifficulty(d.toLowerCase());
+                    loadQuestion();
+                  }}
+                  className={`w-full h-12 text-lg ${
+                    difficulty === d.toLowerCase()
+                      ? "bg-[#fcba28] hover:bg-[#fcba28]/90 text-black"
+                      : "border-[#fcba28]/50 text-[#fcba28] hover:bg-[#fcba28]/10"
+                  }`}
+                >
+                  {d}
+                </Button>
+              ))}
+            </div>
+            <Button
+              variant="outline"
+              onClick={() => setSelectedTopic("")}
+              className="w-full mt-4 border-[#fcba28]/50 text-[#fcba28] hover:bg-[#fcba28]/10"
+            >
+              Back to Topics
+            </Button>
+          </div>
+        </motion.div>
+      );
+    }
+
+    return (
       <motion.div
-        key={angle}
-        className="absolute top-1/2 left-1/2 w-8 h-8 text-white"
-        animate={{
-          x: Math.cos((angle + i * 30) * (Math.PI / 180)) * 150,
-          y: Math.sin((angle + i * 30) * (Math.PI / 180)) * 150,
-          rotate: 360,
-        }}
-        transition={{
-          duration: 10,
-          repeat: Infinity,
-          delay: i * 0.5,
-          ease: "linear",
-        }}
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        exit={{ opacity: 0, y: -20 }}
+        className="space-y-6 max-w-2xl"
       >
-        {i % 2 === 0 ? <FaBrain /> : <FaChartLine />}
+        <QuestionCard
+          question={currentQuestion}
+          timeLeft={timeLeft}
+          selectedOption={selectedOption}
+          onSelectOption={handleOptionSelect}
+          difficulty={difficulty}
+        />
+        
+        {showExplanation && (
+          <>
+            <FeedbackPanel
+              explanation={currentQuestion.explanation}
+              feedback={feedback}
+              skillsTested={currentQuestion.skillsTested}
+            />
+            <div className="flex gap-4">
+              <Button
+                onClick={loadQuestion}
+                className="flex-1 bg-[#fcba28] hover:bg-[#fcba28]/90 text-black"
+                disabled={isLoading}
+              >
+                {isLoading ? "Loading..." : "Next Question"}
+              </Button>
+              <Button
+                variant="outline"
+                onClick={() => setSelectedTopic("")}
+                className="flex-1 border-[#fcba28]/50 text-[#fcba28] hover:bg-[#fcba28]/10"
+              >
+                Change Topic
+              </Button>
+            </div>
+          </>
+        )}
       </motion.div>
-    ))}
-  </motion.div>
-);
-
-export default function PersonalizedTestPage() {
-  const [level, setLevel] = useState("");
-  const [preferences, setPreferences] = useState<string[]>([]);
-  const [isGenerating, setIsGenerating] = useState(false);
-  const [test, setTest] = useState<PersonalizedTest | null>(null);
-
-  const topics = [
-    "Numerical Ability",
-    "Verbal Reasoning",
-    "Logical Reasoning",
-    "Data Interpretation",
-    "Non-verbal Reasoning",
-    "Basic Mathematics",
-  ];
-
-  const togglePreference = (topic: string) => {
-    setPreferences((prev) =>
-      prev.includes(topic)
-        ? prev.filter((t) => t !== topic)
-        : [...prev, topic]
     );
   };
 
-  const generateTest = async () => {
-    if (!level || preferences.length === 0) {
-      alert("Please select your level and at least one topic preference");
-      return;
-    }
-
-    setIsGenerating(true);
-    try {
-      const testData = await generatePersonalizedTest(level, preferences);
-      setTest(testData);
-    } catch (error) {
-      console.error("Error generating test:", error);
-      alert("Failed to generate test. Please try again.");
-    } finally {
-      setIsGenerating(false);
-    }
-  };
-
   return (
-    <main className="min-h-screen bg-background relative overflow-hidden">
-      {/* Background Effects */}
+    <main className="min-h-screen bg-background relative overflow-hidden" ref={targetRef}>
+      {/* Enhanced Background Effects */}
       <div className="absolute inset-0">
         <motion.div
           animate={{
@@ -166,119 +171,105 @@ export default function PersonalizedTestPage() {
           }}
           className="absolute inset-0 bg-[radial-gradient(circle_at_center,#fcba2810_0%,transparent_65%)] blur-3xl"
         />
-        <div className="absolute inset-0 bg-[linear-gradient(to_right,#80808012_1px,transparent_1px),linear-gradient(to_bottom,#80808012_1px,transparent_1px)] bg-[size:24px_24px]" />
+        <motion.div
+          style={{ y }}
+          className="absolute inset-0 bg-[linear-gradient(to_right,#80808012_1px,transparent_1px),linear-gradient(to_bottom,#80808012_1px,transparent_1px)] bg-[size:24px_24px]"
+        />
       </div>
 
       <div className="relative z-10">
         <MaxWidthWrapper>
-          {/* Hero Section */}
-          <div className="grid lg:grid-cols-2 gap-12 items-center py-20">
-            <div>
-              <motion.h1
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                className="text-5xl font-bold text-white mb-6"
-              >
-                Your{" "}
-                <span className="bg-clip-text text-transparent bg-gradient-to-r from-[#fcba28] to-[#ffd700]">
-                  Personalized
-                </span>{" "}
-                Aptitude Journey
-              </motion.h1>
-              <motion.p
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.2 }}
-                className="text-gray-200 text-lg mb-8"
-              >
-                Experience a unique learning path crafted by our AI system based on your skill level and preferences.
-              </motion.p>
-            </div>
-            <AIAnimation />
-          </div>
-
-          {/* Test Configuration Section */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.4 }}
-            className="max-w-3xl mx-auto py-12"
-          >
-            <div className="space-y-12">
-              {/* Level Selection */}
+          <div className="min-h-[90vh] grid grid-cols-1 lg:grid-cols-2 gap-12 items-start py-20">
+            {/* Left Side - Content */}
+            <div className="flex flex-col items-start text-left space-y-8">
               <div>
-                <h2 className="text-2xl font-bold text-white mb-6">Select Your Level</h2>
-                <LevelSelector currentLevel={level} onSelect={setLevel} />
-              </div>
-
-              {/* Topic Preferences */}
-              <div>
-                <h2 className="text-2xl font-bold text-white mb-6">Choose Your Focus Areas</h2>
-                <div className="flex flex-wrap gap-4">
-                  {topics.map((topic) => (
-                    <PreferenceButton
-                      key={topic}
-                      label={topic}
-                      selected={preferences.includes(topic)}
-                      onClick={() => togglePreference(topic)}
-                    />
-                  ))}
-                </div>
-              </div>
-
-              {/* Generate Button */}
-              <div className="text-center">
-                <motion.button
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
-                  onClick={generateTest}
-                  disabled={isGenerating}
-                  className="px-8 py-4 bg-[#fcba28] text-black rounded-full font-semibold inline-flex items-center gap-2 disabled:opacity-50"
+                <motion.div
+                  initial={{ opacity: 0, x: -50 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ duration: 0.8 }}
+                  className="flex items-center gap-4 text-[#fcba28] mb-6"
                 >
-                  {isGenerating ? (
-                    <>
-                      <FaGears className="animate-spin" />
-                      Generating Your Test...
-                    </>
-                  ) : (
-                    <>
-                      <FaRobot />
-                      Generate Personalized Test
-                    </>
-                  )}
-                </motion.button>
-              </div>
-            </div>
-          </motion.div>
+                  <FaBrain className="text-3xl" />
+                  <FaRobot className="text-3xl" />
+                </motion.div>
 
-          {/* Features Section */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            className="py-20"
-          >
-            <h2 className="text-3xl font-bold text-center text-white mb-12">
-              Why Choose Personalized Testing?
-            </h2>
-            <div className="grid md:grid-cols-3 gap-8">
-              <div className="p-6 rounded-xl bg-black/40 backdrop-blur-lg border border-[#fcba28]/20">
-                <FaBrain className="text-[#fcba28] text-3xl mb-4" />
-                <h3 className="text-xl font-bold text-white mb-2">Adaptive Learning</h3>
-                <p className="text-gray-200">Questions that adapt to your skill level and learning pace</p>
+                <motion.h1
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className="text-5xl lg:text-6xl font-bold text-white mb-6"
+                >
+                  Personalized{" "}
+                  <span className="bg-clip-text text-transparent bg-gradient-to-r from-[#fcba28] to-[#ffd700]">
+                    AI-Powered
+                  </span>{" "}
+                  Practice
+                </motion.h1>
+
+                <motion.p
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.2 }}
+                  className="text-xl text-gray-200 mb-8"
+                >
+                  Experience adaptive learning that evolves with your progress. Our AI creates a unique
+                  path tailored to your learning style.
+                </motion.p>
+
+                {/* Quick Stats */}
+                {!selectedTopic && (
+                  <motion.div
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.6 }}
+                    className="grid grid-cols-4 gap-8 mt-12"
+                  >
+                    <div>
+                      <p className="text-3xl font-bold text-[#fcba28]">5+</p>
+                      <p className="text-gray-200">Topics</p>
+                    </div>
+                    <div>
+                      <p className="text-3xl font-bold text-[#fcba28]">3</p>
+                      <p className="text-gray-200">Difficulty Levels</p>
+                    </div>
+                    <div>
+                      <p className="text-3xl font-bold text-[#fcba28]">AI</p>
+                      <p className="text-gray-200">Powered</p>
+                    </div>
+                    <div>
+                      <p className="text-3xl font-bold text-[#fcba28]">24/7</p>
+                      <p className="text-gray-200">Available</p>
+                    </div>
+                  </motion.div>
+                )}
               </div>
-              <div className="p-6 rounded-xl bg-black/40 backdrop-blur-lg border border-[#fcba28]/20">
-                <FaRobot className="text-[#fcba28] text-3xl mb-4" />
-                <h3 className="text-xl font-bold text-white mb-2">AI-Powered Insights</h3>
-                <p className="text-gray-200">Detailed feedback and improvement suggestions from our AI</p>
-              </div>
-              <div className="p-6 rounded-xl bg-black/40 backdrop-blur-lg border border-[#fcba28]/20">
-                <FaChartLine className="text-[#fcba28] text-3xl mb-4" />
-                <h3 className="text-xl font-bold text-white mb-2">Progress Tracking</h3>
-                <p className="text-gray-200">Monitor your improvement with detailed analytics</p>
-              </div>
+
+              {renderContent()}
             </div>
-          </motion.div>
+
+            {/* Right Side - Animation */}
+            <motion.div
+              initial={{ opacity: 0, scale: 0.8 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ duration: 0.8 }}
+              className="sticky top-8"
+            >
+              <HeroAnimation />
+              {currentQuestion && (
+                <motion.div
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className="mt-8 text-center bg-black/40 backdrop-blur-lg rounded-xl border border-[#fcba28]/20 p-6"
+                >
+                  <div className="text-3xl font-bold text-[#fcba28]">
+                    Score: {score}
+                  </div>
+                  <div className="text-gray-200">
+                    Question {questionsHistory.length + 1}
+                  </div>
+                </motion.div>
+              )}
+            </motion.div>
+          </div>
         </MaxWidthWrapper>
       </div>
     </main>
