@@ -10,6 +10,8 @@ import QuestionCard from "./components/QuestionCard";
 import FeedbackPanel from "./components/FeedbackPanel";
 import HeroAnimation from "./components/HeroAnimation";
 import { FaBrain, FaRobot, FaChartLine, FaClock } from "react-icons/fa6";
+import ProgressDashboard from "./components/ProgressDashboard";
+import LearningPath from "./components/LearningPath";
 
 interface Question {
   question: string;
@@ -82,6 +84,111 @@ export default function PersonalizedAptitudePage() {
     dailyGoal: 10,
     studyReminders: false,
     difficultyPreference: 'adaptive'
+  });
+
+  const [view, setView] = useState<'practice' | 'progress' | 'path'>('practice');
+  const [dailyProgress, setDailyProgress] = useState<{
+    date: string;
+    accuracy: number;
+    questionsAttempted: number;
+  }[]>([]);
+  const [learningStyle, setLearningStyle] = useState({
+    visual: 30,
+    verbal: 25,
+    logical: 25,
+    mathematical: 20
+  });
+  const [achievements, setAchievements] = useState([
+    {
+      id: 'streak_master',
+      name: 'Streak Master',
+      description: 'Maintain a streak of 7 days',
+      earned: false,
+      progress: 3,
+      maxProgress: 7
+    },
+    {
+      id: 'speed_demon',
+      name: 'Speed Demon',
+      description: 'Complete 10 questions under time limit',
+      earned: false,
+      progress: 7,
+      maxProgress: 10
+    },
+    {
+      id: 'perfect_score',
+      name: 'Perfect Score',
+      description: 'Get 100% in any topic',
+      earned: false,
+      progress: 90,
+      maxProgress: 100
+    }
+  ]);
+  const [learningPath, setLearningPath] = useState({
+    currentLevel: 2,
+    pathProgress: [
+      {
+        level: 1,
+        name: 'Fundamentals',
+        description: 'Master the basics',
+        completed: true,
+        unlocked: true,
+        topics: [
+          {
+            id: 'basic_math',
+            name: 'Basic Mathematics',
+            status: 'completed' as const,
+            score: 95,
+            requiredScore: 80
+          },
+          {
+            id: 'logical_basics',
+            name: 'Logical Reasoning Basics',
+            status: 'completed' as const,
+            score: 88,
+            requiredScore: 80
+          }
+        ]
+      },
+      {
+        level: 2,
+        name: 'Intermediate',
+        description: 'Advanced concepts and applications',
+        completed: false,
+        unlocked: true,
+        topics: [
+          {
+            id: 'advanced_math',
+            name: 'Advanced Mathematics',
+            status: 'available' as const,
+            score: 45,
+            requiredScore: 80
+          },
+          {
+            id: 'data_interpretation',
+            name: 'Data Interpretation',
+            status: 'available' as const,
+            score: 0,
+            requiredScore: 80
+          }
+        ]
+      },
+      {
+        level: 3,
+        name: 'Expert',
+        description: 'Complex problem solving',
+        completed: false,
+        unlocked: false,
+        topics: [
+          {
+            id: 'expert_math',
+            name: 'Expert Mathematics',
+            status: 'locked' as const,
+            requiredScore: 90
+          }
+        ]
+      }
+    ]
   });
 
   const { generateQuestion, analyzePerfomance, generatePersonalizedFeedback } = useGeminiAI();
@@ -229,130 +336,101 @@ export default function PersonalizedAptitudePage() {
     return clearTimer;
   }, [clearTimer]);
 
-  const renderContent = () => {
-    if (!selectedTopic) {
-      return (
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          exit={{ opacity: 0, y: -20 }}
-        >
-          <TopicSelector onSelectTopic={setSelectedTopic} />
-        </motion.div>
-      );
+  const updateDailyProgress = useCallback(() => {
+    const today = new Date().toISOString().split('T')[0];
+    setDailyProgress(prev => {
+      const todayProgress = prev.find(p => p.date === today);
+      if (todayProgress) {
+        return prev.map(p => 
+          p.date === today
+            ? {
+                ...p,
+                accuracy: performanceMetrics.accuracy * 100,
+                questionsAttempted: performanceMetrics.totalQuestionsAttempted
+              }
+            : p
+        );
+      }
+      return [...prev, {
+        date: today,
+        accuracy: performanceMetrics.accuracy * 100,
+        questionsAttempted: performanceMetrics.totalQuestionsAttempted
+      }];
+    });
+  }, [performanceMetrics]);
+
+  const updateAchievements = useCallback(() => {
+    setAchievements(prev => prev.map(achievement => {
+      switch (achievement.id) {
+        case 'streak_master':
+          return {
+            ...achievement,
+            progress: performanceMetrics.streaks.current,
+            earned: performanceMetrics.streaks.current >= 7
+          };
+        case 'speed_demon':
+          const fastQuestions = questionsHistory.filter((_, i) => {
+            const timeSpent = answersHistory[i] ? 
+              Math.floor((Date.now() - startTime) / 1000) : 0;
+            return timeSpent < timeLeft * 0.5;
+          }).length;
+          return {
+            ...achievement,
+            progress: fastQuestions,
+            earned: fastQuestions >= 10
+          };
+        case 'perfect_score':
+          const topicScores = Object.values(performanceMetrics.topicWisePerformance)
+            .map(({ correct, total }) => (correct / total) * 100);
+          const maxScore = Math.max(...topicScores, 0);
+          return {
+            ...achievement,
+            progress: Math.round(maxScore),
+            earned: maxScore >= 100
+          };
+        default:
+          return achievement;
+      }
+    }));
+  }, [performanceMetrics, questionsHistory, answersHistory, startTime, timeLeft]);
+
+  useEffect(() => {
+    if (showExplanation) {
+      updateDailyProgress();
+      updateAchievements();
     }
+  }, [showExplanation, updateDailyProgress, updateAchievements]);
 
-    if (isLoading) {
-      return (
-        <div className="flex items-center justify-center min-h-[400px]">
-          <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-[#fcba28]"></div>
-        </div>
-      );
-    }
-
-    if (!currentQuestion) {
-      return (
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          exit={{ opacity: 0, y: -20 }}
-          className="space-y-6 max-w-xl"
-        >
-          <div className="bg-black/40 backdrop-blur-lg rounded-xl border border-[#fcba28]/20 p-6 space-y-4">
-            <h2 className="text-2xl font-semibold text-[#fcba28]">Select Difficulty</h2>
-            <div className="space-y-4">
-              {["Easy", "Medium", "Hard"].map((d) => (
-                <Button
-                  key={d}
-                  variant={difficulty === d.toLowerCase() ? "default" : "outline"}
-                  onClick={() => {
-                    setDifficulty(d.toLowerCase());
-                    loadQuestion();
-                  }}
-                  className={`w-full h-12 text-lg ${
-                    difficulty === d.toLowerCase()
-                      ? "bg-[#fcba28] hover:bg-[#fcba28]/90 text-black"
-                      : "border-[#fcba28]/50 text-[#fcba28] hover:bg-[#fcba28]/10"
-                  }`}
-                >
-                  {d}
-                </Button>
-              ))}
-            </div>
-            <Button
-              variant="outline"
-              onClick={() => setSelectedTopic("")}
-              className="w-full mt-4 border-[#fcba28]/50 text-[#fcba28] hover:bg-[#fcba28]/10"
-            >
-              Back to Topics
-            </Button>
-          </div>
-        </motion.div>
-      );
-    }
-
-    return (
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        exit={{ opacity: 0, y: -20 }}
-        className="space-y-6"
-      >
-        <QuestionCard
-          question={currentQuestion}
-          timeLeft={timeLeft}
-          selectedOption={selectedOption}
-          onSelectOption={setSelectedOption}
-          difficulty={difficulty}
-          performanceMetrics={performanceMetrics}
-        />
-
-        {showExplanation && feedback && (
-          <>
-            <FeedbackPanel
-              explanation={currentQuestion.explanation}
-              feedback={feedback}
-              skillsTested={currentQuestion.skillsTested}
-              performanceMetrics={performanceMetrics}
-            />
-            <div className="flex justify-center">
-              <Button
-                onClick={handleNextQuestion}
-                className="bg-[#fcba28] hover:bg-[#fcba28]/90 text-black px-8 py-3 text-lg"
-              >
-                Next Question
-              </Button>
-            </div>
-          </>
-        )}
-      </motion.div>
-    );
-  };
-
-  return (
-    <main className="min-h-screen bg-background relative overflow-hidden" ref={targetRef}>
-      {/* Enhanced Background Effects */}
-      <div className="absolute inset-0">
-        <motion.div
-          animate={{
-            backgroundPosition: ["0% 0%", "100% 100%"],
-          }}
-          transition={{
-            duration: 20,
-            repeat: Infinity,
-            repeatType: "reverse",
-          }}
-          className="absolute inset-0 bg-[radial-gradient(circle_at_center,#fcba2810_0%,transparent_65%)] blur-3xl"
-        />
-        <motion.div
-          style={{ y }}
-          className="absolute inset-0 bg-[linear-gradient(to_right,#80808012_1px,transparent_1px),linear-gradient(to_bottom,#80808012_1px,transparent_1px)] bg-[size:24px_24px]"
-        />
-      </div>
-
-      <div className="relative z-10">
-        <MaxWidthWrapper>
-          <div className="min-h-[90vh] grid grid-cols-1 lg:grid-cols-2 gap-12 items-start py-20">
+  const renderMainContent = () => {
+    switch (view) {
+      case 'progress':
+        return (
+          <ProgressDashboard
+            performanceMetrics={performanceMetrics}
+            dailyProgress={dailyProgress}
+            learningStyle={learningStyle}
+            achievements={achievements}
+          />
+        );
+      case 'path':
+        return (
+          <LearningPath
+            currentLevel={learningPath.currentLevel}
+            pathProgress={learningPath.pathProgress}
+            onSelectTopic={(topicId) => {
+              const topic = learningPath.pathProgress
+                .flatMap(level => level.topics)
+                .find(t => t.id === topicId);
+              if (topic) {
+                setSelectedTopic(topic.name);
+                setView('practice');
+              }
+            }}
+          />
+        );
+      default:
+        return (
+          <div className="min-h-[90vh] grid grid-cols-1 lg:grid-cols-2 gap-12 items-start">
             {/* Left Side - Content */}
             <div className="flex flex-col items-start text-left space-y-8">
               <div>
@@ -388,35 +466,68 @@ export default function PersonalizedAptitudePage() {
                   path tailored to your learning style.
                 </motion.p>
 
-                {/* Quick Stats */}
                 {!selectedTopic && (
                   <motion.div
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: 0.6 }}
-                    className="grid grid-cols-4 gap-8 mt-12"
+                    transition={{ delay: 0.4 }}
+                    className="grid grid-cols-2 md:grid-cols-4 gap-6 mt-12"
                   >
-                    <div>
-                      <p className="text-3xl font-bold text-[#fcba28]">5+</p>
-                      <p className="text-gray-200">Topics</p>
+                    <div className="relative overflow-hidden rounded-xl bg-black/40 backdrop-blur-lg border border-[#fcba28]/20 p-4 group">
+                      <div className="absolute inset-0 bg-gradient-to-br from-[#fcba28]/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+                      <div className="relative">
+                        <p className="text-3xl font-bold text-[#fcba28]">5+</p>
+                        <p className="text-gray-200">Topics</p>
+                      </div>
                     </div>
-                    <div>
-                      <p className="text-3xl font-bold text-[#fcba28]">3</p>
-                      <p className="text-gray-200">Difficulty Levels</p>
+                    <div className="relative overflow-hidden rounded-xl bg-black/40 backdrop-blur-lg border border-[#fcba28]/20 p-4 group">
+                      <div className="absolute inset-0 bg-gradient-to-br from-[#fcba28]/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+                      <div className="relative">
+                        <p className="text-3xl font-bold text-[#fcba28]">3</p>
+                        <p className="text-gray-200">Difficulty Levels</p>
+                      </div>
                     </div>
-                    <div>
-                      <p className="text-3xl font-bold text-[#fcba28]">AI</p>
-                      <p className="text-gray-200">Powered</p>
+                    <div className="relative overflow-hidden rounded-xl bg-black/40 backdrop-blur-lg border border-[#fcba28]/20 p-4 group">
+                      <div className="absolute inset-0 bg-gradient-to-br from-[#fcba28]/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+                      <div className="relative">
+                        <p className="text-3xl font-bold text-[#fcba28]">AI</p>
+                        <p className="text-gray-200">Powered</p>
+                      </div>
                     </div>
-                    <div>
-                      <p className="text-3xl font-bold text-[#fcba28]">24/7</p>
-                      <p className="text-gray-200">Available</p>
+                    <div className="relative overflow-hidden rounded-xl bg-black/40 backdrop-blur-lg border border-[#fcba28]/20 p-4 group">
+                      <div className="absolute inset-0 bg-gradient-to-br from-[#fcba28]/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+                      <div className="relative">
+                        <p className="text-3xl font-bold text-[#fcba28]">24/7</p>
+                        <p className="text-gray-200">Available</p>
+                      </div>
                     </div>
                   </motion.div>
                 )}
               </div>
 
-              {renderContent()}
+              {selectedTopic ? (
+                <div className="w-full">
+                  <QuestionCard
+                    question={currentQuestion}
+                    timeLeft={timeLeft}
+                    selectedOption={selectedOption}
+                    onSelectOption={setSelectedOption}
+                    difficulty={difficulty}
+                    performanceMetrics={performanceMetrics}
+                  />
+
+                  {showExplanation && feedback && (
+                    <FeedbackPanel
+                      explanation={currentQuestion.explanation}
+                      feedback={feedback}
+                      skillsTested={currentQuestion.skillsTested}
+                      performanceMetrics={performanceMetrics}
+                    />
+                  )}
+                </div>
+              ) : (
+                <TopicSelector onSelectTopic={setSelectedTopic} />
+              )}
             </div>
 
             {/* Right Side - Animation */}
@@ -431,17 +542,111 @@ export default function PersonalizedAptitudePage() {
                 <motion.div
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
-                  className="mt-8 text-center bg-black/40 backdrop-blur-lg rounded-xl border border-[#fcba28]/20 p-6"
+                  className="mt-8 text-center relative overflow-hidden rounded-xl bg-black/40 backdrop-blur-lg border border-[#fcba28]/20 p-6 group"
                 >
-                  <div className="text-3xl font-bold text-[#fcba28]">
-                    Score: {score}
-                  </div>
-                  <div className="text-gray-200">
-                    Question {questionsHistory.length + 1}
+                  <div className="absolute inset-0 bg-gradient-to-br from-[#fcba28]/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+                  <div className="relative">
+                    <div className="text-3xl font-bold text-[#fcba28]">
+                      Score: {score}
+                    </div>
+                    <div className="text-gray-200">
+                      Question {questionsHistory.length + 1}
+                    </div>
                   </div>
                 </motion.div>
               )}
             </motion.div>
+          </div>
+        );
+    }
+  };
+
+  return (
+    <main className="min-h-screen relative overflow-hidden" ref={targetRef}>
+      {/* Enhanced Background Effects */}
+      <div className="absolute inset-0">
+        <motion.div
+          animate={{
+            backgroundPosition: ["0% 0%", "100% 100%"],
+          }}
+          transition={{
+            duration: 20,
+            repeat: Infinity,
+            repeatType: "reverse",
+          }}
+          className="absolute inset-0 bg-[radial-gradient(circle_at_center,#fcba2810_0%,transparent_65%)] blur-3xl"
+        />
+        <motion.div
+          style={{ y }}
+          className="absolute inset-0 bg-[linear-gradient(to_right,#80808012_1px,transparent_1px),linear-gradient(to_bottom,#80808012_1px,transparent_1px)] bg-[size:24px_24px]"
+        />
+      </div>
+
+      <div className="relative z-10">
+        <MaxWidthWrapper>
+          {/* Navigation */}
+          <div className="py-8 flex items-center justify-between">
+            <h1 className="text-3xl font-bold text-[#fcba28]">
+              Personalized Aptitude Training
+            </h1>
+            <div className="flex items-center space-x-4">
+              <Button
+                variant="ghost"
+                onClick={() => setView('practice')}
+                className={`relative px-6 py-2 group ${
+                  view === 'practice'
+                    ? 'text-[#fcba28]'
+                    : 'text-gray-400 hover:text-[#fcba28]'
+                }`}
+              >
+                {view === 'practice' && (
+                  <motion.div
+                    layoutId="activeTab"
+                    className="absolute inset-0 rounded-lg bg-[#fcba28]/10 border border-[#fcba28]/20"
+                  />
+                )}
+                <span className="relative">Practice</span>
+              </Button>
+              <Button
+                variant="ghost"
+                onClick={() => setView('progress')}
+                className={`relative px-6 py-2 group ${
+                  view === 'progress'
+                    ? 'text-[#fcba28]'
+                    : 'text-gray-400 hover:text-[#fcba28]'
+                }`}
+              >
+                {view === 'progress' && (
+                  <motion.div
+                    layoutId="activeTab"
+                    className="absolute inset-0 rounded-lg bg-[#fcba28]/10 border border-[#fcba28]/20"
+                  />
+                )}
+                <span className="relative">Progress</span>
+              </Button>
+              <Button
+                variant="ghost"
+                onClick={() => setView('path')}
+                className={`relative px-6 py-2 group ${
+                  view === 'path'
+                    ? 'text-[#fcba28]'
+                    : 'text-gray-400 hover:text-[#fcba28]'
+                }`}
+              >
+                {view === 'path' && (
+                  <motion.div
+                    layoutId="activeTab"
+                    className="absolute inset-0 rounded-lg bg-[#fcba28]/10 border border-[#fcba28]/20"
+                  />
+                )}
+                <span className="relative">Learning Path</span>
+              </Button>
+            </div>
+          </div>
+
+          {/* Main Content */}
+          <div className="py-8">
+            {renderMainContent()}
           </div>
         </MaxWidthWrapper>
       </div>
