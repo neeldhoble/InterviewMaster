@@ -476,7 +476,9 @@ export default function PersonalizedAptitudePage() {
                     <div className="relative overflow-hidden rounded-xl bg-black/40 backdrop-blur-lg border border-[#fcba28]/20 p-4 group">
                       <div className="absolute inset-0 bg-gradient-to-br from-[#fcba28]/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
                       <div className="relative">
-                        <p className="text-3xl font-bold text-[#fcba28]">5+</p>
+                        <p className="text-3xl font-bold text-[#fcba28]">
+                          5+
+                        </p>
                         <p className="text-gray-200">Topics</p>
                       </div>
                     </div>
@@ -585,15 +587,20 @@ export default function PersonalizedAptitudePage() {
       <div className="relative z-10">
         <MaxWidthWrapper>
           {/* Navigation */}
-          <div className="py-8 flex items-center justify-between">
-            <h1 className="text-3xl font-bold text-[#fcba28]">
-              Personalized Aptitude Training
-            </h1>
-            <div className="flex items-center space-x-4">
+          <div className="pt-12 pb-8 px-4 md:px-8 flex flex-col md:flex-row md:items-center justify-between space-y-6 md:space-y-0">
+            <div className="flex flex-col space-y-2">
+              <h1 className="text-4xl font-bold text-[#fcba28]">
+                Personalized Aptitude Training
+              </h1>
+              <p className="text-gray-400 text-lg">
+                Master your skills with AI-powered adaptive learning
+              </p>
+            </div>
+            <div className="flex items-center space-x-4 bg-black/20 backdrop-blur-lg rounded-xl p-1.5">
               <Button
                 variant="ghost"
                 onClick={() => setView('practice')}
-                className={`relative px-6 py-2 group ${
+                className={`relative px-6 py-2.5 group ${
                   view === 'practice'
                     ? 'text-[#fcba28]'
                     : 'text-gray-400 hover:text-[#fcba28]'
@@ -610,7 +617,7 @@ export default function PersonalizedAptitudePage() {
               <Button
                 variant="ghost"
                 onClick={() => setView('progress')}
-                className={`relative px-6 py-2 group ${
+                className={`relative px-6 py-2.5 group ${
                   view === 'progress'
                     ? 'text-[#fcba28]'
                     : 'text-gray-400 hover:text-[#fcba28]'
@@ -627,7 +634,7 @@ export default function PersonalizedAptitudePage() {
               <Button
                 variant="ghost"
                 onClick={() => setView('path')}
-                className={`relative px-6 py-2 group ${
+                className={`relative px-6 py-2.5 group ${
                   view === 'path'
                     ? 'text-[#fcba28]'
                     : 'text-gray-400 hover:text-[#fcba28]'
@@ -645,7 +652,7 @@ export default function PersonalizedAptitudePage() {
           </div>
 
           {/* Main Content */}
-          <div className="py-8">
+          <div className="py-8 px-4 md:px-8">
             {renderMainContent()}
           </div>
         </MaxWidthWrapper>
