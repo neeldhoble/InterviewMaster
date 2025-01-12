@@ -11,7 +11,7 @@ import { ConvexAuthNextjsServerProvider } from "@convex-dev/auth/nextjs/server";
 import NextTopLoader from 'nextjs-toploader';
 import { Header } from "@/components/Header";
 import { Footer } from "@/components/Footer";
-import { Toaster } from "@/components/ui/sonner";
+import { Toaster } from "@/components/ui/toaster"; 
 import { AuthModal } from "@/features/auth/components/AuthModal"; 
 import { AuthProvider } from '@/features/auth/context/AuthContext'; // Added import statement
 
@@ -27,7 +27,7 @@ export default function RootLayout({
 }) {
   return (
     <ConvexAuthNextjsServerProvider>
-      <html lang="en" suppressHydrationWarning>
+      <html lang="en">
         <head>
           <link rel="icon" href="/favicon.ico" />
         </head>
@@ -42,11 +42,11 @@ export default function RootLayout({
               {/* TODO: Use a different color here based on your app theme */}
               <NextTopLoader showSpinner={false} color="#fcba28" />
               <div id="portal-root" /> {/* Add portal root for modals */}
-              <Toaster />
               <Header />
               <AuthModal />
               <main>{children}</main>
               <Footer />
+              <Toaster />
               <Analytics />
             </AuthProvider>
           </ConvexClientProvider>
