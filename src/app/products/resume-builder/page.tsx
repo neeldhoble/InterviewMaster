@@ -122,7 +122,7 @@ export default function ResumeBuilderPage() {
                         </p>
                         <div className="flex flex-wrap gap-4 justify-center">
                             <CTAButton 
-                                href="/products/resume-builder/features/ai" 
+                                href="/products/resume-builder/features/ai-resume" 
                                 variant="primary"
                                 icon={Brain}
                                 size="lg"
