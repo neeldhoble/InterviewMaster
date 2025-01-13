@@ -148,14 +148,15 @@ export const Header = () => {
   const menuRef = useRef<HTMLDivElement>(null);
   const [isNavigating, setIsNavigating] = useState(false);
 
-  // Increased timeout duration
-  const HOVER_TIMEOUT = 550; // 300ms for smoother interaction
+  // Increased timeout duration for smoother interaction
+  const HOVER_TIMEOUT = 200; // Opening delay
+  const CLOSE_TIMEOUT = 500; // Closing delay
 
-  // Mount check with increased timeout
+  // Mount check
   useEffect(() => {
     const timeout = setTimeout(() => {
       setIsMounted(true);
-    }, HOVER_TIMEOUT);
+    }, 100);
 
     return () => {
       setIsMounted(false);
@@ -189,7 +190,7 @@ export const Header = () => {
     }
   });
 
-  // Enhanced menu hover handler with delay
+  // Enhanced menu hover handler with improved timing
   const handleMenuHover = useCallback((index: number | null) => {
     if (!isMounted || isNavigating) return;
     
@@ -198,13 +199,17 @@ export const Header = () => {
     }
 
     if (index === null) {
+      // Delay closing the menu
       timeoutRef.current = setTimeout(() => {
         setActiveMenu(null);
-      }, HOVER_TIMEOUT);
+      }, CLOSE_TIMEOUT);
     } else {
-      setActiveMenu(index);
+      // Open menu with a shorter delay
+      timeoutRef.current = setTimeout(() => {
+        setActiveMenu(index);
+      }, HOVER_TIMEOUT);
     }
-  }, [isMounted, isNavigating, HOVER_TIMEOUT]);
+  }, [isMounted, isNavigating, HOVER_TIMEOUT, CLOSE_TIMEOUT]);
 
   // Navigation handler
   const handleMenuClick = useCallback((href: string) => {
