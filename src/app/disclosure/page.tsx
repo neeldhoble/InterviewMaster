@@ -2,88 +2,123 @@ import Link from 'next/link';
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "Disclosures",
+  title: "InterviewMaster.ai - Disclosures",
+  description: "Important disclosures about our AI interview coaching platform, data usage, and privacy practices."
 }
-// TOOD: This is a mandatory that Microsoft Clarity and Microsoft Advertising agree on
+
 export default function Disclosures() {
     return (
-        <div className="container mx-auto p-6 bg-background text-foreground max-w-3xl my-24">
-            <h1 className="text-3xl font-bold mb-8 border-b pb-2">Disclosures</h1>
+        <div className="min-h-screen bg-background">
+            <div className="container mx-auto px-4 py-20 max-w-4xl">
+                <h1 className="text-4xl md:text-5xl font-bold mb-8 bg-gradient-to-r from-[#fcba28] via-[#fcd978] to-[#fcba28] text-transparent bg-clip-text">
+                    Disclosures
+                </h1>
 
-            <section className="mb-8">
-                <h2 className="text-2xl font-semibold mb-4 text-[#fcba28]">Website Data Usage Disclosure</h2>
-                <p className="mb-4">
-                    Our website uses <strong>Microsoft Clarity</strong> to analyze how visitors interact with
-                    our site. This helps us improve our products, services, and advertising strategies.
-                    By using this site, you agree that we and Microsoft can collect and use this data.
-                </p>
-                <p className="mb-4">
-                    For more information on how we handle your data, please review our{' '}
-                    <Link href="/privacy-policy" className="text-[#fcba28] hover:text-[#fcba28]/70 hover:underline">
-                        Privacy Policy
-                    </Link>.
-                </p>
-            </section>
+                <div className="space-y-12">
+                    <section>
+                        <h2 className="text-2xl font-semibold mb-6 text-[#fcba28]">AI Interview Coaching Disclosure</h2>
+                        <div className="space-y-4 text-gray-300">
+                            <p>
+                                InterviewMaster.ai uses advanced artificial intelligence to provide interview coaching and feedback.
+                                While our AI technology is designed to provide helpful guidance, please note:
+                            </p>
+                            <ul className="list-disc list-inside space-y-2 pl-4">
+                                <li>Our AI feedback is for practice and guidance purposes only</li>
+                                <li>The AI's responses are generated based on training data and may not perfectly match real-world scenarios</li>
+                                <li>Users should use their judgment when applying AI suggestions</li>
+                                <li>We continuously improve our AI models based on user interactions</li>
+                            </ul>
+                        </div>
+                    </section>
 
-            <section className="mb-8">
-                <h2 className="text-2xl font-semibold mb-4 text-[#fcba28]">Privacy Policy on Data Collection</h2>
-                <p className="mb-4">
-                    We partner with <strong>Microsoft Clarity</strong> and <strong>Microsoft Advertising</strong>
-                    to gather insights about your usage of our website. This includes:
-                </p>
-                <ul className="list-disc list-inside mb-4 pl-4">
-                    <li>Behavioral metrics</li>
-                    <li>Heatmaps</li>
-                    <li>Session replays</li>
-                </ul>
-                <p className="mb-4">
-                    These tools allow us to optimize our website, enhance security, and improve marketing
-                    strategies. Data is collected using first and third-party cookies and other tracking
-                    technologies.
-                </p>
-                <p className="mb-4">
-                    Additionally, we use the information to improve site performance, detect fraudulent
-                    activity, and support advertising efforts. To learn more about how Microsoft handles your
-                    data, please visit the{' '}
-                    <Link
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="text-foreground hover:underline"
-                        href="https://privacy.microsoft.com/en-us/privacystatement"
-                    >
-                        Microsoft Privacy Statement
-                    </Link>.
-                </p>
-            </section>
+                    <section>
+                        <h2 className="text-2xl font-semibold mb-6 text-[#fcba28]">Data Collection & Usage</h2>
+                        <div className="space-y-4 text-gray-300">
+                            <p>
+                                To provide our AI interview coaching services, we collect and process the following types of data:
+                            </p>
+                            <ul className="list-disc list-inside space-y-2 pl-4">
+                                <li>Interview responses and transcripts</li>
+                                <li>Video recordings (when enabled)</li>
+                                <li>Practice session analytics</li>
+                                <li>User preferences and settings</li>
+                                <li>Performance metrics and feedback</li>
+                            </ul>
+                            <p>
+                                We use this data to:
+                            </p>
+                            <ul className="list-disc list-inside space-y-2 pl-4">
+                                <li>Provide personalized interview feedback</li>
+                                <li>Improve our AI coaching algorithms</li>
+                                <li>Enhance user experience</li>
+                                <li>Generate anonymous usage statistics</li>
+                            </ul>
+                        </div>
+                    </section>
 
-            <section>
-                <h2 className="text-2xl font-semibold mb-4 text-[#fcba28]">Frequently Asked Questions</h2>
-                <div className="space-y-4">
-                    <div>
-                        <h3 className="text-lg font-medium mb-2">How can I contact you about data collection practices?</h3>
-                        <p>
-                            If you have any questions regarding our data collection practices, please feel free to{" "}
-                            <Link href="mailto:achris.alonzo30@gmail.com" className="text-[#fcba28] hover:text-[#fcba28]/70 hover:underline">
-                                contact us.
-                            </Link>
+                    <section>
+                        <h2 className="text-2xl font-semibold mb-6 text-[#fcba28]">Analytics & Tracking</h2>
+                        <div className="space-y-4 text-gray-300">
+                            <p>
+                                We use <strong>Microsoft Clarity</strong> and other analytics tools to understand how users interact
+                                with our platform. This includes:
+                            </p>
+                            <ul className="list-disc list-inside space-y-2 pl-4">
+                                <li>Usage patterns and behavioral metrics</li>
+                                <li>Feature engagement statistics</li>
+                                <li>Performance monitoring</li>
+                                <li>Error tracking</li>
+                            </ul>
+                            <p>
+                                For more information about our data practices, please review our{' '}
+                                <Link href="/privacy-policy" className="text-[#fcba28] hover:text-[#fcba28]/70 hover:underline">
+                                    Privacy Policy
+                                </Link>.
+                            </p>
+                        </div>
+                    </section>
+
+                    <section>
+                        <h2 className="text-2xl font-semibold mb-6 text-[#fcba28]">Frequently Asked Questions</h2>
+                        <div className="space-y-6">
+                            <div>
+                                <h3 className="text-lg font-medium mb-2 text-white">How is my interview data used?</h3>
+                                <p className="text-gray-300">
+                                    Your interview responses and recordings are used to provide immediate feedback and may be used
+                                    in an anonymized form to improve our AI models. Personal identifiers are removed before any
+                                    data is used for model training.
+                                </p>
+                            </div>
+                            <div>
+                                <h3 className="text-lg font-medium mb-2 text-white">Can I delete my practice session data?</h3>
+                                <p className="text-gray-300">
+                                    Yes, you can delete your practice session data at any time from your account settings.
+                                    However, anonymized data that has been used for AI model training cannot be retroactively
+                                    removed from the model.
+                                </p>
+                            </div>
+                            <div>
+                                <h3 className="text-lg font-medium mb-2 text-white">How do you protect my privacy?</h3>
+                                <p className="text-gray-300">
+                                    We employ industry-standard security measures to protect your data. Video recordings and
+                                    interview responses are encrypted, and access is strictly controlled. We never share your
+                                    personal data with third parties without your explicit consent.
+                                </p>
+                            </div>
+                        </div>
+                    </section>
+
+                    <section>
+                        <h2 className="text-2xl font-semibold mb-6 text-[#fcba28]">Contact Us</h2>
+                        <p className="text-gray-300">
+                            If you have any questions about these disclosures or our data practices, please{' '}
+                            <Link href="/contact" className="text-[#fcba28] hover:text-[#fcba28]/70 hover:underline">
+                                contact our support team
+                            </Link>.
                         </p>
-                    </div>
-                    <div>
-                        <h3 className="text-lg font-medium mb-2">Can I opt out of data collection?</h3>
-                        <p>
-                            While we strive to provide the best user experience, you can opt out of certain data collection
-                            practices. Please refer to our Privacy Policy for more information on managing your data preferences.
-                        </p>
-                    </div>
-                    <div>
-                        <h3 className="text-lg font-medium mb-2">How long do you retain my data?</h3>
-                        <p>
-                            We retain your data for as long as necessary to fulfill the purposes outlined in our Privacy Policy.
-                            The specific retention period may vary depending on the type of data and legal requirements.
-                        </p>
-                    </div>
+                    </section>
                 </div>
-            </section>
+            </div>
         </div>
-    )
+    );
 }
