@@ -1,6 +1,6 @@
 "use client";
 
-import React, { createContext, useContext, useState } from 'react';
+import React, { createContext, useContext, useState, ReactNode } from 'react';
 import { GoogleGenerativeAI } from "@google/generative-ai";
 
 // Types
@@ -95,8 +95,7 @@ interface ResumeContextType {
   updateVolunteerWork: (volunteerWork: VolunteerWork[]) => void;
   updateTemplateId: (id: number) => void;
   updateDeclaration: (declaration: string) => void;
-  generateAISuggestions: (type: string, prompt: string) => Promise<string>;
-  analyzeResume: () => Promise<{ score: number; improvements: string[] }>;
+  analyzeResume: () => Promise<any>;
 }
 
 const defaultResumeData: ResumeData = {
@@ -120,7 +119,7 @@ const defaultResumeData: ResumeData = {
 
 const ResumeContext = createContext<ResumeContextType | undefined>(undefined);
 
-export function ResumeProvider({ children }: { children: React.ReactNode }) {
+export const ResumeProvider = ({ children }: { children: ReactNode }) => {
   const [resumeData, setResumeData] = useState<ResumeData>(defaultResumeData);
   const genAI = new GoogleGenerativeAI(process.env.NEXT_PUBLIC_GEMINI_API_KEY || "");
 
@@ -160,7 +159,7 @@ export function ResumeProvider({ children }: { children: React.ReactNode }) {
   };
 
   const updateVolunteerWork = (volunteerWork: VolunteerWork[]) => {
-    setResumeData((prev) => ({ ...prev, volunteerWork }));
+    setResumeData((prev) => ({ ...prev, volunteer: volunteerWork }));
   };
 
   const updateTemplateId = (id: number) => {
@@ -171,32 +170,37 @@ export function ResumeProvider({ children }: { children: React.ReactNode }) {
     setResumeData((prev) => ({ ...prev, declaration }));
   };
 
-  const generateAISuggestions = async (type: string, prompt: string) => {
-    const model = genAI.getGenerativeModel({ model: "gemini-pro" });
-    const result = await model.generateContent(prompt);
-    const response = await result.response;
-    return response.text();
-  };
-
   const analyzeResume = async () => {
-    const model = genAI.getGenerativeModel({ model: "gemini-pro" });
-    const prompt = `Analyze this resume and provide an ATS score out of 100 and suggestions for improvement:
+    try {
+      const model = genAI.getGenerativeModel({ model: "gemini-pro" });
+      const prompt = `Analyze this resume and provide feedback:
       ${JSON.stringify(resumeData, null, 2)}`;
-    
-    const result = await model.generateContent(prompt);
-    const response = await result.response;
-    const analysis = JSON.parse(response.text());
-    
-    setResumeData(prev => ({
-      ...prev,
-      atsScore: analysis.score,
-      improvements: analysis.improvements
-    }));
 
-    return {
-      score: analysis.score,
-      improvements: analysis.improvements
-    };
+      try {
+        const result = await model.generateContent(prompt);
+        const response = await result.response;
+        const text = response.text();
+        const analysis = JSON.parse(text);
+        setResumeData(prev => ({
+          ...prev,
+          atsScore: analysis.score,
+          improvements: analysis.improvements
+        }));
+        return {
+          score: analysis.score,
+          improvements: analysis.improvements
+        };
+      } catch (error: any) {
+        if (error?.status === 429) {
+          return "API quota exceeded. Please try again later or upgrade your API plan.";
+        }
+        console.error("Error analyzing resume:", error);
+        return "Error analyzing resume. Please try again later.";
+      }
+    } catch (error) {
+      console.error("Error in analyzeResume:", error);
+      return "Error analyzing resume. Please try again later.";
+    }
   };
 
   return (
@@ -214,7 +218,6 @@ export function ResumeProvider({ children }: { children: React.ReactNode }) {
         updateVolunteerWork,
         updateTemplateId,
         updateDeclaration,
-        generateAISuggestions,
         analyzeResume,
       }}
     >
@@ -225,7 +228,7 @@ export function ResumeProvider({ children }: { children: React.ReactNode }) {
 
 export function useResume() {
   const context = useContext(ResumeContext);
-  if (!context) {
+  if (context === undefined) {
     throw new Error("useResume must be used within a ResumeProvider");
   }
   return context;
