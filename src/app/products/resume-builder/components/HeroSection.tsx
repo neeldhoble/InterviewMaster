@@ -117,7 +117,7 @@ export function HeroSection() {
                                 whileTap={{ scale: 0.95 }}
                             >
                                 <Button 
-                                    href="/products/resume-builder/features/ai" 
+                                    href="/products/resume-builder/features/ai-resume" 
                                     variant="primary" 
                                     icon
                                     className="relative overflow-hidden group"

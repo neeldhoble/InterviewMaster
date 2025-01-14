@@ -1,4 +1,4 @@
-yes do all "use client";
+"use client";
 
 import { useResume } from "../../context/ResumeContext";
 import { Card } from "@/components/ui/card";
