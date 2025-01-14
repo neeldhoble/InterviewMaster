@@ -23,7 +23,7 @@ export const Declaration = ({ onNext }: DeclarationProps) => {
   };
 
   return (
-    <Card className="p-6">
+    <Card className="p-6 bg-main-background text-white">
       <form onSubmit={handleSubmit} className="space-y-6">
         <div className="space-y-2">
           <h2 className="text-2xl font-bold">Declaration</h2>

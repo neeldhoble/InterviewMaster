@@ -28,7 +28,7 @@ export const PersonalInfoForm = ({ initialData, onSave }: PersonalInfoFormProps)
   };
 
   return (
-    <Card className="p-6">
+    <Card className="p-6 bg-background text-white">
       <form onSubmit={handleSubmit} className="space-y-6">
         <div className="space-y-2">
           <h2 className="text-2xl font-bold">Personal Information</h2>

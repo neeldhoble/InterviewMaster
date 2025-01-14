@@ -87,6 +87,15 @@ const ResumeBuilder = () => {
     }
   };
 
+  const handleDownload = () => {
+    const element = document.createElement("a");
+    const file = new Blob([JSON.stringify(resumeData, null, 2)], { type: "application/json" });
+    element.href = URL.createObjectURL(file);
+    element.download = "resume.json";
+    document.body.appendChild(element);
+    element.click();
+  };
+
   return (
     <div className="min-h-screen bg-background relative">
       {/* Background Effects */}
@@ -267,6 +276,9 @@ const ResumeBuilder = () => {
                       Analyze Resume with AI
                     </>
                   )}
+                </Button>
+                <Button onClick={handleDownload} className="w-full">
+                  Download Resume
                 </Button>
                 {resumeData.atsScore !== undefined && (
                   <ATSScoreCard

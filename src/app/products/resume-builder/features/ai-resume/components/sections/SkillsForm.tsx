@@ -57,7 +57,7 @@ export const SkillsForm = ({ initialData, onSave }: SkillsFormProps) => {
   };
 
   return (
-    <Card className="p-6">
+    <Card className="p-6 bg-background text-white">
       <form onSubmit={handleSubmit} className="space-y-6">
         <div className="space-y-2">
           <h2 className="text-2xl font-bold">Skills</h2>
@@ -76,6 +76,8 @@ export const SkillsForm = ({ initialData, onSave }: SkillsFormProps) => {
             />
             <Button
               type="button"
+              variant="primary"
+              className="bg-[#fcba28] text-white hover:bg-[#e0a829]"
               onClick={handleAddSkill}
               disabled={!currentSkill.trim()}
             >

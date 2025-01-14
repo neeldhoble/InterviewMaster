@@ -70,7 +70,7 @@ export const LanguagesForm = ({ initialData, onSave }: LanguagesFormProps) => {
   };
 
   return (
-    <Card className="p-6">
+    <Card className="p-6 bg-background text-white">
       <form onSubmit={handleSubmit} className="space-y-6">
         <div className="space-y-2">
           <h2 className="text-2xl font-bold">Languages</h2>
@@ -130,14 +130,14 @@ export const LanguagesForm = ({ initialData, onSave }: LanguagesFormProps) => {
           </div>
         ))}
 
-        <Button
-          type="button"
-          variant="outline"
+        <Button 
+          type="button" 
+          variant="primary" 
+          className="bg-[#fcba28] text-white hover:bg-[#e0a829]"
           onClick={handleAddLanguage}
-          className="w-full"
         >
           <Plus className="w-4 h-4 mr-2" />
-          Add Another Language
+          Add Language
         </Button>
 
         <div className="flex justify-end">

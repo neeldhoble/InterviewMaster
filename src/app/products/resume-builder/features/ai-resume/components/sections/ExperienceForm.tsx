@@ -115,7 +115,7 @@ export const ExperienceForm = ({ initialData, onSave }: ExperienceFormProps) => 
   };
 
   return (
-    <Card className="p-6">
+    <Card className="p-6 bg-background text-white">
       <form onSubmit={handleSubmit} className="space-y-6">
         <div className="space-y-2">
           <h2 className="text-2xl font-bold">Work Experience</h2>
@@ -211,14 +211,14 @@ export const ExperienceForm = ({ initialData, onSave }: ExperienceFormProps) => 
             <div className="space-y-4">
               <div className="flex justify-between items-center">
                 <label className="text-sm font-medium">Responsibilities & Achievements</label>
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
+                <Button 
+                  type="button" 
+                  variant="primary" 
+                  className="bg-[#fcba28] text-white hover:bg-[#e0a829]"
                   onClick={() => handleAddBulletPoint(index)}
                 >
                   <Plus className="w-4 h-4 mr-2" />
-                  Add Point
+                  Add Bullet Point
                 </Button>
               </div>
 
@@ -248,11 +248,11 @@ export const ExperienceForm = ({ initialData, onSave }: ExperienceFormProps) => 
           </div>
         ))}
 
-        <Button
-          type="button"
-          variant="outline"
+        <Button 
+          type="button" 
+          variant="primary" 
+          className="bg-[#fcba28] text-white hover:bg-[#e0a829]"
           onClick={handleAddExperience}
-          className="w-full"
         >
           <Plus className="w-4 h-4 mr-2" />
           Add Another Experience

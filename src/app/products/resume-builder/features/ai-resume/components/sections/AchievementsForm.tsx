@@ -67,7 +67,7 @@ export const AchievementsForm = ({
   };
 
   return (
-    <Card className="p-6">
+    <Card className="p-6 bg-main-background text-white">
       <form onSubmit={handleSubmit} className="space-y-6">
         <div className="space-y-2">
           <h2 className="text-2xl font-bold">Achievements</h2>
@@ -128,14 +128,14 @@ export const AchievementsForm = ({
           </div>
         ))}
 
-        <Button
-          type="button"
-          variant="outline"
+        <Button 
+          type="button" 
+          variant="primary" 
+          className="bg-[#fcba28] text-white hover:bg-[#e0a829]"
           onClick={handleAddAchievement}
-          className="w-full"
         >
           <Plus className="w-4 h-4 mr-2" />
-          Add Another Achievement
+          Add Achievement
         </Button>
 
         <div className="flex justify-end">

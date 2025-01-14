@@ -69,7 +69,7 @@ export const EducationForm = ({ initialData, onSave }: EducationFormProps) => {
   };
 
   return (
-    <Card className="p-6">
+    <Card className="p-6 bg-background text-white">
       <form onSubmit={handleSubmit} className="space-y-6">
         <div className="space-y-2">
           <h2 className="text-2xl font-bold">Education</h2>
@@ -163,12 +163,12 @@ export const EducationForm = ({ initialData, onSave }: EducationFormProps) => {
 
         <Button
           type="button"
-          variant="outline"
+          variant="primary"
+          className="bg-[#fcba28] text-white hover:bg-[#e0a829]"
           onClick={handleAddEducation}
-          className="w-full"
         >
           <Plus className="w-4 h-4 mr-2" />
-          Add Another Education
+          Add Education
         </Button>
 
         <div className="flex justify-end">

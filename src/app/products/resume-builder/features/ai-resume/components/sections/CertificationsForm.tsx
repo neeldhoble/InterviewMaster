@@ -68,7 +68,7 @@ export const CertificationsForm = ({
   };
 
   return (
-    <Card className="p-6">
+    <Card className="p-6 bg-main-background text-white">
       <form onSubmit={handleSubmit} className="space-y-6">
         <div className="space-y-2">
           <h2 className="text-2xl font-bold">Certifications</h2>
@@ -139,12 +139,12 @@ export const CertificationsForm = ({
 
         <Button
           type="button"
-          variant="outline"
+          variant="primary"
+          className="bg-[#fcba28] text-white hover:bg-[#e0a829]"
           onClick={handleAddCertification}
-          className="w-full"
         >
           <Plus className="w-4 h-4 mr-2" />
-          Add Another Certification
+          Add Certification
         </Button>
 
         <div className="flex justify-end">
