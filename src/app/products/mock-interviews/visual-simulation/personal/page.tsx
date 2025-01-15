@@ -3,7 +3,7 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import Link from 'next/link';
-import { ArrowLeft, Upload, Play, Mic, MicOff, Send, Undo } from 'lucide-react';
+import { ArrowLeft, Upload, Play, Mic, MicOff, Send, Undo, Volume2, VolumeX } from 'lucide-react';
 import { parseResume, generateInterviewQuestions, generateFeedback, generateFollowUpResponse } from './services/interview';
 import type { ResumeData, InterviewQuestion, InterviewSession } from './services/interview';
 import { extractTextFromFile, cleanResumeText } from './utils/fileParser';
@@ -39,6 +39,11 @@ export default function PersonalInterviewPage() {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const audioChunksRef = useRef<Blob[]>([]);
+
+  const [isSpeaking, setIsSpeaking] = useState(false);
+  const speechSynthesisRef = useRef<SpeechSynthesis | null>(null);
+  const recognitionRef = useRef<any>(null);
+  const [voiceMode, setVoiceMode] = useState(false);
 
   const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -211,28 +216,14 @@ export default function PersonalInterviewPage() {
 
   const startRecording = async () => {
     try {
+      if (!recognitionRef.current) {
+        throw new Error('Speech recognition is not supported in your browser.');
+      }
+
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-      const mediaRecorder = new MediaRecorder(stream);
-      mediaRecorderRef.current = mediaRecorder;
-      audioChunksRef.current = [];
-
-      mediaRecorder.ondataavailable = (event) => {
-        if (event.data.size > 0) {
-          audioChunksRef.current.push(event.data);
-        }
-      };
-
-      mediaRecorder.onstop = async () => {
-        const audioBlob = new Blob(audioChunksRef.current, { type: 'audio/wav' });
-        // Here you would typically send this to a speech-to-text service
-        // For now, we'll just use the transcript state
-        setIsThinking(true);
-        await handleResponse(transcript);
-        setIsThinking(false);
-      };
-
-      mediaRecorder.start();
+      recognitionRef.current.start();
       setIsRecording(true);
+      setVoiceMode(true);
     } catch (err) {
       console.error('Error accessing microphone:', err);
       setError('Failed to access microphone. Please check your permissions.');
@@ -240,11 +231,9 @@ export default function PersonalInterviewPage() {
   };
 
   const stopRecording = () => {
-    if (mediaRecorderRef.current && isRecording) {
-      mediaRecorderRef.current.stop();
+    if (recognitionRef.current && isRecording) {
+      recognitionRef.current.stop();
       setIsRecording(false);
-      // Stop all audio tracks
-      mediaRecorderRef.current.stream.getTracks().forEach(track => track.stop());
     }
   };
 
@@ -373,6 +362,136 @@ export default function PersonalInterviewPage() {
       lastResponseLength: 0
     }));
   }, []);
+
+  const speakText = useCallback((text: string) => {
+    if (!speechSynthesisRef.current) return;
+
+    // Cancel any ongoing speech
+    speechSynthesisRef.current.cancel();
+
+    const utterance = new SpeechSynthesisUtterance(text);
+    utterance.rate = 1;
+    utterance.pitch = 1;
+    utterance.volume = 1;
+
+    // Use a more natural voice if available
+    const voices = speechSynthesisRef.current.getVoices();
+    const preferredVoice = voices.find(voice => 
+      voice.name.includes('Google') || voice.name.includes('Natural') || voice.name.includes('Female')
+    );
+    if (preferredVoice) {
+      utterance.voice = preferredVoice;
+    }
+
+    utterance.onstart = () => setIsSpeaking(true);
+    utterance.onend = () => setIsSpeaking(false);
+    utterance.onerror = (event) => {
+      console.error('Speech synthesis error:', event);
+      setIsSpeaking(false);
+    };
+
+    speechSynthesisRef.current.speak(utterance);
+  }, []);
+
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      speechSynthesisRef.current = window.speechSynthesis;
+      
+      // Initialize speech recognition
+      const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+      if (SpeechRecognition) {
+        recognitionRef.current = new SpeechRecognition();
+        recognitionRef.current.continuous = true;
+        recognitionRef.current.interimResults = true;
+        recognitionRef.current.lang = 'en-US';
+
+        recognitionRef.current.onresult = (event: any) => {
+          const transcript = Array.from(event.results)
+            .map((result: any) => result[0])
+            .map(result => result.transcript)
+            .join('');
+          
+          setTranscript(transcript);
+        };
+
+        recognitionRef.current.onerror = (event: any) => {
+          console.error('Speech recognition error:', event.error);
+          if (event.error === 'not-allowed') {
+            setError('Please enable microphone access to use voice mode.');
+          }
+        };
+      }
+    }
+
+    return () => {
+      if (speechSynthesisRef.current) {
+        speechSynthesisRef.current.cancel();
+      }
+      if (recognitionRef.current) {
+        recognitionRef.current.stop();
+      }
+    };
+  }, []);
+
+  useEffect(() => {
+    if (voiceMode && aiResponse && !isSpeaking) {
+      // Remove markdown and special characters for better speech
+      const cleanText = aiResponse
+        .replace(/[*_`#]/g, '')
+        .replace(/\n+/g, ' ')
+        .trim();
+      
+      speakText(cleanText);
+    }
+  }, [aiResponse, voiceMode, isSpeaking, speakText]);
+
+  useEffect(() => {
+    if (step === 'interview' && session) {
+      const timer = setInterval(() => {
+        setInterviewMetrics(prev => ({
+          ...prev,
+          timeRemaining: Math.max(0, prev.timeRemaining - 1)
+        }));
+      }, 1000);
+
+      return () => clearInterval(timer);
+    }
+  }, [step, session]);
+
+  useEffect(() => {
+    if (transcript) {
+      const words = transcript.trim().split(/\s+/).length;
+      const timeSpent = 30 - interviewMetrics.timeRemaining;
+      const wpm = timeSpent > 0 ? Math.round((words / timeSpent) * 60) : 0;
+
+      setInterviewMetrics(prev => ({
+        ...prev,
+        wordsPerMinute: wpm,
+        lastResponseLength: words,
+        clarity: Math.min(100, Math.max(0, wpm > 150 ? 70 : wpm > 100 ? 90 : wpm > 50 ? 80 : 60)),
+        confidence: Math.min(100, Math.max(0, words > 100 ? 85 : words > 50 ? 75 : 60))
+      }));
+    }
+  }, [transcript, interviewMetrics.timeRemaining]);
+
+  useEffect(() => {
+    if (!session || !transcript.trim()) return;
+
+    const currentQuestion = session.questions[session.currentQuestionIndex];
+    const keywords = currentQuestion.expectedPoints?.join(' ').toLowerCase().split(/\s+/) || [];
+    const responseWords = transcript.toLowerCase().split(/\s+/);
+    const matchedKeywords = keywords.filter(keyword => 
+      responseWords.some(word => word.includes(keyword) || keyword.includes(word))
+    );
+    const relevanceScore = keywords.length > 0 
+      ? Math.round((matchedKeywords.length / keywords.length) * 100)
+      : 70;
+
+    setInterviewMetrics(prev => ({
+      ...prev,
+      relevance: relevanceScore
+    }));
+  }, [session, transcript]);
 
   const InterviewSummary = () => (
     <motion.div
@@ -596,53 +715,31 @@ export default function PersonalInterviewPage() {
     </div>
   );
 
-  useEffect(() => {
-    if (step === 'interview' && session) {
-      const timer = setInterval(() => {
-        setInterviewMetrics(prev => ({
-          ...prev,
-          timeRemaining: Math.max(0, prev.timeRemaining - 1)
-        }));
-      }, 1000);
-
-      return () => clearInterval(timer);
-    }
-  }, [step, session]);
-
-  useEffect(() => {
-    if (transcript) {
-      const words = transcript.trim().split(/\s+/).length;
-      const timeSpent = 30 - interviewMetrics.timeRemaining;
-      const wpm = timeSpent > 0 ? Math.round((words / timeSpent) * 60) : 0;
-
-      setInterviewMetrics(prev => ({
-        ...prev,
-        wordsPerMinute: wpm,
-        lastResponseLength: words,
-        clarity: Math.min(100, Math.max(0, wpm > 150 ? 70 : wpm > 100 ? 90 : wpm > 50 ? 80 : 60)),
-        confidence: Math.min(100, Math.max(0, words > 100 ? 85 : words > 50 ? 75 : 60))
-      }));
-    }
-  }, [transcript, interviewMetrics.timeRemaining]);
-
-  useEffect(() => {
-    if (!session || !transcript.trim()) return;
-
-    const currentQuestion = session.questions[session.currentQuestionIndex];
-    const keywords = currentQuestion.expectedPoints?.join(' ').toLowerCase().split(/\s+/) || [];
-    const responseWords = transcript.toLowerCase().split(/\s+/);
-    const matchedKeywords = keywords.filter(keyword => 
-      responseWords.some(word => word.includes(keyword) || keyword.includes(word))
-    );
-    const relevanceScore = keywords.length > 0 
-      ? Math.round((matchedKeywords.length / keywords.length) * 100)
-      : 70;
-
-    setInterviewMetrics(prev => ({
-      ...prev,
-      relevance: relevanceScore
-    }));
-  }, [session, transcript]);
+  const VoiceModeToggle = () => (
+    <motion.button
+      whileHover={{ scale: 1.05 }}
+      whileTap={{ scale: 0.95 }}
+      onClick={() => setVoiceMode(!voiceMode)}
+      className={`p-2 rounded-lg ${voiceMode ? 'bg-[#fcba28]' : 'bg-gray-700'}`}
+      title={voiceMode ? 'Disable voice mode' : 'Enable voice mode'}
+    >
+      {voiceMode ? (
+        <div className="flex items-center gap-2">
+          <div className="relative">
+            <Volume2 className="w-6 h-6" />
+            {isSpeaking && (
+              <div className="absolute -right-1 -top-1 w-3 h-3">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#fcba28] opacity-75"></span>
+                <span className="relative inline-flex rounded-full h-3 w-3 bg-[#fcba28]"></span>
+              </div>
+            )}
+          </div>
+        </div>
+      ) : (
+        <VolumeX className="w-6 h-6" />
+      )}
+    </motion.button>
+  );
 
   return (
     <div className="min-h-screen bg-background py-12 px-4 sm:px-6 lg:px-8">
@@ -697,7 +794,7 @@ export default function PersonalInterviewPage() {
                     >
                       {isProcessing ? (
                         <>
-                          <div className="w-5 h-5 mr-2 border-2 border-black border-t-transparent rounded-full animate-spin" />
+                          <div className="w-5 h-5 border-2 border-black border-t-transparent rounded-full animate-spin" />
                           Processing...
                         </>
                       ) : (
@@ -958,10 +1055,11 @@ export default function PersonalInterviewPage() {
                       type="text"
                       value={transcript}
                       onChange={(e) => setTranscript(e.target.value)}
-                      placeholder="Type your response..."
+                      placeholder={voiceMode ? "Listening..." : "Type your response..."}
                       className="flex-1 px-4 py-2 bg-black/20 border border-[#fcba28]/20 rounded-lg text-white placeholder-gray-400"
-                      disabled={isThinking}
+                      disabled={isThinking || isRecording}
                     />
+                    <VoiceModeToggle />
                     <motion.button
                       type="button"
                       whileHover={{ scale: 1.05 }}
@@ -975,12 +1073,38 @@ export default function PersonalInterviewPage() {
                       type="submit"
                       whileHover={{ scale: 1.05 }}
                       whileTap={{ scale: 0.95 }}
-                      disabled={!transcript.trim() || isThinking}
+                      disabled={!transcript.trim() || isThinking || isSpeaking}
                       className="p-2 bg-[#fcba28] rounded-lg disabled:opacity-50"
                     >
                       <Send className="w-6 h-6" />
                     </motion.button>
                   </form>
+                  
+                  {voiceMode && (
+                    <div className="text-center text-sm text-gray-400">
+                      {isRecording ? (
+                        <div className="flex items-center justify-center gap-2">
+                          <div className="flex gap-1">
+                            <div className="w-2 h-2 bg-red-500 rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
+                            <div className="w-2 h-2 bg-red-500 rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
+                            <div className="w-2 h-2 bg-red-500 rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
+                          </div>
+                          Listening...
+                        </div>
+                      ) : isSpeaking ? (
+                        <div className="flex items-center justify-center gap-2">
+                          <div className="flex gap-1">
+                            <div className="w-2 h-2 bg-[#fcba28] rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
+                            <div className="w-2 h-2 bg-[#fcba28] rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
+                            <div className="w-2 h-2 bg-[#fcba28] rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
+                          </div>
+                          AI is speaking...
+                        </div>
+                      ) : (
+                        'Click the microphone to start speaking'
+                      )}
+                    </div>
+                  )}
                 </div>
 
                 {error && (
