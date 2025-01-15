@@ -37,17 +37,17 @@ const InterviewModes = [
     link: '/products/mock-interviews/visual-simulation/simulation'
   },
   {
-    title: 'Peer Practice',
-    description: 'Practice with other candidates and give each other feedback',
+    title: 'Personalized AI Interview',
+    description: 'Get a tailored interview experience based on your resume',
     icon: Users,
     features: [
-      'Mock interviews',
-      'Peer feedback',
-      'Community support',
-      'Diverse perspectives'
+      'Resume-based questions',
+      'Voice interaction',
+      'Real-time AI feedback',
+      'Natural conversation'
     ],
     gradient: 'from-green-600/20 to-emerald-600/20',
-    link: '/products/mock-interviews/visual-simulation/peer'
+    link: '/products/mock-interviews/visual-simulation/personal'
   }
 ];
 
