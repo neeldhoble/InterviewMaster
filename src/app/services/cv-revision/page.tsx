@@ -36,7 +36,7 @@ export default function CVRevisionPage() {
         'Industry-specific optimization',
         'Two revision rounds'
       ],
-      price: '$49',
+      price: '$2',
       link: './cv-revision/professional',
       gradient: 'from-amber-600/20 to-orange-600/20'
     }

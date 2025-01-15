@@ -31,7 +31,7 @@ export default function ProfessionalPersonalBrandingPage() {
   const packages = {
     standard: {
       name: 'Standard Package',
-      price: '$149',
+      price: '$5',
       duration: '2 weeks',
       features: [
         'LinkedIn Profile Optimization',
@@ -43,7 +43,7 @@ export default function ProfessionalPersonalBrandingPage() {
     },
     premium: {
       name: 'Premium Package',
-      price: '$349',
+      price: '$10',
       duration: '4 weeks',
       features: [
         'Everything in Standard Package',

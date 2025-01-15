@@ -37,7 +37,7 @@ export default function ConsultationPage() {
         'Detailed feedback',
         'Career roadmap'
       ],
-      price: '$99/session',
+      price: '$5/session',
       link: './consultation/professional',
       gradient: 'from-amber-600/20 to-orange-600/20'
     }

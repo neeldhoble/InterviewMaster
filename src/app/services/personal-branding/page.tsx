@@ -132,7 +132,7 @@ export default function PersonalBrandingPage() {
                 <p className="text-gray-300">Expert-guided brand development</p>
               </div>
             </div>
-            <div className="text-3xl font-bold mb-6">$199</div>
+            <div className="text-3xl font-bold mb-6">$5</div>
             <ul className="space-y-4 mb-8">
               {proFeatures.map((feature, index) => (
                 <li key={index} className="flex items-center gap-3">

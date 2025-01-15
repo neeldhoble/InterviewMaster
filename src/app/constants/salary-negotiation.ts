@@ -3,7 +3,7 @@ import { Package } from '../types/salary-negotiation';
 export const PACKAGES: Record<string, Package> = {
   standard: {
     name: 'Standard Package',
-    price: '$99',
+    price: '$5',
     features: [
       'One-hour consultation session',
       'Basic salary negotiation strategy',
@@ -13,7 +13,7 @@ export const PACKAGES: Record<string, Package> = {
   },
   premium: {
     name: 'Premium Package',
-    price: '$199',
+    price: '$10',
     features: [
       'Two-hour in-depth consultation',
       'Advanced negotiation tactics',

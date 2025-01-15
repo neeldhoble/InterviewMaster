@@ -132,7 +132,7 @@ export default function InterviewCoachingPage() {
                 <p className="text-gray-300">Expert-led interview preparation</p>
               </div>
             </div>
-            <div className="text-3xl font-bold mb-6">$99/hour</div>
+            <div className="text-3xl font-bold mb-6">$5/hour</div>
             <ul className="space-y-4 mb-8">
               {proFeatures.map((feature, index) => (
                 <li key={index} className="flex items-center gap-3">
