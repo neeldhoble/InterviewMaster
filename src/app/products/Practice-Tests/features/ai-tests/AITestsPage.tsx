@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   FaRobot, FaCode, FaLightbulb, FaArrowLeft, FaClock, 
-  FaList, FaBrain, FaCheckCircle, FaTimesCircle 
+  FaList, FaBrain, FaCheckCircle, FaTimesCircle, FaRocket 
 } from 'react-icons/fa';
 import AITestForm from './components/AITestForm';
 import CodeEditor from './components/CodeEditor';
@@ -80,33 +80,78 @@ export default function AITestsPage() {
   const [testSubmitted, setTestSubmitted] = useState(false);
   const [timeRemaining, setTimeRemaining] = useState<number | null>(null);
   const [showStats, setShowStats] = useState(false);
+  const [isGenerating, setIsGenerating] = useState(false);
+  const [isTestStarted, setIsTestStarted] = useState(false);
+  const [formState, setFormState] = useState<TestFormData | null>(null);
   const [performance, setPerformance] = useState<TestPerformance>({
     correctAnswers: 0,
     totalQuestions: 0,
     topics: {}
   });
 
-  const handleSubmit = async (formData: TestFormData) => {
+  const handleFormSubmit = (formData: TestFormData) => {
+    // Just store the form data without generating test
+    setFormState(formData);
+    setShowForm(false);
+  };
+
+  const handleGenerateTest = async () => {
+    if (!formState || isGenerating) return;
+    setIsGenerating(true);
     setLoading(true);
+    
     try {
-      const test = await generateTest(formData);
+      const test = await generateTest(formState);
+      if (!test || !test.questions || test.questions.length === 0) {
+        throw new Error('No test questions were generated');
+      }
+      
       setGeneratedTest(test);
-      setShowForm(false);
       setSelectedAnswers({});
       setShowFeedback({});
       setTestSubmitted(false);
-      setTimeRemaining(formData.timeLimit * 60); // Convert minutes to seconds
+      setTimeRemaining(null);
+      setIsTestStarted(false);
     } catch (error) {
       console.error('Error:', error);
-      alert('Failed to generate test. Please try again.');
+      const errorMessage = error instanceof Error ? error.message : 'Failed to generate test';
+      alert(`Error: ${errorMessage}. Please try again.`);
+      setShowForm(true);
+      setFormState(null);
     } finally {
       setLoading(false);
+      setIsGenerating(false);
     }
   };
 
+  const handleStartTest = () => {
+    if (!generatedTest || !generatedTest.questions || generatedTest.questions.length === 0) {
+      alert('No test questions available. Please generate a new test.');
+      handleBackToForm();
+      return;
+    }
+    
+    if (isTestStarted) return;
+    setIsTestStarted(true);
+    setTimeRemaining(generatedTest.metadata.timeLimit * 60);
+  };
+
+  const handleBackToForm = () => {
+    setShowForm(true);
+    setGeneratedTest(null);
+    setSelectedAnswers({});
+    setShowFeedback({});
+    setTestSubmitted(false);
+    setTimeRemaining(null);
+    setIsTestStarted(false);
+    setFormState(null);
+    setIsGenerating(false);
+  };
+
+  // Timer only starts after user clicks start
   useEffect(() => {
     let timer: NodeJS.Timeout;
-    if (timeRemaining !== null && timeRemaining > 0 && !testSubmitted) {
+    if (timeRemaining !== null && timeRemaining > 0 && !testSubmitted && isTestStarted) {
       timer = setInterval(() => {
         setTimeRemaining(prev => {
           if (prev === null || prev <= 0) {
@@ -120,7 +165,7 @@ export default function AITestsPage() {
     return () => {
       if (timer) clearInterval(timer);
     };
-  }, [timeRemaining, testSubmitted]);
+  }, [timeRemaining, testSubmitted, isTestStarted]);
 
   const formatTime = (seconds: number): string => {
     const minutes = Math.floor(seconds / 60);
@@ -216,10 +261,82 @@ export default function AITestsPage() {
                 className="max-w-4xl mx-auto"
               >
                 <AITestForm 
-                  onSubmit={handleSubmit} 
+                  onSubmit={handleFormSubmit}
                   loading={loading}
                   previousPerformance={performance.totalQuestions > 0 ? performance : undefined}
                 />
+              </motion.div>
+            ) : !generatedTest ? (
+              <motion.div
+                key="confirmation"
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -20 }}
+                className="max-w-4xl mx-auto text-center space-y-8"
+              >
+                <div className="p-8 rounded-xl bg-black/20 border border-[#fcba28]/20 backdrop-blur-sm">
+                  <h2 className="text-2xl font-bold text-white mb-4">Ready to Generate Your Test?</h2>
+                  {formState ? (
+                    <>
+                      <div className="space-y-4 text-left mb-8">
+                        <h3 className="text-[#fcba28] font-medium">Test Configuration:</h3>
+                        <ul className="space-y-2 text-gray-300">
+                          <li>• Topics: {formState.topics.join(', ')}</li>
+                          <li>• Difficulty: {formState.difficulty}</li>
+                          <li>• Questions: {formState.questionCount}</li>
+                          <li>• Time Limit: {formState.timeLimit} minutes</li>
+                          <li>• Question Types: {formState.questionTypes.join(', ')}</li>
+                        </ul>
+                      </div>
+                      <div className="flex justify-center gap-4">
+                        <motion.button
+                          whileHover={{ scale: 1.02 }}
+                          whileTap={{ scale: 0.98 }}
+                          onClick={handleBackToForm}
+                          disabled={loading || isGenerating}
+                          className="px-6 py-3 bg-gray-700 text-white rounded-lg font-medium disabled:opacity-50"
+                        >
+                          Edit Configuration
+                        </motion.button>
+                        <motion.button
+                          whileHover={{ scale: 1.02 }}
+                          whileTap={{ scale: 0.98 }}
+                          onClick={handleGenerateTest}
+                          disabled={loading || isGenerating}
+                          className={`px-8 py-3 rounded-lg font-medium flex items-center gap-2 ${
+                            loading || isGenerating
+                              ? 'bg-gray-600 cursor-not-allowed'
+                              : 'bg-[#fcba28] text-black hover:bg-[#fcba28]/90'
+                          }`}
+                        >
+                          {loading || isGenerating ? (
+                            <>
+                              <div className="w-5 h-5 border-2 border-black border-t-transparent rounded-full animate-spin" />
+                              Generating...
+                            </>
+                          ) : (
+                            <>
+                              <FaRobot className="w-5 h-5" />
+                              Generate Test
+                            </>
+                          )}
+                        </motion.button>
+                      </div>
+                    </>
+                  ) : (
+                    <div className="text-center">
+                      <p className="text-red-500 mb-4">Error: Test configuration not found</p>
+                      <motion.button
+                        whileHover={{ scale: 1.02 }}
+                        whileTap={{ scale: 0.98 }}
+                        onClick={handleBackToForm}
+                        className="px-6 py-3 bg-[#fcba28] text-black rounded-lg font-medium"
+                      >
+                        Back to Form
+                      </motion.button>
+                    </div>
+                  )}
+                </div>
               </motion.div>
             ) : (
               <motion.div
@@ -233,7 +350,7 @@ export default function AITestsPage() {
                   <motion.button
                     whileHover={{ scale: 1.05 }}
                     whileTap={{ scale: 0.95 }}
-                    onClick={() => setShowForm(true)}
+                    onClick={handleBackToForm}
                     className="flex items-center gap-2 text-[#fcba28] hover:text-[#fcd978] transition-colors"
                   >
                     <FaArrowLeft />
@@ -301,229 +418,265 @@ export default function AITestsPage() {
                   </motion.div>
                 )}
 
-                {generatedTest && (
+                {!showForm && generatedTest && (
                   <div className="space-y-8">
-                    {/* Test Statistics */}
-                    {showStats && (
+                    {!isTestStarted ? (
                       <motion.div
-                        initial={{ opacity: 0, height: 0 }}
-                        animate={{ opacity: 1, height: 'auto' }}
-                        exit={{ opacity: 0, height: 0 }}
-                        className="relative p-6 rounded-xl bg-black/20 border border-[#fcba28]/20 backdrop-blur-sm"
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        className="text-center space-y-6"
                       >
-                        <button
-                          onClick={() => setShowStats(false)}
-                          className="absolute top-4 right-4 text-gray-400 hover:text-red-500"
-                        >
-                          ×
-                        </button>
-                        <h3 className="text-[#fcba28] font-medium mb-4">Test Statistics</h3>
-                        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-                          <div className="p-4 rounded-lg bg-black/20 border border-[#fcba28]/20">
-                            <div className="text-sm text-gray-400 mb-1">Questions</div>
-                            <div className="text-xl font-medium text-[#fcba28]">
-                              {generatedTest.metadata.questionCount}
-                            </div>
-                          </div>
-                          <div className="p-4 rounded-lg bg-black/20 border border-[#fcba28]/20">
-                            <div className="text-sm text-gray-400 mb-1">Time Limit</div>
-                            <div className="text-xl font-medium text-[#fcba28]">
-                              {generatedTest.metadata.timeLimit}m
-                            </div>
-                          </div>
-                          <div className="p-4 rounded-lg bg-black/20 border border-[#fcba28]/20">
-                            <div className="text-sm text-gray-400 mb-1">Completed</div>
-                            <div className="text-xl font-medium text-[#fcba28]">
-                              {Object.keys(selectedAnswers).length}/{generatedTest.questions.length}
-                            </div>
-                          </div>
-                          <div className="p-4 rounded-lg bg-black/20 border border-[#fcba28]/20">
-                            <div className="text-sm text-gray-400 mb-1">Time Left</div>
-                            <div className="text-xl font-medium text-[#fcba28]">
-                              {timeRemaining !== null ? formatTime(timeRemaining) : '--:--'}
-                            </div>
-                          </div>
+                        <h2 className="text-2xl font-bold text-white">Test Ready</h2>
+                        <div className="space-y-4">
+                          <p className="text-white/80">
+                            Your test has been generated. Click the button below when you're ready to start.
+                            The timer will begin once you start the test.
+                          </p>
+                          <ul className="text-white/70 space-y-2">
+                            <li>• Time Limit: {generatedTest.metadata.timeLimit} minutes</li>
+                            <li>• Questions: {generatedTest.questions.length}</li>
+                            <li>• Topics: {generatedTest.metadata.topics.join(', ')}</li>
+                          </ul>
+                          <motion.button
+                            whileHover={{ scale: 1.02 }}
+                            whileTap={{ scale: 0.98 }}
+                            onClick={handleStartTest}
+                            className="px-8 py-3 bg-[#fcba28] text-black rounded-lg font-medium flex items-center gap-2 mx-auto"
+                          >
+                            <FaRocket className="w-5 h-5" />
+                            Start Test
+                          </motion.button>
                         </div>
                       </motion.div>
-                    )}
-
-                    <div className="flex justify-between items-center mb-4">
-                      <button
-                        onClick={() => setShowStats(!showStats)}
-                        className="text-[#fcba28] hover:text-[#fcd978] transition-colors"
+                    ) : (
+                      <motion.div
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        className="space-y-8"
                       >
-                        {showStats ? 'Hide Statistics' : 'Show Statistics'}
-                      </button>
-                      <div className="flex items-center gap-2 text-gray-400">
-                        <span>Progress:</span>
-                        <span className="font-medium">
-                          {Object.keys(selectedAnswers).length}/{generatedTest.questions.length}
-                        </span>
-                      </div>
-                    </div>
-
-                    <div className="grid gap-6">
-                      {generatedTest.questions.map((question: any, index: number) => (
-                        <motion.div
-                          key={question.id}
-                          initial={{ opacity: 0, y: 20 }}
-                          animate={{ opacity: 1, y: 0 }}
-                          transition={{ delay: index * 0.1 }}
-                          className="p-6 rounded-xl bg-black/20 backdrop-blur-sm border border-[#fcba28]/20 space-y-6"
-                        >
-                          <div className="flex items-start justify-between gap-4">
-                            <div className="flex-1">
-                              <div className="flex items-center gap-2 text-[#fcba28] mb-2">
-                                <span className="text-sm font-medium">Question {index + 1}</span>
-                                <span className="text-xs px-2 py-0.5 rounded-full bg-[#fcba28]/10 border border-[#fcba28]/20">
-                                  {question.topic}
-                                </span>
-                                <span className="text-xs px-2 py-0.5 rounded-full bg-[#fcba28]/10 border border-[#fcba28]/20">
-                                  {question.difficulty}
-                                </span>
+                        {/* Test Statistics */}
+                        {showStats && (
+                          <motion.div
+                            initial={{ opacity: 0, height: 0 }}
+                            animate={{ opacity: 1, height: 'auto' }}
+                            exit={{ opacity: 0, height: 0 }}
+                            className="relative p-6 rounded-xl bg-black/20 border border-[#fcba28]/20 backdrop-blur-sm"
+                          >
+                            <button
+                              onClick={() => setShowStats(false)}
+                              className="absolute top-4 right-4 text-gray-400 hover:text-red-500"
+                            >
+                              ×
+                            </button>
+                            <h3 className="text-[#fcba28] font-medium mb-4">Test Statistics</h3>
+                            <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+                              <div className="p-4 rounded-lg bg-black/20 border border-[#fcba28]/20">
+                                <div className="text-sm text-gray-400 mb-1">Questions</div>
+                                <div className="text-xl font-medium text-[#fcba28]">
+                                  {generatedTest.metadata.questionCount}
+                                </div>
                               </div>
-                              <p className="text-white">{question.question}</p>
+                              <div className="p-4 rounded-lg bg-black/20 border border-[#fcba28]/20">
+                                <div className="text-sm text-gray-400 mb-1">Time Limit</div>
+                                <div className="text-xl font-medium text-[#fcba28]">
+                                  {generatedTest.metadata.timeLimit}m
+                                </div>
+                              </div>
+                              <div className="p-4 rounded-lg bg-black/20 border border-[#fcba28]/20">
+                                <div className="text-sm text-gray-400 mb-1">Completed</div>
+                                <div className="text-xl font-medium text-[#fcba28]">
+                                  {Object.keys(selectedAnswers).length}/{generatedTest.questions.length}
+                                </div>
+                              </div>
+                              <div className="p-4 rounded-lg bg-black/20 border border-[#fcba28]/20">
+                                <div className="text-sm text-gray-400 mb-1">Time Left</div>
+                                <div className="text-xl font-medium text-[#fcba28]">
+                                  {timeRemaining !== null ? formatTime(timeRemaining) : '--:--'}
+                                </div>
+                              </div>
                             </div>
+                          </motion.div>
+                        )}
+
+                        <div className="flex justify-between items-center mb-4">
+                          <button
+                            onClick={() => setShowStats(!showStats)}
+                            className="text-[#fcba28] hover:text-[#fcd978] transition-colors"
+                          >
+                            {showStats ? 'Hide Statistics' : 'Show Statistics'}
+                          </button>
+                          <div className="flex items-center gap-2 text-gray-400">
+                            <span>Progress:</span>
+                            <span className="font-medium">
+                              {Object.keys(selectedAnswers).length}/{generatedTest.questions.length}
+                            </span>
                           </div>
+                        </div>
 
-                          {question.type === 'multiple-choice' ? (
-                            <div className="grid gap-3">
-                              {question.options.map((option: string, optIndex: number) => {
-                                const optionLetter = String.fromCharCode(65 + optIndex);
-                                const isSelected = selectedAnswers[question.id] === optionLetter;
-                                const showingFeedback = showFeedback[question.id];
-                                const isCorrect = question.correctAnswer === optionLetter;
+                        <div className="grid gap-6">
+                          {generatedTest.questions.map((question: any, index: number) => (
+                            <motion.div
+                              key={question.id}
+                              initial={{ opacity: 0, y: 20 }}
+                              animate={{ opacity: 1, y: 0 }}
+                              transition={{ delay: index * 0.1 }}
+                              className="p-6 rounded-xl bg-black/20 backdrop-blur-sm border border-[#fcba28]/20 space-y-6"
+                            >
+                              <div className="flex items-start justify-between gap-4">
+                                <div className="flex-1">
+                                  <div className="flex items-center gap-2 text-[#fcba28] mb-2">
+                                    <span className="text-sm font-medium">Question {index + 1}</span>
+                                    <span className="text-xs px-2 py-0.5 rounded-full bg-[#fcba28]/10 border border-[#fcba28]/20">
+                                      {question.topic}
+                                    </span>
+                                    <span className="text-xs px-2 py-0.5 rounded-full bg-[#fcba28]/10 border border-[#fcba28]/20">
+                                      {question.difficulty}
+                                    </span>
+                                  </div>
+                                  <p className="text-white">{question.question}</p>
+                                </div>
+                              </div>
 
-                                return (
-                                  <motion.button
-                                    key={optIndex}
-                                    onClick={() => {
-                                      handleAnswerSelect(question.id, optionLetter, question.topic);
+                              {question.type === 'multiple-choice' ? (
+                                <div className="grid gap-3">
+                                  {question.options.map((option: string, optIndex: number) => {
+                                    const optionLetter = String.fromCharCode(65 + optIndex);
+                                    const isSelected = selectedAnswers[question.id] === optionLetter;
+                                    const showingFeedback = showFeedback[question.id];
+                                    const isCorrect = question.correctAnswer === optionLetter;
+
+                                    return (
+                                      <motion.button
+                                        key={optIndex}
+                                        onClick={() => {
+                                          handleAnswerSelect(question.id, optionLetter, question.topic);
+                                          if (!showFeedback[question.id]) {
+                                            toggleFeedback(question.id);
+                                          }
+                                        }}
+                                        className={`p-4 rounded-lg text-left transition-all flex items-center gap-3
+                                          ${isSelected 
+                                            ? showingFeedback
+                                              ? isCorrect
+                                                ? 'bg-green-500/20 border-green-500/40'
+                                                : 'bg-red-500/20 border-red-500/40'
+                                              : 'bg-[#fcba28] text-black'
+                                            : 'bg-black/20 hover:bg-[#fcba28]/10 text-white border border-[#fcba28]/20'
+                                          }
+                                        `}
+                                      >
+                                        <div className={`w-6 h-6 rounded-full border-2 flex items-center justify-center
+                                          ${isSelected
+                                            ? showingFeedback
+                                              ? isCorrect
+                                                ? 'border-green-500 text-green-500'
+                                                : 'border-red-500 text-red-500'
+                                              : 'border-black text-black'
+                                            : 'border-[#fcba28]/50 text-[#fcba28]'
+                                          }
+                                        `}>
+                                          {optionLetter}
+                                        </div>
+                                        <span className={isSelected && !showingFeedback ? 'text-black' : 'text-gray-300'}>
+                                          {option.replace(/^[A-D]\)\s*/, '')}
+                                        </span>
+                                        {showingFeedback && isSelected && (
+                                          <span className="ml-auto">
+                                            {isCorrect 
+                                              ? <FaCheckCircle className="w-5 h-5 text-green-500" />
+                                              : <FaTimesCircle className="w-5 h-5 text-red-500" />
+                                            }
+                                          </span>
+                                        )}
+                                      </motion.button>
+                                    );
+                                  })}
+                                </div>
+                              ) : question.type === 'coding' ? (
+                                <CodeEditor
+                                  question={{
+                                    id: question.id,
+                                    language: question.language || 'javascript',
+                                    starterCode: question.starterCode || '// Your code here',
+                                    testCases: question.testCases || [
+                                      {
+                                        input: 'Example input',
+                                        expectedOutput: 'Example output'
+                                      }
+                                    ]
+                                  }}
+                                  onTestResult={(passed) => handleCodeResult(question.id, passed, question.topic)}
+                                />
+                              ) : (
+                                <div className="space-y-4">
+                                  <textarea
+                                    placeholder="Type your answer here..."
+                                    className="w-full h-32 p-4 rounded-lg bg-black/20 border border-[#fcba28]/20 text-white placeholder-gray-400 focus:border-[#fcba28]/40 focus:ring-1 focus:ring-[#fcba28]/40"
+                                    onChange={(e) => {
+                                      handleAnswerSelect(question.id, e.target.value, question.topic);
                                       if (!showFeedback[question.id]) {
                                         toggleFeedback(question.id);
                                       }
                                     }}
-                                    className={`p-4 rounded-lg text-left transition-all flex items-center gap-3
-                                      ${isSelected 
-                                        ? showingFeedback
-                                          ? isCorrect
-                                            ? 'bg-green-500/20 border-green-500/40'
-                                            : 'bg-red-500/20 border-red-500/40'
-                                          : 'bg-[#fcba28] text-black'
-                                        : 'bg-black/20 hover:bg-[#fcba28]/10 text-white border border-[#fcba28]/20'
-                                      }
-                                    `}
-                                  >
-                                    <div className={`w-6 h-6 rounded-full border-2 flex items-center justify-center
-                                      ${isSelected
-                                        ? showingFeedback
-                                          ? isCorrect
-                                            ? 'border-green-500 text-green-500'
-                                            : 'border-red-500 text-red-500'
-                                          : 'border-black text-black'
-                                        : 'border-[#fcba28]/50 text-[#fcba28]'
-                                      }
-                                    `}>
-                                      {optionLetter}
-                                    </div>
-                                    <span className={isSelected && !showingFeedback ? 'text-black' : 'text-gray-300'}>
-                                      {option.replace(/^[A-D]\)\s*/, '')}
-                                    </span>
-                                    {showingFeedback && isSelected && (
-                                      <span className="ml-auto">
-                                        {isCorrect 
-                                          ? <FaCheckCircle className="w-5 h-5 text-green-500" />
-                                          : <FaTimesCircle className="w-5 h-5 text-red-500" />
-                                        }
-                                      </span>
-                                    )}
-                                  </motion.button>
-                                );
-                              })}
-                            </div>
-                          ) : question.type === 'coding' ? (
-                            <CodeEditor
-                              question={{
-                                id: question.id,
-                                language: question.language || 'javascript',
-                                starterCode: question.starterCode || '// Your code here',
-                                testCases: question.testCases || [
-                                  {
-                                    input: 'Example input',
-                                    expectedOutput: 'Example output'
-                                  }
-                                ]
-                              }}
-                              onTestResult={(passed) => handleCodeResult(question.id, passed, question.topic)}
-                            />
-                          ) : (
-                            <div className="space-y-4">
-                              <textarea
-                                placeholder="Type your answer here..."
-                                className="w-full h-32 p-4 rounded-lg bg-black/20 border border-[#fcba28]/20 text-white placeholder-gray-400 focus:border-[#fcba28]/40 focus:ring-1 focus:ring-[#fcba28]/40"
-                                onChange={(e) => {
-                                  handleAnswerSelect(question.id, e.target.value, question.topic);
-                                  if (!showFeedback[question.id]) {
-                                    toggleFeedback(question.id);
-                                  }
-                                }}
-                              />
-                            </div>
-                          )}
+                                  />
+                                </div>
+                              )}
 
-                          {showFeedback[question.id] && question.explanation && (
-                            <motion.div
-                              initial={{ opacity: 0, height: 0 }}
-                              animate={{ opacity: 1, height: 'auto' }}
-                              className="p-4 rounded-lg bg-[#fcba28]/10 border border-[#fcba28]/20"
-                            >
-                              <div className="flex items-center gap-2 text-[#fcba28] mb-2">
-                                <FaLightbulb className="w-4 h-4" />
-                                <span className="font-medium">Explanation</span>
-                              </div>
-                              <p className="text-gray-300">{question.explanation}</p>
+                              {showFeedback[question.id] && question.explanation && (
+                                <motion.div
+                                  initial={{ opacity: 0, height: 0 }}
+                                  animate={{ opacity: 1, height: 'auto' }}
+                                  className="p-4 rounded-lg bg-[#fcba28]/10 border border-[#fcba28]/20"
+                                >
+                                  <div className="flex items-center gap-2 text-[#fcba28] mb-2">
+                                    <FaLightbulb className="w-4 h-4" />
+                                    <span className="font-medium">Explanation</span>
+                                  </div>
+                                  <p className="text-gray-300">{question.explanation}</p>
+                                </motion.div>
+                              )}
+
+                              {showFeedback[question.id] && question.practiceQuestion && (
+                                <motion.div
+                                  initial={{ opacity: 0, height: 0 }}
+                                  animate={{ opacity: 1, height: 'auto' }}
+                                  className="p-4 rounded-lg bg-black/20 border border-[#fcba28]/20"
+                                >
+                                  <div className="flex items-center gap-2 text-[#fcba28] mb-2">
+                                    <FaCode className="w-4 h-4" />
+                                    <span className="font-medium">Practice Question</span>
+                                  </div>
+                                  <p className="text-gray-300 mb-4">{question.practiceQuestion.question}</p>
+                                  <div className="p-4 rounded-lg bg-[#fcba28]/10 border border-[#fcba28]/20">
+                                    <div className="text-[#fcba28] mb-2 font-medium">Solution</div>
+                                    <p className="text-gray-300">{question.practiceQuestion.answer}</p>
+                                  </div>
+                                </motion.div>
+                              )}
                             </motion.div>
-                          )}
+                          ))}
+                        </div>
 
-                          {showFeedback[question.id] && question.practiceQuestion && (
-                            <motion.div
-                              initial={{ opacity: 0, height: 0 }}
-                              animate={{ opacity: 1, height: 'auto' }}
-                              className="p-4 rounded-lg bg-black/20 border border-[#fcba28]/20"
+                        {/* Submit Test Button */}
+                        {!testSubmitted && Object.keys(selectedAnswers).length > 0 && (
+                          <motion.div
+                            initial={{ opacity: 0, y: 20 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            className="mt-8"
+                          >
+                            <motion.button
+                              whileHover={{ scale: 1.02 }}
+                              whileTap={{ scale: 0.98 }}
+                              onClick={handleTestSubmit}
+                              className="w-full py-4 rounded-xl text-lg font-medium bg-[#fcba28] text-black hover:bg-[#fcba28]/90 transition-all"
                             >
-                              <div className="flex items-center gap-2 text-[#fcba28] mb-2">
-                                <FaCode className="w-4 h-4" />
-                                <span className="font-medium">Practice Question</span>
-                              </div>
-                              <p className="text-gray-300 mb-4">{question.practiceQuestion.question}</p>
-                              <div className="p-4 rounded-lg bg-[#fcba28]/10 border border-[#fcba28]/20">
-                                <div className="text-[#fcba28] mb-2 font-medium">Solution</div>
-                                <p className="text-gray-300">{question.practiceQuestion.answer}</p>
-                              </div>
-                            </motion.div>
-                          )}
-                        </motion.div>
-                      ))}
-                    </div>
-
-                    {/* Submit Test Button */}
-                    {!testSubmitted && Object.keys(selectedAnswers).length > 0 && (
-                      <motion.div
-                        initial={{ opacity: 0, y: 20 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        className="mt-8"
-                      >
-                        <motion.button
-                          whileHover={{ scale: 1.02 }}
-                          whileTap={{ scale: 0.98 }}
-                          onClick={handleTestSubmit}
-                          className="w-full py-4 rounded-xl text-lg font-medium bg-[#fcba28] text-black hover:bg-[#fcba28]/90 transition-all"
-                        >
-                          Submit Test
-                        </motion.button>
-                        <p className="text-center text-sm text-gray-400 mt-2">
-                          You've completed {Object.keys(selectedAnswers).length} out of {generatedTest.questions.length} questions
-                        </p>
+                              Submit Test
+                            </motion.button>
+                            <p className="text-center text-sm text-gray-400 mt-2">
+                              You've completed {Object.keys(selectedAnswers).length} out of {generatedTest.questions.length} questions
+                            </p>
+                          </motion.div>
+                        )}
                       </motion.div>
                     )}
                   </div>

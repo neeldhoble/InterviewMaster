@@ -61,6 +61,7 @@ const SelectButton = ({ selected, onClick, children }: any) => (
 );
 
 export default function AITestForm({ onSubmit, loading, previousPerformance }: AITestFormProps) {
+  const [showConfirmation, setShowConfirmation] = useState(false);
   const [formData, setFormData] = useState<TestFormData>({
     topics: [],
     customTopic: '',
@@ -98,6 +99,7 @@ export default function AITestForm({ onSubmit, loading, previousPerformance }: A
   });
 
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const validateForm = () => {
     const newErrors: Record<string, string> = {};
@@ -118,8 +120,19 @@ export default function AITestForm({ onSubmit, loading, previousPerformance }: A
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    if (isSubmitting || loading) return;
+    
     if (validateForm()) {
+      setShowConfirmation(true);
+    }
+  };
+
+  const handleConfirm = () => {
+    setIsSubmitting(true);
+    try {
       onSubmit(formData);
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -595,24 +608,166 @@ export default function AITestForm({ onSubmit, loading, previousPerformance }: A
 
       <motion.button
         type="submit"
-        disabled={loading}
+        disabled={loading || isSubmitting}
         whileHover={{ scale: 1.02 }}
         whileTap={{ scale: 0.98 }}
         className={`w-full py-4 rounded-xl text-lg font-medium transition-all ${
-          loading
+          loading || isSubmitting
             ? 'bg-gray-600 cursor-not-allowed'
             : 'bg-[#fcba28] text-black hover:bg-[#fcba28]/90'
         }`}
       >
-        {loading ? (
+        {loading || isSubmitting ? (
           <div className="flex items-center justify-center gap-2">
             <div className="w-5 h-5 border-2 border-black border-t-transparent rounded-full animate-spin" />
-            <span>Generating Test...</span>
+            <span>Processing...</span>
           </div>
         ) : (
-          'Generate Test'
+          <span>Review Configuration</span>
         )}
       </motion.button>
+
+      {/* Confirmation Modal */}
+      {showConfirmation && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
+          <motion.div
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="w-full max-w-4xl max-h-[90vh] overflow-y-auto bg-[#1a1a1a] rounded-xl p-8 border border-[#fcba28]/20"
+          >
+            <h2 className="text-2xl font-bold text-white mb-6">Review Test Configuration</h2>
+            
+            <div className="space-y-6">
+              {/* Basic Settings */}
+              <div className="space-y-4">
+                <h3 className="text-[#fcba28] font-medium">Basic Settings</h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-gray-300">
+                  <div>
+                    <span className="font-medium">Topics:</span>
+                    <div className="mt-1">{formData.topics.join(', ')}</div>
+                  </div>
+                  <div>
+                    <span className="font-medium">Difficulty:</span>
+                    <div className="mt-1">{formData.difficulty}</div>
+                  </div>
+                  <div>
+                    <span className="font-medium">Question Count:</span>
+                    <div className="mt-1">{formData.questionCount}</div>
+                  </div>
+                  <div>
+                    <span className="font-medium">Time Limit:</span>
+                    <div className="mt-1">{formData.timeLimit} minutes</div>
+                  </div>
+                  <div>
+                    <span className="font-medium">Question Types:</span>
+                    <div className="mt-1">{formData.questionTypes.join(', ')}</div>
+                  </div>
+                  <div>
+                    <span className="font-medium">Experience Level:</span>
+                    <div className="mt-1">{formData.experienceLevel}</div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Advanced Settings */}
+              <div className="space-y-4">
+                <h3 className="text-[#fcba28] font-medium">Advanced Settings</h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-gray-300">
+                  <div>
+                    <span className="font-medium">Difficulty Progression:</span>
+                    <div className="mt-1">{formData.difficultyProgression}</div>
+                  </div>
+                  <div>
+                    <span className="font-medium">Interview Type:</span>
+                    <div className="mt-1">{formData.interviewType}</div>
+                  </div>
+                  <div>
+                    <span className="font-medium">Skill Level:</span>
+                    <div className="mt-1">{formData.skillLevel}</div>
+                  </div>
+                  <div>
+                    <span className="font-medium">Company Focus:</span>
+                    <div className="mt-1">{formData.companyFocus || 'None'}</div>
+                  </div>
+                  <div>
+                    <span className="font-medium">Coding Languages:</span>
+                    <div className="mt-1">{formData.codingLanguages.join(', ') || 'None specified'}</div>
+                  </div>
+                  <div>
+                    <span className="font-medium">Focus Areas:</span>
+                    <div className="mt-1">{formData.focusAreas.join(', ') || 'None specified'}</div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Additional Features */}
+              <div className="space-y-4">
+                <h3 className="text-[#fcba28] font-medium">Additional Features</h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-gray-300">
+                  <div>
+                    <span className="font-medium">Includes:</span>
+                    <ul className="mt-1 space-y-1">
+                      {formData.includeExplanations && <li>• Explanations</li>}
+                      {formData.includePracticeQuestions && <li>• Practice Questions</li>}
+                      {formData.includeHints && <li>• Hints</li>}
+                      {formData.includeResources && <li>• Learning Resources</li>}
+                      {formData.includeSystemDesign && <li>• System Design Questions</li>}
+                      {formData.includeArchitectureQuestions && <li>• Architecture Questions</li>}
+                      {formData.includeBehavioralQuestions && <li>• Behavioral Questions</li>}
+                    </ul>
+                  </div>
+                  <div>
+                    <span className="font-medium">Difficulty Distribution:</span>
+                    <ul className="mt-1 space-y-1">
+                      <li>• Easy: {formData.difficultyDistribution.easy}%</li>
+                      <li>• Medium: {formData.difficultyDistribution.medium}%</li>
+                      <li>• Hard: {formData.difficultyDistribution.hard}%</li>
+                    </ul>
+                  </div>
+                </div>
+              </div>
+
+              {formData.customInstructions && (
+                <div className="space-y-2">
+                  <h3 className="text-[#fcba28] font-medium">Custom Instructions</h3>
+                  <div className="text-gray-300 whitespace-pre-wrap">{formData.customInstructions}</div>
+                </div>
+              )}
+            </div>
+
+            <div className="flex justify-end gap-4 mt-8">
+              <motion.button
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+                onClick={() => setShowConfirmation(false)}
+                className="px-6 py-3 bg-gray-700 text-white rounded-lg font-medium"
+              >
+                Edit Configuration
+              </motion.button>
+              <motion.button
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+                onClick={handleConfirm}
+                disabled={loading || isSubmitting}
+                className={`px-8 py-3 rounded-lg font-medium ${
+                  loading || isSubmitting
+                    ? 'bg-gray-600 cursor-not-allowed'
+                    : 'bg-[#fcba28] text-black hover:bg-[#fcba28]/90'
+                }`}
+              >
+                {loading || isSubmitting ? (
+                  <div className="flex items-center gap-2">
+                    <div className="w-5 h-5 border-2 border-black border-t-transparent rounded-full animate-spin" />
+                    <span>Processing...</span>
+                  </div>
+                ) : (
+                  'Continue to Test Generation'
+                )}
+              </motion.button>
+            </div>
+          </motion.div>
+        </div>
+      )}
     </form>
   );
 }
