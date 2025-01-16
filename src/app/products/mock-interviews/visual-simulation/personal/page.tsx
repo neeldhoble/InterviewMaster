@@ -7,6 +7,7 @@ import { ArrowLeft, Upload, Play, Mic, MicOff, Send, Undo, Volume2, VolumeX } fr
 import { parseResume, generateInterviewQuestions, generateFeedback, generateFollowUpResponse } from './services/interview';
 import type { ResumeData, InterviewQuestion, InterviewSession } from './services/interview';
 import { extractTextFromFile, cleanResumeText } from './utils/fileParser';
+import { getPreferredVoice, configureSpeech, initializeSpeechSynthesis } from './utils/speechUtils';
 
 export default function PersonalInterviewPage() {
   const [step, setStep] = useState<'upload' | 'configure' | 'interview'>('upload');
@@ -367,33 +368,65 @@ export default function PersonalInterviewPage() {
     }));
   }, []);
 
+  // const speakText = useCallback((text: string) => {
+  //   if (!speechSynthesisRef.current) return;
+
+  //   // Cancel any ongoing speech
+  //   speechSynthesisRef.current.cancel();
+
+  //   const utterance = new SpeechSynthesisUtterance(text);
+  //   utterance.rate = 1;
+  //   utterance.pitch = 1;
+  //   utterance.volume = 1;
+
+  //   // Use a more natural voice if available
+  //   const voices = speechSynthesisRef.current.getVoices();
+  //   const preferredVoice = voices.find(voice => 
+  //     voice.name.includes('Google') || voice.name.includes('Natural') || voice.name.includes('Female')
+  //   );
+  //   if (preferredVoice) {
+  //     utterance.voice = preferredVoice;
+  //   }
+
+  //   utterance.onstart = () => setIsSpeaking(true);
+  //   utterance.onend = () => setIsSpeaking(false);
+  //   utterance.onerror = (event) => {
+  //     console.error('Speech synthesis error:', event);
+  //     setIsSpeaking(false);
+  //   };
+
+  //   speechSynthesisRef.current.speak(utterance);
+  // }, []);
+
+
   const speakText = useCallback((text: string) => {
     if (!speechSynthesisRef.current) return;
-
+  
     // Cancel any ongoing speech
     speechSynthesisRef.current.cancel();
-
+  
     const utterance = new SpeechSynthesisUtterance(text);
-    utterance.rate = 1;
-    utterance.pitch = 1;
-    utterance.volume = 1;
-
-    // Use a more natural voice if available
+    
+    // Configure for Indian English
+    configureSpeech(utterance);
+    
+    // Get preferred voice
     const voices = speechSynthesisRef.current.getVoices();
-    const preferredVoice = voices.find(voice => 
-      voice.name.includes('Google') || voice.name.includes('Natural') || voice.name.includes('Female')
-    );
+    const preferredVoice = getPreferredVoice(voices);
     if (preferredVoice) {
       utterance.voice = preferredVoice;
     }
-
+  
     utterance.onstart = () => setIsSpeaking(true);
-    utterance.onend = () => setIsSpeaking(false);
+    utterance.onend = () => {
+      setIsSpeaking(false);
+      setHasSpokenQuestion(true);
+    };
     utterance.onerror = (event) => {
       console.error('Speech synthesis error:', event);
       setIsSpeaking(false);
     };
-
+  
     speechSynthesisRef.current.speak(utterance);
   }, []);
 
@@ -437,17 +470,29 @@ export default function PersonalInterviewPage() {
     };
   }, []);
 
-  useEffect(() => {
-    if (voiceMode && aiResponse && !isSpeaking) {
-      // Remove markdown and special characters for better speech
-      const cleanText = aiResponse
-        .replace(/[*_`#]/g, '')
-        .replace(/\n+/g, ' ')
-        .trim();
+  // useEffect(() => {
+  //   if (voiceMode && aiResponse && !isSpeaking) {
+  //     // Remove markdown and special characters for better speech
+  //     const cleanText = aiResponse
+  //       .replace(/[*_`#]/g, '')
+  //       .replace(/\n+/g, ' ')
+  //       .trim();
       
-      speakText(cleanText);
-    }
-  }, [aiResponse, voiceMode, isSpeaking, speakText]);
+  //     speakText(cleanText);
+  //   }
+  // }, [aiResponse, voiceMode, isSpeaking, speakText]);
+
+  useEffect(() => {
+    const initSpeech = async () => {
+      if (typeof window !== 'undefined') {
+        const initialized = await initializeSpeechSynthesis();
+        if (initialized) {
+          speechSynthesisRef.current = window.speechSynthesis;
+        }
+      }
+    };
+    initSpeech();
+  }, []);
 
   useEffect(() => {
     if (step === 'interview' && session) {
