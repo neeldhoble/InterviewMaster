@@ -1,237 +1,98 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
-import { motion } from 'framer-motion';
+import { useState, useEffect } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import Link from 'next/link';
 import {
   FaCalendarAlt,
   FaClock,
   FaUser,
-  FaCode,
-  FaSpinner,
-  FaCheckCircle,
-  FaStar,
-  FaGlobe,
   FaArrowRight,
-  FaArrowLeft
+  FaArrowLeft,
+  FaCheck
 } from 'react-icons/fa';
-import { formatTime, formatDate } from '@/utils/interviewScheduler';
-import { InterviewTypeSelector } from './components/InterviewTypeSelector';
-import { InterviewerSelector } from './components/InterviewerSelector';
-import { TimeSlotSelector } from './components/TimeSlotSelector';
-import toast from 'react-hot-toast';
-import { useRouter } from 'next/router';
 
 interface TimeSlot {
   id: string;
-  startTime: string;
-  endTime: string;
-  isAvailable: boolean;
+  time: string;
+  available: boolean;
 }
 
 interface Interviewer {
   id: string;
   name: string;
+  role: string;
   expertise: string[];
-  rating: number;
-  timezone: string;
-}
-
-interface InterviewType {
-  id: string;
-  name: string;
-  duration: number;
-  price: number;
-  description: string;
+  avatar: string;
+  available: boolean;
 }
 
 export default function InstantBookingPage() {
-  const [step, setStep] = useState(1);
-  const [selectedType, setSelectedType] = useState<InterviewType | null>(null);
-  const [selectedInterviewer, setSelectedInterviewer] = useState<Interviewer | null>(null);
-  const [selectedDate, setSelectedDate] = useState<string>('');
-  const [selectedSlot, setSelectedSlot] = useState<TimeSlot | null>(null);
-  const [interviewTypes, setInterviewTypes] = useState<InterviewType[]>([]);
-  const [interviewers, setInterviewers] = useState<Interviewer[]>([]);
-  const [availableSlots, setAvailableSlots] = useState<TimeSlot[]>([]);
+  const [selectedDate, setSelectedDate] = useState<Date | null>(null);
+  const [selectedTime, setSelectedTime] = useState<string | null>(null);
+  const [selectedInterviewer, setSelectedInterviewer] = useState<string | null>(null);
+  const [showConfirmation, setShowConfirmation] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState('');
-  const [bookingComplete, setBookingComplete] = useState(false);
-  const [formData, setFormData] = useState({
-    name: '',
-    email: '',
-    phone: '',
-    experience: '',
-    currentRole: '',
-    targetRole: '',
-    preferredLanguages: '',
-    notes: ''
-  });
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const router = useRouter();
+  const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
-    fetchInterviewTypes();
-    fetchInterviewers();
+    setMounted(true);
+    return () => setMounted(false);
   }, []);
 
-  const fetchInterviewTypes = async () => {
-    // Temporary mock data
-    setInterviewTypes([
-      {
-        id: '1',
-        name: 'Technical Interview',
-        duration: 60,
-        price: 99,
-        description: 'In-depth technical assessment with coding challenges'
-      },
-      {
-        id: '2',
-        name: 'System Design',
-        duration: 90,
-        price: 149,
-        description: 'Architecture and system design discussion'
-      },
-      {
-        id: '3',
-        name: 'Behavioral Interview',
-        duration: 45,
-        price: 79,
-        description: 'Focus on soft skills and past experiences'
-      }
-    ]);
-  };
+  // Mock data
+  const timeSlots: TimeSlot[] = [
+    { id: '1', time: '09:00 AM', available: true },
+    { id: '2', time: '10:00 AM', available: true },
+    { id: '3', time: '11:00 AM', available: true },
+    { id: '4', time: '02:00 PM', available: true },
+    { id: '5', time: '03:00 PM', available: true },
+    { id: '6', time: '04:00 PM', available: true },
+  ];
 
-  const fetchInterviewers = async () => {
-    // Temporary mock data
-    setInterviewers([
-      {
-        id: '1',
-        name: 'John Smith',
-        expertise: ['JavaScript', 'React', 'Node.js'],
-        rating: 4.9,
-        timezone: 'EST'
-      },
-      {
-        id: '2',
-        name: 'Sarah Johnson',
-        expertise: ['System Design', 'Java', 'Cloud Architecture'],
-        rating: 4.8,
-        timezone: 'PST'
-      },
-      {
-        id: '3',
-        name: 'Michael Chen',
-        expertise: ['Python', 'Machine Learning', 'Data Structures'],
-        rating: 4.7,
-        timezone: 'GMT'
-      }
-    ]);
-  };
-
-  const fetchAvailableSlots = async () => {
-    if (!selectedInterviewer || !selectedDate) return;
-    
-    setIsLoading(true);
-    try {
-      // Temporary mock data
-      const mockSlots = Array.from({ length: 8 }, (_, i) => ({
-        id: `slot-${i}`,
-        startTime: new Date(selectedDate + 'T' + (9 + i) + ':00:00').toISOString(),
-        endTime: new Date(selectedDate + 'T' + (10 + i) + ':00:00').toISOString(),
-        isAvailable: Math.random() > 0.3
-      }));
-      setAvailableSlots(mockSlots);
-    } catch (err) {
-      setError('Failed to load available slots');
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    if (selectedInterviewer && selectedDate) {
-      fetchAvailableSlots();
-    }
-  }, [selectedInterviewer, selectedDate]);
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!selectedType || !selectedInterviewer || !selectedDate || !selectedSlot) {
-      toast.error('Please complete all required fields');
-      return;
-    }
-
-    try {
-      setIsSubmitting(true);
-
-      const requestData = {
-        interviewType: {
-          id: selectedType.id,
-          name: selectedType.name,
-          duration: selectedType.duration,
-          price: selectedType.price
-        },
-        interviewer: {
-          id: selectedInterviewer.id,
-          name: selectedInterviewer.name,
-          expertise: selectedInterviewer.expertise,
-          timezone: selectedInterviewer.timezone
-        },
-        date: selectedDate,
-        timeSlot: {
-          startTime: selectedSlot.startTime,
-          endTime: selectedSlot.endTime
-        },
-        candidate: {
-          name: formData.name,
-          email: formData.email,
-          phone: formData.phone,
-          experience: formData.experience,
-          currentRole: formData.currentRole,
-          targetRole: formData.targetRole,
-          preferredLanguages: formData.preferredLanguages,
-          notes: formData.notes
-        }
-      };
-
-      const response = await fetch('/api/send-mock-interview', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(requestData),
-      });
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || 'Failed to schedule interview');
-      }
-
-      toast.success('Your mock interview has been scheduled successfully!');
-      router.push('/thankyou');
-    } catch (err) {
-      console.error('Interview scheduling error:', err);
-      toast.error(err instanceof Error ? err.message : 'Failed to schedule interview. Please try again.');
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
+  const interviewers: Interviewer[] = [
+    {
+      id: '1',
+      name: 'Sarah Johnson',
+      role: 'Senior Software Engineer',
+      expertise: ['React', 'Node.js', 'System Design'],
+      avatar: '/avatars/interviewer1.jpg',
+      available: true,
+    },
+    {
+      id: '2',
+      name: 'Michael Chen',
+      role: 'Tech Lead',
+      expertise: ['Java', 'Spring', 'Microservices'],
+      avatar: '/avatars/interviewer2.jpg',
+      available: true,
+    },
+    {
+      id: '3',
+      name: 'Emily Rodriguez',
+      role: 'Senior Frontend Engineer',
+      expertise: ['React', 'TypeScript', 'UI/UX'],
+      avatar: '/avatars/interviewer3.jpg',
+      available: true,
+    },
+  ];
 
   const handleBooking = async () => {
-    if (!selectedType || !selectedInterviewer || !selectedSlot) return;
-    
+    if (!selectedDate || !selectedTime || !selectedInterviewer || !mounted) return;
+
     setIsLoading(true);
     try {
       // Simulate API call
       await new Promise(resolve => setTimeout(resolve, 1500));
-      setBookingComplete(true);
-    } catch (err) {
-      setError('Failed to book interview. Please try again.');
+      setShowConfirmation(true);
+    } catch (error) {
+      console.error('Booking failed:', error);
     } finally {
       setIsLoading(false);
     }
   };
+
+  if (!mounted) return null;
 
   return (
     <div className="min-h-screen bg-background py-12 px-4 sm:px-6 lg:px-8">
@@ -251,290 +112,193 @@ export default function InstantBookingPage() {
             className="inline-flex items-center text-gray-400 hover:text-white transition-colors duration-200"
           >
             <FaArrowLeft className="w-5 h-5 mr-2" />
-            Back to Schedule Options
+            Back to Scheduling Options
           </Link>
         </div>
 
-        {/* Header */}
-        <div className="text-center mb-12">
-          <motion.div
-            initial={{ opacity: 0, scale: 0.5 }}
-            animate={{ opacity: 1, scale: 1 }}
-            className="inline-block p-4 rounded-full bg-[#fcba28]/20 mb-6"
-          >
-            <FaCalendarAlt className="w-8 h-8 text-[#fcba28]" />
-          </motion.div>
-          
-          <motion.h1 
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="text-4xl md:text-5xl font-bold mb-6 bg-gradient-to-r from-white to-gray-400 text-transparent bg-clip-text"
-          >
-            Instant Interview Booking
-          </motion.h1>
-          
-          <motion.p 
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="text-xl text-gray-400 max-w-3xl mx-auto mb-8"
-          >
-            Book your interview session instantly with our expert interviewers
-          </motion.p>
-        </div>
-
-        {/* Main Content */}
         <div className="max-w-4xl mx-auto">
-          {/* Progress Steps */}
-          <div className="flex justify-between items-center mb-8">
-            {[1, 2, 3, 4].map((stepNumber) => (
-              <div key={stepNumber} className="flex items-center">
-                <div
-                  className={`w-8 h-8 rounded-full flex items-center justify-center ${
-                    step >= stepNumber
-                      ? 'bg-[#fcba28] text-black'
-                      : 'bg-white/10 text-white'
-                  }`}
-                >
-                  {step > stepNumber ? (
-                    <FaCheckCircle className="w-5 h-5" />
-                  ) : (
-                    stepNumber
-                  )}
-                </div>
-                {stepNumber < 4 && (
-                  <div
-                    className={`w-full h-1 mx-2 ${
-                      step > stepNumber ? 'bg-[#fcba28]' : 'bg-white/10'
-                    }`}
-                  />
-                )}
-              </div>
-            ))}
-          </div>
-
-          {/* Error Message */}
-          {error && (
-            <div className="mb-6 p-4 bg-red-500/20 border border-red-500/50 rounded-xl text-red-500 text-center">
-              {error}
-            </div>
-          )}
-
-          {/* Step Content */}
+          {/* Main Content */}
           <div className="space-y-8">
-            {step === 1 && (
-              <motion.div
-                initial={{ opacity: 0, x: 20 }}
-                animate={{ opacity: 1, x: 0 }}
-                exit={{ opacity: 0, x: -20 }}
-              >
-                <h2 className="text-2xl font-bold text-white mb-6">Select Interview Type</h2>
-                <InterviewTypeSelector
-                  interviewTypes={interviewTypes}
-                  selectedType={selectedType}
-                  onSelect={(type) => {
-                    setSelectedType(type);
-                    setStep(2);
-                  }}
-                />
-              </motion.div>
-            )}
+            {/* Date Selection */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="bg-white/5 border border-white/10 rounded-2xl p-8"
+            >
+              <h2 className="text-2xl font-bold text-white mb-6 flex items-center gap-3">
+                <FaCalendarAlt className="text-[#fcba28]" />
+                Select Date
+              </h2>
+              <input
+                type="date"
+                onChange={(e) => setSelectedDate(new Date(e.target.value))}
+                className="w-full bg-white/5 border border-white/10 rounded-lg p-4 text-white focus:outline-none focus:ring-2 focus:ring-[#fcba28]/50"
+              />
+            </motion.div>
 
-            {step === 2 && (
-              <motion.div
-                initial={{ opacity: 0, x: 20 }}
-                animate={{ opacity: 1, x: 0 }}
-                exit={{ opacity: 0, x: -20 }}
-              >
-                <h2 className="text-2xl font-bold text-white mb-6">Choose Your Interviewer</h2>
-                <InterviewerSelector
-                  interviewers={interviewers}
-                  selectedInterviewer={selectedInterviewer}
-                  onSelect={(interviewer) => {
-                    setSelectedInterviewer(interviewer);
-                    setStep(3);
-                  }}
-                />
-              </motion.div>
-            )}
+            {/* Time Selection */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="bg-white/5 border border-white/10 rounded-2xl p-8"
+            >
+              <h2 className="text-2xl font-bold text-white mb-6 flex items-center gap-3">
+                <FaClock className="text-[#fcba28]" />
+                Select Time
+              </h2>
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
+                {timeSlots.map((slot) => (
+                  <motion.button
+                    key={slot.id}
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
+                    onClick={() => setSelectedTime(slot.time)}
+                    className={`p-4 rounded-lg text-center transition-all ${
+                      selectedTime === slot.time
+                        ? 'bg-[#fcba28] text-black'
+                        : 'bg-white/5 text-white hover:bg-white/10'
+                    }`}
+                  >
+                    {slot.time}
+                  </motion.button>
+                ))}
+              </div>
+            </motion.div>
 
-            {step === 3 && (
-              <motion.div
-                initial={{ opacity: 0, x: 20 }}
-                animate={{ opacity: 1, x: 0 }}
-                exit={{ opacity: 0, x: -20 }}
-              >
-                <h2 className="text-2xl font-bold text-white mb-6">Select Time Slot</h2>
-                <TimeSlotSelector
-                  availableSlots={availableSlots}
-                  selectedSlot={selectedSlot}
-                  selectedDate={selectedDate}
-                  onSelectSlot={(slot) => {
-                    setSelectedSlot(slot);
-                    setStep(4);
-                  }}
-                  onSelectDate={setSelectedDate}
-                />
-              </motion.div>
-            )}
-
-            {step === 4 && (
-              <motion.div
-                initial={{ opacity: 0, x: 20 }}
-                animate={{ opacity: 1, x: 0 }}
-                exit={{ opacity: 0, x: -20 }}
-              >
-                {bookingComplete ? (
-                  <div className="bg-white/5 border border-white/10 rounded-2xl p-8 text-center">
-                    <div className="w-16 h-16 mx-auto bg-[#fcba28]/20 rounded-full flex items-center justify-center mb-6">
-                      <FaCheckCircle className="w-8 h-8 text-[#fcba28]" />
+            {/* Interviewer Selection */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="bg-white/5 border border-white/10 rounded-2xl p-8"
+            >
+              <h2 className="text-2xl font-bold text-white mb-6 flex items-center gap-3">
+                <FaUser className="text-[#fcba28]" />
+                Select Interviewer
+              </h2>
+              <div className="space-y-4">
+                {interviewers.map((interviewer) => (
+                  <motion.button
+                    key={interviewer.id}
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
+                    onClick={() => setSelectedInterviewer(interviewer.id)}
+                    className={`w-full p-4 rounded-lg text-left transition-all ${
+                      selectedInterviewer === interviewer.id
+                        ? 'bg-[#fcba28]/20 border-[#fcba28]'
+                        : 'bg-white/5 hover:bg-white/10'
+                    } border`}
+                  >
+                    <div className="flex items-center gap-4">
+                      <div className="w-12 h-12 rounded-full bg-white/10 flex items-center justify-center">
+                        <FaUser className="w-6 h-6 text-[#fcba28]" />
+                      </div>
+                      <div>
+                        <div className="font-medium text-white">{interviewer.name}</div>
+                        <div className="text-sm text-gray-400">{interviewer.role}</div>
+                      </div>
                     </div>
-                    <h2 className="text-2xl font-bold text-white mb-4">Booking Confirmed!</h2>
-                    <p className="text-gray-400 mb-8">
-                      Your interview has been scheduled successfully. Check your email for details.
-                    </p>
-                    <Link
-                      href="/dashboard"
-                      className="inline-flex items-center px-6 py-3 bg-[#fcba28] text-black rounded-lg hover:bg-[#fcd978] transition-colors duration-200"
-                    >
-                      View My Interviews
-                      <FaArrowRight className="ml-2 w-4 h-4" />
-                    </Link>
-                  </div>
-                ) : (
-                  <div className="bg-white/5 border border-white/10 rounded-2xl p-8">
-                    <h2 className="text-2xl font-bold text-white mb-6">Confirm Booking</h2>
-                    {selectedType && selectedInterviewer && selectedSlot && (
-                      <div className="space-y-4 text-left mb-8">
-                        <div className="flex items-center justify-between p-4 bg-white/5 rounded-lg">
-                          <div className="flex items-center gap-3">
-                            <FaCode className="w-5 h-5 text-[#fcba28]" />
-                            <span className="text-white">{selectedType.name}</span>
-                          </div>
-                          <span className="text-[#fcba28]">${selectedType.price}</span>
-                        </div>
-                        <div className="flex items-center justify-between p-4 bg-white/5 rounded-lg">
-                          <div className="flex items-center gap-3">
-                            <FaUser className="w-5 h-5 text-[#fcba28]" />
-                            <span className="text-white">{selectedInterviewer.name}</span>
-                          </div>
-                          <div className="flex items-center gap-1">
-                            <FaStar className="w-4 h-4 text-[#fcba28]" />
-                            <span className="text-white">{selectedInterviewer.rating}</span>
-                          </div>
-                        </div>
-                        <div className="flex items-center justify-between p-4 bg-white/5 rounded-lg">
-                          <div className="flex items-center gap-3">
-                            <FaClock className="w-5 h-5 text-[#fcba28]" />
-                            <div className="text-white">
-                              <div>{formatDate(selectedDate)}</div>
-                              <div className="text-sm text-gray-400">
-                                {formatTime(selectedSlot.startTime)}
-                              </div>
-                            </div>
-                          </div>
-                          <div className="flex items-center gap-2">
-                            <FaGlobe className="w-4 h-4 text-[#fcba28]" />
-                            <span className="text-white">{selectedInterviewer.timezone}</span>
-                          </div>
-                        </div>
-                      </div>
-                    )}
-                    <form onSubmit={handleSubmit}>
-                      <div className="space-y-4 mb-8">
-                        <input 
-                          type="text" 
-                          value={formData.name} 
-                          onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                          className="w-full p-4 bg-white/5 rounded-lg text-white"
-                          placeholder="Your Name"
-                        />
-                        <input 
-                          type="email" 
-                          value={formData.email} 
-                          onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                          className="w-full p-4 bg-white/5 rounded-lg text-white"
-                          placeholder="Your Email"
-                        />
-                        <input 
-                          type="tel" 
-                          value={formData.phone} 
-                          onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                          className="w-full p-4 bg-white/5 rounded-lg text-white"
-                          placeholder="Your Phone Number"
-                        />
-                        <input 
-                          type="text" 
-                          value={formData.experience} 
-                          onChange={(e) => setFormData({ ...formData, experience: e.target.value })}
-                          className="w-full p-4 bg-white/5 rounded-lg text-white"
-                          placeholder="Your Experience"
-                        />
-                        <input 
-                          type="text" 
-                          value={formData.currentRole} 
-                          onChange={(e) => setFormData({ ...formData, currentRole: e.target.value })}
-                          className="w-full p-4 bg-white/5 rounded-lg text-white"
-                          placeholder="Your Current Role"
-                        />
-                        <input 
-                          type="text" 
-                          value={formData.targetRole} 
-                          onChange={(e) => setFormData({ ...formData, targetRole: e.target.value })}
-                          className="w-full p-4 bg-white/5 rounded-lg text-white"
-                          placeholder="Your Target Role"
-                        />
-                        <input 
-                          type="text" 
-                          value={formData.preferredLanguages} 
-                          onChange={(e) => setFormData({ ...formData, preferredLanguages: e.target.value })}
-                          className="w-full p-4 bg-white/5 rounded-lg text-white"
-                          placeholder="Your Preferred Languages"
-                        />
-                        <textarea 
-                          value={formData.notes} 
-                          onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
-                          className="w-full p-4 bg-white/5 rounded-lg text-white"
-                          placeholder="Any Additional Notes"
-                        />
-                      </div>
-                      <button
-                        type="submit"
-                        disabled={isSubmitting}
-                        className="w-full px-6 py-3 bg-[#fcba28] text-black rounded-lg hover:bg-[#fcd978] transition-colors duration-200 flex items-center justify-center gap-2"
-                      >
-                        {isSubmitting ? (
-                          <>
-                            <FaSpinner className="w-5 h-5 animate-spin" />
-                            Processing...
-                          </>
-                        ) : (
-                          <>
-                            Confirm Booking
-                            <FaArrowRight className="w-4 h-4" />
-                          </>
-                        )}
-                      </button>
-                    </form>
-                  </div>
-                )}
-              </motion.div>
-            )}
-          </div>
+                  </motion.button>
+                ))}
+              </div>
+            </motion.div>
 
-          {/* Navigation Buttons */}
-          {!bookingComplete && step > 1 && (
-            <div className="flex justify-between mt-8">
-              <button
-                onClick={() => setStep(step - 1)}
-                className="px-6 py-3 bg-white/10 text-white rounded-lg hover:bg-white/20 transition-colors duration-200 flex items-center gap-2"
+            {/* Book Button */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="flex justify-center"
+            >
+              <motion.button
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                onClick={handleBooking}
+                disabled={!selectedDate || !selectedTime || !selectedInterviewer || isLoading}
+                className={`px-8 py-4 rounded-lg font-medium flex items-center gap-2 ${
+                  !selectedDate || !selectedTime || !selectedInterviewer || isLoading
+                    ? 'bg-white/10 text-gray-400 cursor-not-allowed'
+                    : 'bg-[#fcba28] text-black'
+                }`}
               >
-                <FaArrowLeft className="w-4 h-4" />
-                Previous
-              </button>
-            </div>
-          )}
+                {isLoading ? (
+                  <>
+                    <div className="w-5 h-5 border-2 border-black border-t-transparent rounded-full animate-spin" />
+                    Booking...
+                  </>
+                ) : (
+                  <>
+                    <FaCheck className="w-5 h-5" />
+                    Confirm Booking
+                  </>
+                )}
+              </motion.button>
+            </motion.div>
+          </div>
         </div>
       </div>
+
+      {/* Confirmation Modal */}
+      <AnimatePresence mode="wait">
+        {showConfirmation && mounted && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 z-50"
+          >
+            <motion.div
+              initial={{ scale: 0.9, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.9, opacity: 0 }}
+              className="bg-gray-900 rounded-xl p-8 max-w-md w-full border border-[#fcba28]/20"
+            >
+              <div className="text-center mb-6">
+                <div className="w-16 h-16 bg-[#fcba28]/20 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <FaCheck className="w-8 h-8 text-[#fcba28]" />
+                </div>
+                <h2 className="text-2xl font-bold text-white">Interview Scheduled!</h2>
+                <p className="text-gray-400 mt-2">
+                  Your mock interview has been scheduled successfully.
+                </p>
+              </div>
+
+              <div className="space-y-4 mb-8">
+                <div className="flex items-center gap-3 text-gray-300">
+                  <FaCalendarAlt className="w-5 h-5 text-[#fcba28]" />
+                  <span>{selectedDate?.toLocaleDateString()}</span>
+                </div>
+                <div className="flex items-center gap-3 text-gray-300">
+                  <FaClock className="w-5 h-5 text-[#fcba28]" />
+                  <span>{selectedTime}</span>
+                </div>
+                <div className="flex items-center gap-3 text-gray-300">
+                  <FaUser className="w-5 h-5 text-[#fcba28]" />
+                  <span>{interviewers.find(i => i.id === selectedInterviewer)?.name}</span>
+                </div>
+              </div>
+
+              <div className="flex gap-4">
+                <Link href="/dashboard" className="flex-1">
+                  <motion.button
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
+                    className="w-full px-6 py-3 bg-[#fcba28] text-black rounded-lg font-medium"
+                  >
+                    Go to Dashboard
+                  </motion.button>
+                </Link>
+                <motion.button
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
+                  onClick={() => setShowConfirmation(false)}
+                  className="flex-1 px-6 py-3 bg-white/5 text-white rounded-lg hover:bg-white/10"
+                >
+                  Close
+                </motion.button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }
