@@ -33,6 +33,7 @@ export function InterviewSession({ onComplete }: InterviewSessionProps) {
     wordsPerMinute: 0,
     lastResponseLength: 0
   });
+  const [hasSpokenQuestion, setHasSpokenQuestion] = useState(false);
 
   const recognitionRef = useRef<any>(null);
   const speechSynthesisRef = useRef<SpeechSynthesis | null>(null);
@@ -79,6 +80,12 @@ export function InterviewSession({ onComplete }: InterviewSessionProps) {
       onComplete();
     }
   }, [currentQuestionIndex, questions.length, onComplete]);
+
+  useEffect(() => {
+    if (!hasSpokenQuestion && currentQuestion) {
+      speakText(currentQuestion.question);
+    }
+  }, [currentQuestion, hasSpokenQuestion]);
 
   const startRecording = async () => {
     try {
@@ -145,11 +152,21 @@ export function InterviewSession({ onComplete }: InterviewSessionProps) {
   const speakText = (text: string) => {
     if (!speechSynthesisRef.current) return;
 
+    // Get available voices
+    const voices = speechSynthesisRef.current.getVoices();
+    const indianVoice = voices.find(voice => voice.name.toLowerCase().includes('indian'));
+
     speechSynthesisRef.current.cancel();
     const utterance = new SpeechSynthesisUtterance(text);
+    if (indianVoice) {
+        utterance.voice = indianVoice;
+    }
     
     utterance.onstart = () => setIsSpeaking(true);
-    utterance.onend = () => setIsSpeaking(false);
+    utterance.onend = () => {
+        setIsSpeaking(false);
+        setHasSpokenQuestion(true); // Mark question as spoken
+    };
     utterance.onerror = () => setIsSpeaking(false);
 
     speechSynthesisRef.current.speak(utterance);

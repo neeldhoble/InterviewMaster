@@ -26,7 +26,13 @@ export async function parseResume(resumeText: string): Promise<ResumeData> {
 }
 
 export async function generateInterviewQuestions(resumeData: ResumeData, targetRole?: string): Promise<InterviewQuestion[]> {
-  // Implementation for generating interview questions based on resume data
+  try {
+    const response = await genAI.generateInterviewQuestions(resumeData, targetRole);
+    return response.data; // Adjust based on the actual API response structure
+  } catch (error) {
+    console.error('Error generating interview questions:', error);
+    throw new Error('Failed to generate interview questions.');
+  }
 }
 
 export async function generateFeedback(

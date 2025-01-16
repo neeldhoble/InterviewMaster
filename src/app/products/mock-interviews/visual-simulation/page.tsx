@@ -47,7 +47,7 @@ const InterviewModes = [
       'Natural conversation'
     ],
     gradient: 'from-green-600/20 to-emerald-600/20',
-    link: '/products/mock-interviews/visual-simulation/ai-personalise-interview'
+    link: '/products/mock-interviews/visual-simulation/personal'
   }
 ];
 

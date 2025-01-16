@@ -45,6 +45,10 @@ export default function PersonalInterviewPage() {
   const recognitionRef = useRef<any>(null);
   const [voiceMode, setVoiceMode] = useState(false);
 
+
+  const [hasSpokenQuestion, setHasSpokenQuestion] = useState(false);
+  
+
   const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (!file) return;

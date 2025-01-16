@@ -61,12 +61,18 @@ async function extractFromPDF(file: File): Promise<string> {
       const pageText = textContent.items
         .map((item: any) => item.str)
         .join(' ');
-      fullText += pageText + '\\n';
+      fullText += pageText + '\n';
     }
 
     const cleanedText = fullText.trim();
     if (!cleanedText) {
-      throw new Error('No readable text found in PDF');
+      // Attempt to extract text using OCR if no text found
+      const pdfBlob = new Blob([arrayBuffer], { type: 'application/pdf' });
+      const ocrText = await extractTextFromImage(pdfBlob);
+      if (!ocrText) {
+        throw new Error('No readable text found in PDF or image.');
+      }
+      return ocrText;
     }
 
     return cleanedText;
