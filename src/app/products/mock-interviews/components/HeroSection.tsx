@@ -245,14 +245,14 @@ export const HeroSection = () => {
                   Start Interview
                 </motion.button>
               </Link>
-              <Link href="/products/mock-interviews/tips">
+              <Link href="/products/mock-interviews/visual-simulation">
                 <motion.button 
                   className="w-full sm:w-auto px-8 py-3 bg-white/10 text-white rounded-full font-medium hover:bg-white/20 transition-all duration-300 flex items-center justify-center"
                   whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.95 }}
                 >
                   <MessageSquare className="w-5 h-5 mr-2" />
-                  Interview Tips
+                  Start Simulation
                 </motion.button>
               </Link>
             </motion.div>
