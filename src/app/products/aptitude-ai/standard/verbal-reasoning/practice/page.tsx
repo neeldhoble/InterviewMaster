@@ -1,137 +1,150 @@
 'use client';
 
-import { useState } from 'react';
-import { motion } from "framer-motion";
+import React, { useState, useEffect } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+import Link from 'next/link';
 import { MaxWidthWrapper } from "@/components/MaxWidthWrapper";
-import Link from "next/link";
-import { FaArrowLeft } from "react-icons/fa6";
-import { PracticeMode } from "../../components/PracticeMode";
+import { 
+  FaArrowLeft, 
+  FaBrain, 
+  FaLightbulb,
+  FaClock,
+  FaRobot,
+  FaSpinner
+} from 'react-icons/fa6';
+import { tcsQuestions } from '../questions/tcs';
+import { infosysQuestions } from '../questions/infosys';
+import { wiproQuestions } from '../questions/wipro';
+import { accentureQuestions } from '../questions/accenture';
+import { generateQuestion } from '../utils/questionGenerator';
+import { Question } from '../questions/common';
 
-const questions = [
-  {
-    id: "vr1",
-    question: `Choose the word that best completes the analogy:
-SYMPHONY : COMPOSER :: NOVEL : ?`,
-    options: ["Reader", "Writer", "Publisher", "Editor"],
-    answer: "Writer",
-    explanation: "A symphony is created by a composer, just as a novel is created by a writer. The relationship is that of creator and creation.",
-    difficulty: "Medium" as const,
-    category: "Analogies",
-    hints: [
-      "Focus on the relationship between the first pair",
-      "Look for a similar relationship in the second pair"
-    ]
-  },
-  {
-    id: "vr2",
-    question: `Read the passage and answer the question:
+const categories = [
+  'Analogies',
+  'Reading Comprehension'
+] as const;
 
-The rise of artificial intelligence has sparked debates about its impact on employment. While some argue that AI will eliminate jobs, others contend that it will create new opportunities and transform existing roles. Historical precedents suggest that technological revolutions typically lead to job displacement in the short term but job creation in the long term.
+const difficulties = ['Easy', 'Medium', 'Hard'] as const;
 
-What is the main argument of this passage?`,
-    options: [
-      "AI will definitely eliminate jobs",
-      "AI will only create new jobs",
-      "AI's impact on employment is complex and multifaceted",
-      "Historical precedents are irrelevant to AI's impact"
-    ],
-    answer: "AI's impact on employment is complex and multifaceted",
-    explanation: "The passage presents multiple perspectives on AI's impact on employment and uses historical context to suggest that the effects are not simple or one-dimensional.",
-    difficulty: "Hard" as const,
-    category: "Reading Comprehension",
-    hints: [
-      "Look for the overall theme that connects all points",
-      "Notice how the passage presents different viewpoints"
-    ]
-  },
-  {
-    id: "vr3",
-    question: `Choose the word that is most nearly OPPOSITE in meaning to PROLIFIC:`,
-    options: ["Barren", "Fertile", "Abundant", "Productive"],
-    answer: "Barren",
-    explanation: "PROLIFIC means producing a lot or being highly productive. BARREN means unproductive or infertile, making it the opposite of prolific.",
-    difficulty: "Medium" as const,
-    category: "Antonyms",
-    hints: [
-      "Think about what PROLIFIC means in terms of production",
-      "Look for a word that suggests lack of production"
-    ]
-  },
-  {
-    id: "vr4",
-    question: `Complete the sentence with the most appropriate word:
+const VerbalReasoningPractice = () => {
+  // State management
+  const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
+  const [selectedAnswer, setSelectedAnswer] = useState<string | null>(null);
+  const [showExplanation, setShowExplanation] = useState(false);
+  const [showHint, setShowHint] = useState(false);
+  const [hintIndex, setHintIndex] = useState(0);
+  const [selectedCompany, setSelectedCompany] = useState<string>('TCS');
+  const [questions, setQuestions] = useState<Question[]>([]);
+  const [isGenerating, setIsGenerating] = useState(false);
+  const [selectedCategory, setSelectedCategory] = useState<typeof categories[number]>('Analogies');
+  const [selectedDifficulty, setSelectedDifficulty] = useState<typeof difficulties[number]>('Easy');
+  const [showGenerateSuccess, setShowGenerateSuccess] = useState(false);
+  const [showDebug, setShowDebug] = useState(false);
 
-Despite his _______ manner, he was actually quite kind and generous.`,
-    options: ["Gregarious", "Austere", "Effusive", "Benevolent"],
-    answer: "Austere",
-    explanation: "The sentence suggests a contrast between appearance and reality. 'Austere' (stern or severe in manner) contrasts well with 'kind and generous'.",
-    difficulty: "Hard" as const,
-    category: "Sentence Completion",
-    hints: [
-      "Look for the contrast indicated by 'Despite'",
-      "The word should contrast with 'kind and generous'"
-    ]
-  },
-  {
-    id: "vr5",
-    question: `Arrange the following sentences in logical order:
-
-1. However, the experiment yielded unexpected results.
-2. The scientists had been working on the project for months.
-3. This led to a completely new direction in their research.
-4. They carefully documented all their findings.
-5. These results challenged their initial hypothesis.`,
-    options: [
-      "2,1,5,3,4",
-      "2,4,1,5,3",
-      "1,2,3,4,5",
-      "4,2,1,5,3"
-    ],
-    answer: "2,1,5,3,4",
-    explanation: "The logical sequence is:\n1. Initial situation (working for months)\n2. Main event (unexpected results)\n3. Impact on hypothesis\n4. New direction\n5. Documentation",
-    difficulty: "Hard" as const,
-    category: "Sentence Arrangement",
-    hints: [
-      "Look for the opening sentence that sets the context",
-      "Follow the cause-and-effect relationship"
-    ]
-  },
-  {
-    id: "vr6",
-    question: `In the following question, two statements are given followed by two conclusions. Choose the conclusion that logically follows:
-
-Statements:
-All cats are animals.
-Some animals are pets.
-
-Conclusions:
-I. Some cats are pets.
-II. All pets are cats.`,
-    options: [
-      "Only I follows",
-      "Only II follows",
-      "Both I and II follow",
-      "Neither I nor II follows"
-    ],
-    answer: "Neither I nor II follows",
-    explanation: "From the statements:\n1. We know all cats are animals\n2. Some animals are pets\n3. We can't conclude that any cats are among the animals that are pets\n4. We also can't conclude that all pets are cats\nTherefore, neither conclusion logically follows.",
-    difficulty: "Hard" as const,
-    category: "Logical Deduction",
-    hints: [
-      "Draw a Venn diagram",
-      "Check if there's a definite overlap between sets"
-    ]
-  }
-];
-
-export default function VerbalReasoningPracticePage() {
-  const [practiceComplete, setPracticeComplete] = useState(false);
-  const [results, setResults] = useState<any>(null);
-
-  const handleComplete = (practiceResults: any) => {
-    setResults(practiceResults);
-    setPracticeComplete(true);
+  const allQuestions = {
+    'TCS': tcsQuestions,
+    'Infosys': infosysQuestions,
+    'Wipro': wiproQuestions,
+    'Accenture': accentureQuestions,
   };
+
+  // Initialize questions
+  useEffect(() => {
+    setQuestions(allQuestions[selectedCompany as keyof typeof allQuestions] || []);
+  }, [selectedCompany]);
+
+  const currentQuestion = questions[currentQuestionIndex];
+
+  const handleAnswerSelect = (option: string) => {
+    setSelectedAnswer(option);
+    setShowExplanation(true);
+  };
+
+  const handleNextQuestion = () => {
+    if (questions.length === 0) return;
+    setCurrentQuestionIndex((prev) => (prev + 1) % questions.length);
+    setSelectedAnswer(null);
+    setShowExplanation(false);
+    setShowHint(false);
+    setHintIndex(0);
+  };
+
+  const handlePrevQuestion = () => {
+    if (questions.length === 0) return;
+    setCurrentQuestionIndex((prev) => (prev - 1 + questions.length) % questions.length);
+    setSelectedAnswer(null);
+    setShowExplanation(false);
+    setShowHint(false);
+    setHintIndex(0);
+  };
+
+  const handleShowHint = () => {
+    if (!currentQuestion) return;
+    if (!showHint) {
+      setShowHint(true);
+    } else {
+      setHintIndex((prev) => (prev + 1) % currentQuestion.hints.length);
+    }
+  };
+
+  const handleCompanyChange = (company: string) => {
+    setSelectedCompany(company);
+    const newQuestions = allQuestions[company as keyof typeof allQuestions] || [];
+    setQuestions(newQuestions);
+    setCurrentQuestionIndex(0);
+    setSelectedAnswer(null);
+    setShowExplanation(false);
+    setShowHint(false);
+  };
+
+  const handleGenerateQuestion = async () => {
+    try {
+      setIsGenerating(true);
+      const newQuestion = await generateQuestion(
+        selectedCompany,
+        selectedCategory,
+        selectedDifficulty
+      );
+      
+      setQuestions(prev => {
+        const newQuestions = [...prev, newQuestion];
+        console.log('Updated questions:', newQuestions); // Debug log
+        return newQuestions;
+      });
+      
+      // Wait for state update
+      setTimeout(() => {
+        setCurrentQuestionIndex(questions.length);
+        setSelectedAnswer(null);
+        setShowExplanation(false);
+        setShowHint(false);
+        setHintIndex(0);
+        setShowGenerateSuccess(true);
+        setTimeout(() => setShowGenerateSuccess(false), 3000);
+      }, 100);
+
+      const dialog = document.getElementById('aiGeneratorDialog') as HTMLDialogElement;
+      dialog.close();
+    } catch (error) {
+      console.error('Failed to generate question:', error);
+      alert('Failed to generate question. Please try again.');
+    } finally {
+      setIsGenerating(false);
+    }
+  };
+
+  const companies = Object.keys(allQuestions);
+
+  if (!currentQuestion) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="text-white text-center">
+          <h2 className="text-2xl mb-4">Loading questions...</h2>
+          <FaSpinner className="animate-spin text-4xl mx-auto" />
+        </div>
+      </div>
+    );
+  }
 
   return (
     <main className="min-h-screen bg-background relative overflow-hidden">
@@ -152,107 +165,252 @@ export default function VerbalReasoningPracticePage() {
       </div>
 
       <div className="relative z-10">
-        <MaxWidthWrapper className="py-8">
+        <MaxWidthWrapper>
           {/* Navigation */}
-          <div className="mb-8">
+          <div className="pt-8">
             <Link 
               href="/products/aptitude-ai/standard/verbal-reasoning"
               className="inline-flex items-center text-[#fcba28] hover:text-[#ffd700] transition-colors gap-2 group"
             >
               <FaArrowLeft className="group-hover:-translate-x-1 transition-transform" />
-              Back to Overview
+              Back to Verbal Reasoning
             </Link>
           </div>
 
-          {practiceComplete ? (
+          {/* Debug Panel */}
+          {showDebug && (
+            <div className="mt-4 p-4 bg-black/60 rounded-lg text-white">
+              <h3 className="font-bold mb-2">Debug Info:</h3>
+              <pre className="text-sm">
+                {JSON.stringify({
+                  totalQuestions: questions.length,
+                  currentIndex: currentQuestionIndex,
+                  currentQuestion: currentQuestion.id,
+                  company: selectedCompany
+                }, null, 2)}
+              </pre>
+            </div>
+          )}
+
+          {/* Main Content */}
+          <div className="py-12">
+            {/* Header Stats */}
+            <div className="grid grid-cols-4 gap-6 mb-12">
+              <div className="p-4 rounded-xl bg-black/40 backdrop-blur-lg border border-[#fcba28]/20">
+                <div className="text-[#fcba28] mb-2"><FaBrain className="text-2xl" /></div>
+                <div className="text-white font-bold">{selectedCompany}</div>
+                <div className="text-gray-400 text-sm">Current Company</div>
+              </div>
+              <div className="p-4 rounded-xl bg-black/40 backdrop-blur-lg border border-[#fcba28]/20">
+                <div className="text-[#fcba28] mb-2"><FaClock className="text-2xl" /></div>
+                <div className="text-white font-bold">{currentQuestionIndex + 1}/{questions.length}</div>
+                <div className="text-gray-400 text-sm">Question Progress</div>
+              </div>
+              <div className="p-4 rounded-xl bg-black/40 backdrop-blur-lg border border-[#fcba28]/20">
+                <div className="text-[#fcba28] mb-2"><FaLightbulb className="text-2xl" /></div>
+                <div className="text-white font-bold">{currentQuestion.difficulty}</div>
+                <div className="text-gray-400 text-sm">Difficulty Level</div>
+              </div>
+              <button 
+                onClick={() => {
+                  const dialog = document.getElementById('aiGeneratorDialog') as HTMLDialogElement;
+                  dialog.showModal();
+                }}
+                className="p-4 rounded-xl bg-black/40 backdrop-blur-lg border border-[#fcba28]/20 hover:bg-[#fcba28]/10 transition-all cursor-pointer group"
+              >
+                <div className="text-[#fcba28] mb-2 group-hover:scale-110 transition-transform">
+                  <FaRobot className="text-2xl" />
+                </div>
+                <div className="text-white font-bold">Generate</div>
+                <div className="text-gray-400 text-sm">AI Question</div>
+              </button>
+            </div>
+
+            {/* Success Message */}
+            <AnimatePresence>
+              {showGenerateSuccess && (
+                <motion.div
+                  initial={{ opacity: 0, y: -20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -20 }}
+                  className="fixed top-4 right-4 bg-green-500/90 text-white px-6 py-3 rounded-lg shadow-lg backdrop-blur-lg"
+                >
+                  New question generated successfully!
+                </motion.div>
+              )}
+            </AnimatePresence>
+
+            {/* Question Card */}
             <motion.div
+              key={currentQuestion.id}
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
-              className="text-center py-12"
+              exit={{ opacity: 0, y: -20 }}
+              className="p-8 rounded-xl bg-black/40 backdrop-blur-lg border border-[#fcba28]/20 mb-8"
             >
-              <h1 className="text-4xl font-bold text-white mb-6">Practice Complete!</h1>
-              <p className="text-gray-300 mb-8">
-                You've completed {questions.length} questions. Here's your performance:
-              </p>
+              <div className="flex justify-between items-center mb-6">
+                <div className="flex items-center gap-4">
+                  <span className="text-[#fcba28]">{currentQuestion.category}</span>
+                  {currentQuestion.id.includes('ai') && (
+                    <span className="px-2 py-1 rounded-full bg-[#fcba28]/20 text-[#fcba28] text-sm">
+                      AI Generated
+                    </span>
+                  )}
+                </div>
+                <select
+                  value={selectedCompany}
+                  onChange={(e) => handleCompanyChange(e.target.value)}
+                  className="bg-black/40 border border-[#fcba28]/20 rounded-lg px-4 py-2 text-white"
+                >
+                  {companies.map((company) => (
+                    <option key={company} value={company}>
+                      {company}
+                    </option>
+                  ))}
+                </select>
+              </div>
               
-              {/* Results summary */}
-              <div className="grid grid-cols-3 gap-6 max-w-3xl mx-auto mb-12">
-                <div className="p-6 rounded-xl bg-black/40 backdrop-blur-lg border border-[#fcba28]/20">
-                  <div className="text-3xl font-bold text-[#fcba28] mb-2">
-                    {results.filter((r: any) => r.correct).length}/{questions.length}
-                  </div>
-                  <div className="text-gray-400">Correct Answers</div>
-                </div>
-                <div className="p-6 rounded-xl bg-black/40 backdrop-blur-lg border border-[#fcba28]/20">
-                  <div className="text-3xl font-bold text-[#fcba28] mb-2">
-                    {Math.round((results.filter((r: any) => r.correct).length / questions.length) * 100)}%
-                  </div>
-                  <div className="text-gray-400">Accuracy</div>
-                </div>
-                <div className="p-6 rounded-xl bg-black/40 backdrop-blur-lg border border-[#fcba28]/20">
-                  <div className="text-3xl font-bold text-[#fcba28] mb-2">
-                    {Math.round(results.reduce((acc: number, r: any) => acc + r.timeSpent, 0) / results.length)}s
-                  </div>
-                  <div className="text-gray-400">Avg. Time per Question</div>
-                </div>
+              <p className="text-lg text-white mb-8 whitespace-pre-wrap">{currentQuestion.question}</p>
+
+              <div className="space-y-4">
+                {currentQuestion.options.map((option, index) => (
+                  <button
+                    key={index}
+                    onClick={() => handleAnswerSelect(option)}
+                    className={`w-full p-4 text-left rounded-lg transition-all ${
+                      selectedAnswer === option
+                        ? option === currentQuestion.answer
+                          ? 'bg-green-500/20 border-green-500'
+                          : 'bg-red-500/20 border-red-500'
+                        : 'bg-black/40 hover:bg-[#fcba28]/10'
+                    } border ${
+                      selectedAnswer && option === currentQuestion.answer
+                        ? 'border-green-500'
+                        : 'border-[#fcba28]/20'
+                    } text-white`}
+                    disabled={selectedAnswer !== null}
+                  >
+                    {option}
+                  </button>
+                ))}
               </div>
 
-              {/* Performance Analysis */}
-              <div className="max-w-3xl mx-auto mb-12">
-                <h2 className="text-2xl font-bold text-white mb-4">Topic Performance</h2>
-                <div className="grid gap-4">
-                  {["Analogies", "Reading Comprehension", "Antonyms", "Sentence Completion", "Logical Deduction"].map(topic => {
-                    const topicQuestions = questions.filter(q => q.category === topic);
-                    const correctAnswers = results.filter((r: any, i: number) => 
-                      r.correct && questions[i].category === topic
-                    ).length;
-                    return (
-                      <div key={topic} className="p-4 rounded-lg bg-black/40 backdrop-blur-lg border border-[#fcba28]/20">
-                        <div className="flex justify-between items-center mb-2">
-                          <span className="text-white">{topic}</span>
-                          <span className="text-[#fcba28]">
-                            {correctAnswers}/{topicQuestions.length}
-                          </span>
-                        </div>
-                        <div className="w-full h-2 bg-black/40 rounded-full overflow-hidden">
-                          <div 
-                            className="h-full bg-[#fcba28]"
-                            style={{ width: `${(correctAnswers / topicQuestions.length) * 100}%` }}
-                          />
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
-              </div>
+              {showExplanation && (
+                <motion.div
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className="mt-6 p-4 rounded-lg bg-[#fcba28]/10 border border-[#fcba28]/20"
+                >
+                  <h3 className="font-semibold text-[#fcba28] mb-2">Explanation:</h3>
+                  <p className="text-white">{currentQuestion.explanation}</p>
+                </motion.div>
+              )}
 
-              {/* Action buttons */}
-              <div className="flex justify-center gap-4">
-                <Link
-                  href="/products/aptitude-ai/standard/verbal-reasoning"
-                  className="px-6 py-3 bg-black/40 backdrop-blur-lg border border-[#fcba28]/20 text-[#fcba28] rounded-xl hover:border-[#fcba28]/40 transition-colors"
+              {showHint && (
+                <motion.div
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className="mt-6 p-4 rounded-lg bg-yellow-500/10 border border-yellow-500/20"
                 >
-                  Back to Topics
-                </Link>
-                <button
-                  onClick={() => {
-                    setPracticeComplete(false);
-                    setResults(null);
-                  }}
-                  className="px-6 py-3 bg-[#fcba28] text-black rounded-xl hover:bg-[#ffd700] transition-colors"
-                >
-                  Practice Again
-                </button>
-              </div>
+                  <h3 className="font-semibold text-yellow-400 mb-2">Hint {hintIndex + 1}:</h3>
+                  <p className="text-white">{currentQuestion.hints[hintIndex]}</p>
+                </motion.div>
+              )}
             </motion.div>
-          ) : (
-            <PracticeMode 
-              questions={questions}
-              onComplete={handleComplete}
-            />
-          )}
+
+            {/* Navigation Buttons */}
+            <div className="flex justify-between">
+              <button
+                onClick={handlePrevQuestion}
+                className="px-6 py-3 bg-black/40 text-white rounded-lg hover:bg-[#fcba28]/20 transition-colors border border-[#fcba28]/20"
+              >
+                Previous
+              </button>
+              <button
+                onClick={handleShowHint}
+                className="px-6 py-3 bg-black/40 text-[#fcba28] rounded-lg hover:bg-[#fcba28]/20 transition-colors border border-[#fcba28]/20"
+                disabled={selectedAnswer !== null}
+              >
+                {showHint ? 'Next Hint' : 'Show Hint'}
+              </button>
+              <button
+                onClick={handleNextQuestion}
+                className="px-6 py-3 bg-[#fcba28] text-black rounded-lg hover:bg-[#ffd700] transition-colors"
+              >
+                Next
+              </button>
+            </div>
+          </div>
         </MaxWidthWrapper>
       </div>
+
+      {/* AI Question Generator Dialog */}
+      <dialog
+        id="aiGeneratorDialog"
+        className="p-8 rounded-xl bg-black/95 backdrop:bg-gray-900/50 text-white border border-[#fcba28]/20 backdrop-blur-lg"
+      >
+        <h2 className="text-2xl font-bold text-[#fcba28] mb-6">Generate AI Question</h2>
+        <div className="space-y-6">
+          <div>
+            <label className="block text-sm font-medium text-gray-300 mb-2">Category</label>
+            <select
+              value={selectedCategory}
+              onChange={(e) => setSelectedCategory(e.target.value as typeof categories[number])}
+              className="w-full bg-black/40 border border-[#fcba28]/20 rounded-lg px-4 py-2 text-white"
+            >
+              {categories.map((category) => (
+                <option key={category} value={category}>
+                  {category}
+                </option>
+              ))}
+            </select>
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-300 mb-2">Difficulty</label>
+            <select
+              value={selectedDifficulty}
+              onChange={(e) => setSelectedDifficulty(e.target.value as typeof difficulties[number])}
+              className="w-full bg-black/40 border border-[#fcba28]/20 rounded-lg px-4 py-2 text-white"
+            >
+              {difficulties.map((difficulty) => (
+                <option key={difficulty} value={difficulty}>
+                  {difficulty}
+                </option>
+              ))}
+            </select>
+          </div>
+          <div className="flex justify-end gap-4 mt-8">
+            <button
+              onClick={() => {
+                const dialog = document.getElementById('aiGeneratorDialog') as HTMLDialogElement;
+                dialog.close();
+              }}
+              className="px-6 py-3 bg-black/40 text-white rounded-lg hover:bg-[#fcba28]/20 transition-colors border border-[#fcba28]/20"
+            >
+              Cancel
+            </button>
+            <button
+              onClick={handleGenerateQuestion}
+              disabled={isGenerating}
+              className="px-6 py-3 bg-[#fcba28] text-black rounded-lg hover:bg-[#ffd700] transition-colors disabled:bg-[#fcba28]/50 flex items-center gap-2"
+            >
+              {isGenerating ? (
+                <>
+                  <FaSpinner className="animate-spin" />
+                  Generating...
+                </>
+              ) : (
+                <>
+                  <FaRobot />
+                  Generate Question
+                </>
+              )}
+            </button>
+          </div>
+        </div>
+      </dialog>
     </main>
   );
-}
+};
+
+export default VerbalReasoningPractice;
