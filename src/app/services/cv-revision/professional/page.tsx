@@ -190,7 +190,7 @@ export default function CVRevisionProfessionalPage() {
                 Content Suggestions
               </li>
             </ul>
-            <p className="text-2xl font-bold text-white">$49</p>
+            <p className="text-2xl font-bold text-white">$2</p>
           </motion.div>
 
           {/* Premium Plan */}
@@ -227,7 +227,7 @@ export default function CVRevisionProfessionalPage() {
                 LinkedIn Profile Review
               </li>
             </ul>
-            <p className="text-2xl font-bold text-white">$99</p>
+            <p className="text-2xl font-bold text-white">$5</p>
           </motion.div>
         </div>
 

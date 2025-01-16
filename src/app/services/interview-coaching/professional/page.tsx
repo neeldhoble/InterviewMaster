@@ -29,7 +29,7 @@ export default function ProfessionalInterviewCoachingPage() {
   const packages = {
     standard: {
       name: 'Standard Package',
-      price: '$99',
+      price: '$5',
       duration: '1 hour',
       features: [
         'One-on-one coaching session',
@@ -41,7 +41,7 @@ export default function ProfessionalInterviewCoachingPage() {
     },
     premium: {
       name: 'Premium Package',
-      price: '$249',
+      price: '$10',
       duration: '3 hours',
       features: [
         'Three one-on-one sessions',

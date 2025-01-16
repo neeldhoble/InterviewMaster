@@ -28,7 +28,7 @@ const writers: Writer[] = [
     packages: {
       basic: {
         name: 'Basic',
-        price: 99,
+        price: 5,
         turnaround: '3-5 business days',
         isPopular: false,
         features: [
@@ -40,7 +40,7 @@ const writers: Writer[] = [
       },
       premium: {
         name: 'Premium',
-        price: 199,
+        price: 10,
         turnaround: '2-3 business days',
         isPopular: true,
         features: [
@@ -53,7 +53,7 @@ const writers: Writer[] = [
       },
       executive: {
         name: 'Executive',
-        price: 299,
+        price: 15,
         turnaround: '1-2 business days',
         isPopular: false,
         features: [
@@ -85,7 +85,7 @@ const writers: Writer[] = [
     packages: {
       basic: {
         name: 'Basic',
-        price: 89,
+        price: 5,
         turnaround: '3-5 business days',
         isPopular: false,
         features: [
@@ -97,7 +97,7 @@ const writers: Writer[] = [
       },
       premium: {
         name: 'Premium',
-        price: 179,
+        price: 10,
         turnaround: '2-3 business days',
         isPopular: true,
         features: [
@@ -110,7 +110,7 @@ const writers: Writer[] = [
       },
       executive: {
         name: 'Executive',
-        price: 279,
+        price: 15,
         turnaround: '1-2 business days',
         isPopular: false,
         features: [

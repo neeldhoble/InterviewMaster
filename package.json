@@ -58,7 +58,7 @@
     "docx": "^9.1.0",
     "face-api.js": "^0.22.2",
     "file-saver": "^2.0.5",
-    "framer-motion": "^11.16.0",
+    "framer-motion": "^11.18.0",
     "html-docx-js-typescript": "^0.1.5",
     "html-to-image": "^1.11.11",
     "html2canvas": "^1.4.1",
@@ -99,7 +99,8 @@
     "tailwindcss-animate": "^1.0.7",
     "tesseract.js": "^6.0.0",
     "uuid": "^11.0.3",
-    "zod": "^3.23.8"
+    "zod": "^3.23.8",
+    "zustand": "^5.0.3"
   },
   "devDependencies": {
     "@figma/plugin-typings": "^1.106.0",
