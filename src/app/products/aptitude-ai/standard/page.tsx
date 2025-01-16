@@ -21,6 +21,7 @@ const TopicCard = ({
   questionCount,
   difficulty,
   color,
+  path,
 }: {
   icon: any;
   title: string;
@@ -28,6 +29,7 @@ const TopicCard = ({
   questionCount: number;
   difficulty: string;
   color: string;
+  path: string;
 }) => (
   <motion.div
     whileHover={{ scale: 1.05, y: -5 }}
@@ -59,7 +61,7 @@ const TopicCard = ({
           {difficulty}
         </span>
         <Link
-          href={`/products/aptitude-ai/standard/${title.toLowerCase().replace(/\s+/g, "-")}`}
+          href={path}
           className="text-[#fcba28] hover:text-[#ffd700] transition-colors inline-flex items-center gap-2"
         >
           Practice Now →
@@ -69,73 +71,64 @@ const TopicCard = ({
   </motion.div>
 );
 
-const StatsCard = ({ icon: Icon, value, label }: { icon: any; value: string; label: string }) => (
-  <motion.div
-    whileHover={{ scale: 1.05 }}
-    className="p-6 rounded-xl bg-black/40 backdrop-blur-lg border border-[#fcba28]/20 flex items-center gap-4"
-  >
-    <div className="w-12 h-12 rounded-lg bg-[#fcba28]/10 flex items-center justify-center text-[#fcba28]">
-      <Icon className="text-2xl" />
-    </div>
-    <div>
-      <p className="text-2xl font-bold text-white">{value}</p>
-      <p className="text-gray-400">{label}</p>
-    </div>
-  </motion.div>
-);
+const topics = [
+  {
+    icon: FaCalculator,
+    title: "Numerical Ability",
+    description: "Master arithmetic, percentages, and mathematical concepts",
+    questionCount: 250,
+    difficulty: "Medium",
+    color: "from-blue-500 to-cyan-500",
+    path: "/products/aptitude-ai/standard/numerical-ability"
+  },
+  {
+    icon: FaBrain,
+    title: "Verbal Reasoning",
+    description: "Improve logical deduction and verbal comprehension",
+    questionCount: 200,
+    difficulty: "Hard",
+    color: "from-purple-500 to-pink-500",
+    path: "/products/aptitude-ai/standard/verbal-reasoning"
+  },
+  {
+    icon: FaPuzzlePiece,
+    title: "Logical Reasoning",
+    description: "Enhance problem-solving and analytical thinking",
+    questionCount: 180,
+    difficulty: "Medium",
+    color: "from-orange-500 to-red-500",
+    path: "/products/aptitude-ai/standard/logical-reasoning"
+  },
+  {
+    icon: FaChartLine,
+    title: "Data Interpretation",
+    description: "Analyze graphs, charts, and statistical data",
+    questionCount: 150,
+    difficulty: "Hard",
+    color: "from-green-500 to-emerald-500",
+    path: "/products/aptitude-ai/standard/data-interpretation"
+  },
+  {
+    icon: FaTable,
+    title: "Non-verbal Reasoning",
+    description: "Practice with patterns and spatial relationships",
+    questionCount: 220,
+    difficulty: "Medium",
+    color: "from-yellow-500 to-amber-500",
+    path: "/products/aptitude-ai/standard/non-verbal-reasoning"
+  },
+  {
+    icon: FaSquareRootVariable,
+    title: "Quantitative Aptitude",
+    description: "Advanced mathematical and statistical concepts",
+    questionCount: 280,
+    difficulty: "Hard",
+    color: "from-indigo-500 to-violet-500",
+    path: "/products/aptitude-ai/standard/quantitative-aptitude"
+  },
+];
 
 export default function StandardPracticePage() {
-  const topics = [
-    {
-      icon: FaCalculator,
-      title: "Numerical Ability",
-      description: "Master arithmetic, percentages, and mathematical concepts",
-      questionCount: 250,
-      difficulty: "Medium",
-      color: "from-blue-500 to-cyan-500",
-    },
-    {
-      icon: FaBrain,
-      title: "Verbal Reasoning",
-      description: "Improve logical deduction and verbal comprehension",
-      questionCount: 200,
-      difficulty: "Hard",
-      color: "from-purple-500 to-pink-500",
-    },
-    {
-      icon: FaPuzzlePiece,
-      title: "Logical Reasoning",
-      description: "Enhance problem-solving and analytical thinking",
-      questionCount: 180,
-      difficulty: "Medium",
-      color: "from-orange-500 to-red-500",
-    },
-    {
-      icon: FaChartLine,
-      title: "Data Interpretation",
-      description: "Analyze graphs, charts, and statistical data",
-      questionCount: 150,
-      difficulty: "Hard",
-      color: "from-green-500 to-emerald-500",
-    },
-    {
-      icon: FaTable,
-      title: "Non-verbal Reasoning",
-      description: "Practice with patterns and spatial relationships",
-      questionCount: 220,
-      difficulty: "Medium",
-      color: "from-yellow-500 to-amber-500",
-    },
-    {
-      icon: FaSquareRootVariable,
-      title: "Quantitative Aptitude",
-      description: "Advanced mathematical and statistical concepts",
-      questionCount: 280,
-      difficulty: "Hard",
-      color: "from-indigo-500 to-violet-500",
-    },
-  ];
-
   return (
     <main className="min-h-screen bg-background relative overflow-hidden">
       {/* Background Effects */}
@@ -180,21 +173,36 @@ export default function StandardPracticePage() {
 
             {/* Stats Section */}
             <div className="grid md:grid-cols-3 gap-6 mb-20">
-              <StatsCard
-                icon={FaBrain}
-                value="1,280+"
-                label="Practice Questions"
-              />
-              <StatsCard
-                icon={FaClock}
-                value="6"
-                label="Topic Categories"
-              />
-              <StatsCard
-                icon={FaTrophy}
-                value="24/7"
-                label="AI Assistance"
-              />
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.3 }}
+                className="p-6 rounded-xl bg-black/40 backdrop-blur-lg border border-[#fcba28]/20"
+              >
+                <FaBrain className="text-[#fcba28] text-3xl mx-auto mb-4" />
+                <div className="text-2xl font-bold text-[#fcba28] mb-2">1,280+</div>
+                <div className="text-gray-400">Practice Questions</div>
+              </motion.div>
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.4 }}
+                className="p-6 rounded-xl bg-black/40 backdrop-blur-lg border border-[#fcba28]/20"
+              >
+                <FaClock className="text-[#fcba28] text-3xl mx-auto mb-4" />
+                <div className="text-2xl font-bold text-[#fcba28] mb-2">6</div>
+                <div className="text-gray-400">Topic Categories</div>
+              </motion.div>
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.5 }}
+                className="p-6 rounded-xl bg-black/40 backdrop-blur-lg border border-[#fcba28]/20"
+              >
+                <FaTrophy className="text-[#fcba28] text-3xl mx-auto mb-4" />
+                <div className="text-2xl font-bold text-[#fcba28] mb-2">24/7</div>
+                <div className="text-gray-400">AI Assistance</div>
+              </motion.div>
             </div>
           </div>
 
@@ -205,7 +213,7 @@ export default function StandardPracticePage() {
             transition={{ delay: 0.4 }}
             className="grid md:grid-cols-2 lg:grid-cols-3 gap-8 py-12"
           >
-            {topics.map((topic, index) => (
+            {topics.map((topic) => (
               <TopicCard key={topic.title} {...topic} />
             ))}
           </motion.div>
