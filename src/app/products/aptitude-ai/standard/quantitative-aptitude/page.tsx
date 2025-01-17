@@ -1,249 +1,289 @@
 'use client';
 
-import { motion } from "framer-motion";
-import { MaxWidthWrapper } from "@/components/MaxWidthWrapper";
-import Link from "next/link";
-import { 
-  FaArrowLeft, 
-  FaSquareRootVariable, 
-  FaChartLine, 
-  FaLightbulb, 
-  FaGraduationCap,
-  FaClock,
-  FaCalculator
-} from "react-icons/fa6";
-
-const features = [
-  {
-    icon: FaSquareRootVariable,
-    title: "Advanced Math",
-    description: "Master complex mathematical concepts and formulas"
-  },
-  {
-    icon: FaCalculator,
-    title: "Quick Calculations",
-    description: "Learn shortcuts and speed math techniques"
-  },
-  {
-    icon: FaLightbulb,
-    title: "AI-Powered Help",
-    description: "Get step-by-step solutions and explanations"
-  },
-  {
-    icon: FaGraduationCap,
-    title: "Comprehensive Coverage",
-    description: "Practice all quantitative aptitude topics"
-  }
-];
-
-const topics = [
-  {
-    title: "Time & Work",
-    questions: 50,
-    difficulty: "Hard",
-    topics: ["Time Taken", "Work Efficiency", "Combined Work"]
-  },
-  {
-    title: "Probability",
-    questions: 45,
-    difficulty: "Hard",
-    topics: ["Basic Probability", "Compound Events", "Conditional Probability"]
-  },
-  {
-    title: "Permutation & Combination",
-    questions: 40,
-    difficulty: "Hard",
-    topics: ["Arrangements", "Selections", "Word Problems"]
-  },
-  {
-    title: "Advanced Algebra",
-    questions: 55,
-    difficulty: "Hard",
-    topics: ["Quadratic Equations", "Progressions", "Complex Numbers"]
-  }
-];
+import React, { useState } from 'react';
+import { motion } from 'framer-motion';
+import Link from 'next/link';
+import { FaCalculator, FaChartLine, FaLightbulb, FaClock, FaBrain, FaTrophy, FaArrowLeft } from 'react-icons/fa';
+import { tcsQuantitativeQuestions } from './questions/tcs';
+import { infosysQuantitativeQuestions } from './questions/infosys';
+import { wiproQuantitativeQuestions } from './questions/wipro';
+import { accentureQuantitativeQuestions } from './questions/accenture';
+import { commonQuantitativeQuestions } from './questions/common';
 
 export default function QuantitativeAptitudePage() {
-  return (
-    <main className="min-h-screen bg-background relative overflow-hidden">
-      {/* Background Effects */}
-      <div className="absolute inset-0">
-        <motion.div
-          animate={{
-            backgroundPosition: ["0% 0%", "100% 100%"],
-          }}
-          transition={{
-            duration: 20,
-            repeat: Infinity,
-            repeatType: "reverse",
-          }}
-          className="absolute inset-0 bg-[radial-gradient(circle_at_center,#fcba2810_0%,transparent_65%)] blur-3xl"
-        />
-        <div className="absolute inset-0 bg-[linear-gradient(to_right,#80808012_1px,transparent_1px),linear-gradient(to_bottom,#80808012_1px,transparent_1px)] bg-[size:24px_24px]" />
-      </div>
+  const [selectedCompany, setSelectedCompany] = useState<string | null>(null);
+  const [currentQuestion, setCurrentQuestion] = useState(0);
+  const [answers, setAnswers] = useState<{ [key: string]: string }>({});
+  const [showExplanation, setShowExplanation] = useState(false);
 
-      <div className="relative z-10">
-        <MaxWidthWrapper>
-          {/* Navigation */}
-          <div className="pt-8">
+  const companies = [
+    { id: 'tcs', name: 'TCS', questions: tcsQuantitativeQuestions },
+    { id: 'infosys', name: 'Infosys', questions: infosysQuantitativeQuestions },
+    { id: 'wipro', name: 'Wipro', questions: wiproQuantitativeQuestions },
+    { id: 'accenture', name: 'Accenture', questions: accentureQuantitativeQuestions },
+    { id: 'common', name: 'Common Questions', questions: commonQuantitativeQuestions },
+  ];
+
+  const features = [
+    {
+      icon: <FaCalculator className="w-6 h-6" />,
+      title: "Numerical Computation",
+      description: "Master arithmetic, algebra, and mathematical calculations essential for aptitude tests."
+    },
+    {
+      icon: <FaChartLine className="w-6 h-6" />,
+      title: "Data Analysis",
+      description: "Practice interpreting graphs, charts, and statistical data with real-world scenarios."
+    },
+    {
+      icon: <FaLightbulb className="w-6 h-6" />,
+      title: "Problem Solving",
+      description: "Develop logical thinking and analytical skills through diverse problem types."
+    },
+    {
+      icon: <FaClock className="w-6 h-6" />,
+      title: "Time Management",
+      description: "Learn techniques to solve complex problems quickly and efficiently."
+    },
+    {
+      icon: <FaBrain className="w-6 h-6" />,
+      title: "Mental Math",
+      description: "Strengthen your ability to perform calculations mentally with speed and accuracy."
+    },
+    {
+      icon: <FaTrophy className="w-6 h-6" />,
+      title: "Company-Specific",
+      description: "Practice questions tailored to match the patterns of top tech companies."
+    }
+  ];
+
+  const currentQuestions = selectedCompany 
+    ? companies.find(c => c.id === selectedCompany)?.questions || []
+    : [];
+
+  const handleAnswer = (answer: string) => {
+    setAnswers(prev => ({
+      ...prev,
+      [currentQuestions[currentQuestion].id]: answer
+    }));
+    setShowExplanation(true);
+  };
+
+  const nextQuestion = () => {
+    if (currentQuestion < currentQuestions.length - 1) {
+      setCurrentQuestion(prev => prev + 1);
+      setShowExplanation(false);
+    }
+  };
+
+  const prevQuestion = () => {
+    if (currentQuestion > 0) {
+      setCurrentQuestion(prev => prev - 1);
+      setShowExplanation(false);
+    }
+  };
+
+  if (!selectedCompany) {
+    return (
+      <div className="min-h-screen bg-background">
+        {/* Background Effects */}
+        <div className="fixed inset-0 overflow-hidden pointer-events-none">
+          <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,#fcba2810_0%,transparent_65%)] blur-3xl" />
+          <div className="absolute inset-0 bg-[radial-gradient(circle_at_80%_20%,#fcba2815_0%,transparent_50%)]" />
+          <div className="absolute inset-0 bg-[radial-gradient(circle_at_20%_80%,#fcba2815_0%,transparent_50%)]" />
+          <div className="absolute inset-0 bg-[linear-gradient(to_right,#80808012_1px,transparent_1px),linear-gradient(to_bottom,#80808012_1px,transparent_1px)] bg-[size:24px_24px]" />
+        </div>
+
+        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+          {/* Back Button */}
+          <div className="mb-8">
             <Link 
-              href="/products/aptitude-ai/standard"
-              className="inline-flex items-center text-[#fcba28] hover:text-[#ffd700] transition-colors gap-2 group"
+              href="/products/aptitude-ai/standard" 
+              className="inline-flex items-center text-gray-400 hover:text-white transition-colors duration-200"
             >
-              <FaArrowLeft className="group-hover:-translate-x-1 transition-transform" />
-              Back to Topics
+              <FaArrowLeft className="w-5 h-5 mr-2" />
+              Back to Standard Tests
             </Link>
           </div>
 
-          {/* Hero Section */}
-          <div className="text-center py-16">
-            <motion.h1
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              className="text-5xl font-bold text-white mb-6"
-            >
-              Quantitative{" "}
-              <span className="bg-clip-text text-transparent bg-gradient-to-r from-[#fcba28] to-[#ffd700]">
-                Aptitude
-              </span>
-            </motion.h1>
-            <motion.p
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.2 }}
-              className="text-gray-200 text-xl max-w-2xl mx-auto mb-12"
-            >
-              Master advanced mathematical concepts and problem-solving techniques
-            </motion.p>
-
-            {/* Quick Stats */}
-            <div className="grid grid-cols-3 gap-6 max-w-3xl mx-auto mb-16">
-              <div className="p-4 rounded-xl bg-black/40 backdrop-blur-lg border border-[#fcba28]/20">
-                <div className="text-3xl font-bold text-[#fcba28] mb-2">190+</div>
-                <div className="text-gray-400">Practice Questions</div>
-              </div>
-              <div className="p-4 rounded-xl bg-black/40 backdrop-blur-lg border border-[#fcba28]/20">
-                <div className="text-3xl font-bold text-[#fcba28] mb-2">4</div>
-                <div className="text-gray-400">Major Topics</div>
-              </div>
-              <div className="p-4 rounded-xl bg-black/40 backdrop-blur-lg border border-[#fcba28]/20">
-                <div className="text-3xl font-bold text-[#fcba28] mb-2">12</div>
-                <div className="text-gray-400">Sub-topics</div>
-              </div>
-            </div>
-
-            {/* Formula Showcase */}
+          {/* Header */}
+          <div className="text-center mb-16">
             <motion.div
-              initial={{ opacity: 0, scale: 0.95 }}
+              initial={{ opacity: 0, scale: 0.5 }}
               animate={{ opacity: 1, scale: 1 }}
-              transition={{ delay: 0.4 }}
-              className="max-w-3xl mx-auto mb-16 p-8 rounded-xl bg-black/40 backdrop-blur-lg border border-[#fcba28]/20"
+              className="inline-block p-4 rounded-full bg-[#fcba28]/20 mb-6"
             >
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                {[
-                  "x = (-b ± √(b² - 4ac)) / 2a",
-                  "P(A∪B) = P(A) + P(B) - P(A∩B)",
-                  "nPr = n! / (n-r)!",
-                  "nCr = n! / (r! × (n-r)!)"
-                ].map((formula, index) => (
-                  <motion.div
-                    key={index}
-                    whileHover={{ scale: 1.05 }}
-                    className="p-4 rounded-lg bg-black/40 border border-[#fcba28]/20"
-                  >
-                    <p className="text-[#fcba28] font-mono text-sm">{formula}</p>
-                  </motion.div>
-                ))}
-              </div>
-              <p className="text-gray-400 mt-4 text-center">
-                Master essential formulas with interactive practice
-              </p>
+              <FaCalculator className="w-8 h-8 text-[#fcba28]" />
             </motion.div>
+            
+            <motion.h1 
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="text-4xl md:text-5xl font-bold mb-6 bg-gradient-to-r from-white to-gray-400 text-transparent bg-clip-text"
+            >
+              Quantitative Aptitude Practice
+            </motion.h1>
+            
+            <motion.p 
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="text-xl text-gray-400 max-w-3xl mx-auto"
+            >
+              Master the mathematical concepts and problem-solving techniques required for technical interviews
+            </motion.p>
           </div>
 
           {/* Features Grid */}
-          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6 mb-20">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 mb-16">
             {features.map((feature, index) => (
               <motion.div
-                key={feature.title}
+                key={index}
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: index * 0.1 }}
-                className="p-6 rounded-xl bg-black/40 backdrop-blur-lg border border-[#fcba28]/20"
+                className="bg-white/5 border border-white/10 rounded-xl p-6"
               >
-                <feature.icon className="text-[#fcba28] text-2xl mb-4" />
-                <h3 className="text-white font-bold mb-2">{feature.title}</h3>
-                <p className="text-gray-400 text-sm">{feature.description}</p>
+                <div className="p-3 bg-[#fcba28]/20 rounded-lg inline-block mb-4">
+                  {feature.icon}
+                </div>
+                <h3 className="text-xl font-semibold text-white mb-2">{feature.title}</h3>
+                <p className="text-gray-400">{feature.description}</p>
               </motion.div>
             ))}
           </div>
 
-          {/* Topics Section */}
-          <div className="mb-20">
-            <h2 className="text-3xl font-bold text-white mb-8 text-center">Available Topics</h2>
-            <div className="grid md:grid-cols-2 gap-6">
-              {topics.map((topic, index) => (
-                <motion.div
-                  key={topic.title}
+          {/* Company Selection */}
+          <div className="space-y-6">
+            <h2 className="text-2xl font-bold text-white text-center mb-8">
+              Choose Your Practice Set
+            </h2>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {companies.map((company, index) => (
+                <motion.button
+                  key={company.id}
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: index * 0.1 }}
-                  className="p-6 rounded-xl bg-black/40 backdrop-blur-lg border border-[#fcba28]/20"
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
+                  onClick={() => setSelectedCompany(company.id)}
+                  className="bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl p-6 text-left transition-all group"
                 >
-                  <div className="flex justify-between items-start mb-4">
-                    <h3 className="text-xl font-bold text-white">{topic.title}</h3>
-                    <span className={`px-3 py-1 rounded-full text-sm ${
-                      topic.difficulty === "Easy" ? "bg-green-500/20 text-green-400" :
-                      topic.difficulty === "Medium" ? "bg-yellow-500/20 text-yellow-400" :
-                      "bg-red-500/20 text-red-400"
-                    }`}>
-                      {topic.difficulty}
-                    </span>
+                  <h3 className="text-xl font-semibold text-white mb-2 group-hover:text-[#fcba28] transition-colors">
+                    {company.name}
+                  </h3>
+                  <p className="text-gray-400 mb-4">
+                    {company.questions.length} questions
+                  </p>
+                  <div className="flex items-center text-[#fcba28] group-hover:gap-2 transition-all">
+                    Start Practice
+                    <FaArrowLeft className="rotate-180 ml-2" />
                   </div>
-                  <div className="flex items-center gap-2 text-gray-400 mb-4">
-                    <FaClock className="text-[#fcba28]" />
-                    <span>{topic.questions} questions</span>
-                  </div>
-                  <div className="flex flex-wrap gap-2">
-                    {topic.topics.map(t => (
-                      <span key={t} className="px-3 py-1 rounded-full bg-[#fcba28]/10 text-[#fcba28] text-sm">
-                        {t}
-                      </span>
-                    ))}
-                  </div>
-                </motion.div>
+                </motion.button>
               ))}
             </div>
           </div>
+        </div>
+      </div>
+    );
+  }
 
-          {/* CTA Section */}
+  return (
+    <div className="min-h-screen bg-background py-12 px-4 sm:px-6 lg:px-8">
+      {/* Background Effects */}
+      <div className="fixed inset-0 overflow-hidden pointer-events-none">
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,#fcba2810_0%,transparent_65%)] blur-3xl" />
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_80%_20%,#fcba2815_0%,transparent_50%)]" />
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_20%_80%,#fcba2815_0%,transparent_50%)]" />
+        <div className="absolute inset-0 bg-[linear-gradient(to_right,#80808012_1px,transparent_1px),linear-gradient(to_bottom,#80808012_1px,transparent_1px)] bg-[size:24px_24px]" />
+      </div>
+
+      <div className="max-w-3xl mx-auto relative">
+        {/* Header */}
+        <div className="flex items-center justify-between mb-8">
+          <button
+            onClick={() => setSelectedCompany(null)}
+            className="text-gray-400 hover:text-white transition-colors inline-flex items-center"
+          >
+            <FaArrowLeft className="w-5 h-5 mr-2" />
+            Back to Companies
+          </button>
+          <div className="text-white font-medium">
+            Question {currentQuestion + 1} of {currentQuestions.length}
+          </div>
+        </div>
+
+        {/* Question Card */}
+        <motion.div
+          key={currentQuestion}
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="bg-white/5 border border-white/10 rounded-xl p-6 mb-6"
+        >
+          <h2 className="text-xl text-white mb-6">
+            {currentQuestions[currentQuestion].question}
+          </h2>
+          <div className="space-y-4">
+            {currentQuestions[currentQuestion].options.map((option, index) => (
+              <button
+                key={index}
+                onClick={() => handleAnswer(option[0])}
+                className={`w-full p-4 rounded-lg text-left transition-all ${
+                  answers[currentQuestions[currentQuestion].id] === option[0]
+                    ? 'bg-[#fcba28] text-black'
+                    : 'bg-white/5 text-white hover:bg-white/10'
+                }`}
+              >
+                {option}
+              </button>
+            ))}
+          </div>
+        </motion.div>
+
+        {/* Explanation */}
+        {showExplanation && (
           <motion.div
             initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            className="text-center py-20"
+            animate={{ opacity: 1, y: 0 }}
+            className="bg-white/5 border border-white/10 rounded-xl p-6 mb-6"
           >
-            <h2 className="text-3xl font-bold text-white mb-6">
-              Ready to Start?
-            </h2>
-            <p className="text-gray-300 mb-8 max-w-2xl mx-auto">
-              Begin with our carefully curated practice questions and master quantitative aptitude.
+            <h3 className="text-lg font-semibold text-white mb-2">Explanation</h3>
+            <p className="text-gray-400 whitespace-pre-line">
+              {currentQuestions[currentQuestion].explanation}
             </p>
-            <Link
-              href="/products/aptitude-ai/standard/quantitative-aptitude/practice"
-              className="px-8 py-4 bg-[#fcba28] text-black rounded-full font-semibold inline-flex items-center gap-2 hover:bg-[#ffd700] transition-colors"
-            >
-              Start Practice
-              <motion.span
-                animate={{ x: [0, 5, 0] }}
-                transition={{ duration: 1, repeat: Infinity }}
-              >
-                →
-              </motion.span>
-            </Link>
           </motion.div>
-        </MaxWidthWrapper>
+        )}
+
+        {/* Navigation Buttons */}
+        <div className="flex justify-between">
+          <motion.button
+            whileHover={{ scale: 1.02 }}
+            whileTap={{ scale: 0.98 }}
+            onClick={prevQuestion}
+            disabled={currentQuestion === 0}
+            className={`px-6 py-3 rounded-lg transition-all ${
+              currentQuestion === 0
+                ? 'bg-white/5 text-gray-500 cursor-not-allowed'
+                : 'bg-white/10 text-white hover:bg-white/20'
+            }`}
+          >
+            Previous
+          </motion.button>
+          <motion.button
+            whileHover={{ scale: 1.02 }}
+            whileTap={{ scale: 0.98 }}
+            onClick={nextQuestion}
+            disabled={currentQuestion === currentQuestions.length - 1}
+            className={`px-6 py-3 rounded-lg transition-all ${
+              currentQuestion === currentQuestions.length - 1
+                ? 'bg-white/5 text-gray-500 cursor-not-allowed'
+                : 'bg-[#fcba28] text-black hover:bg-[#fcba28]/90'
+            }`}
+          >
+            Next
+          </motion.button>
+        </div>
       </div>
-    </main>
+    </div>
   );
 }

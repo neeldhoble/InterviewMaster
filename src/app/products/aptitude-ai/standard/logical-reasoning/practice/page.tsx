@@ -1,177 +1,325 @@
 'use client';
 
-import { useState } from 'react';
-import { motion } from "framer-motion";
-import { MaxWidthWrapper } from "@/components/MaxWidthWrapper";
-import Link from "next/link";
-import { FaArrowLeft } from "react-icons/fa6";
-import { PracticeMode } from "../../components/PracticeMode";
+import React, { useState } from 'react';
+import { motion } from 'framer-motion';
+import Link from 'next/link';
+import { FaArrowLeft, FaFilter, FaBrain } from 'react-icons/fa';
+import { tcsLogicalQuestions } from '../questions/tcs';
+import { infosysLogicalQuestions } from '../questions/infosys';
+import { wiproLogicalQuestions } from '../questions/wipro';
+import { accentureLogicalQuestions } from '../questions/accenture';
+import { commonLogicalQuestions } from '../questions/common';
 
-const questions = [
-  {
-    id: "lr1",
-    question: "In a certain code, 'COMPUTER' is written as 'RFUVQNPC'. How will 'PRINTER' be written in that code?",
-    options: ["SFUOJSQ", "SFUOJSF", "QSJOUFQ", "QSJOUFS"],
-    answer: "QSJOUFQ",
-    explanation: "The code is formed by replacing each letter with the letter that comes before it in the alphabet.\nP → Q\nR → S\nI → J\nN → O\nT → U\nE → F\nR → S",
-    difficulty: "Medium" as const,
-    category: "Coding-Decoding",
-    hints: [
-      "Look for the pattern in how each letter is transformed",
-      "Try writing out the alphabet and see how letters shift"
-    ]
-  },
-  {
-    id: "lr2",
-    question: "Find the missing number in the series: 2, 6, 12, 20, ?, 42",
-    options: ["30", "32", "34", "36"],
-    answer: "30",
-    explanation: "The pattern is adding consecutive even numbers:\n2 + 4 = 6\n6 + 6 = 12\n12 + 8 = 20\n20 + 10 = 30\n30 + 12 = 42",
-    difficulty: "Easy" as const,
-    category: "Number Series",
-    hints: [
-      "Look at the difference between consecutive numbers",
-      "Is the difference following a pattern?"
-    ]
-  },
-  {
-    id: "lr3",
-    question: "If A + B means A is the mother of B; A × B means A is the sister of B; A ÷ B means A is the father of B; A - B means A is the brother of B, then which of the following means M is the uncle of N?",
-    options: [
-      "M - P + N",
-      "M × P + N",
-      "M - P ÷ N",
-      "M + P × N"
-    ],
-    answer: "M - P + N",
-    explanation: "To be an uncle, M must be the brother of N's parent.\nM - P means M is brother of P\nP + N means P is mother of N\nTherefore, M - P + N means M is brother of N's mother, making M the uncle of N",
-    difficulty: "Hard" as const,
-    category: "Blood Relations",
-    hints: [
-      "Break down what makes someone an uncle",
-      "Follow the relationships one at a time"
-    ]
-  },
-  {
-    id: "lr4",
-    question: "Statement: All cats are animals. Some animals are pets.\nConclusion: Some cats are pets.",
-    options: [
-      "Definitely true",
-      "Probably true",
-      "Insufficient data",
-      "Definitely false"
-    ],
-    answer: "Insufficient data",
-    explanation: "While all cats are animals, and some animals are pets, we cannot definitively conclude that any cats fall into the 'pets' subset of animals. The pets could be other animals.",
-    difficulty: "Medium" as const,
-    category: "Syllogisms",
-    hints: [
-      "Draw a Venn diagram",
-      "Consider if there's a guaranteed overlap between sets"
-    ]
-  }
-];
+export default function LogicalPracticePage() {
+  const [selectedCompany, setSelectedCompany] = useState<string | null>(null);
+  const [currentQuestion, setCurrentQuestion] = useState(0);
+  const [answers, setAnswers] = useState<{ [key: string]: string }>({});
+  const [showExplanation, setShowExplanation] = useState(false);
+  const [score, setScore] = useState(0);
+  const [showFilters, setShowFilters] = useState(false);
+  const [selectedDifficulty, setSelectedDifficulty] = useState<string | null>(null);
+  const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
 
-export default function LogicalReasoningPracticePage() {
-  const [practiceComplete, setPracticeComplete] = useState(false);
-  const [results, setResults] = useState<any>(null);
+  const companies = [
+    { id: 'tcs', name: 'TCS', questions: tcsLogicalQuestions },
+    { id: 'infosys', name: 'Infosys', questions: infosysLogicalQuestions },
+    { id: 'wipro', name: 'Wipro', questions: wiproLogicalQuestions },
+    { id: 'accenture', name: 'Accenture', questions: accentureLogicalQuestions },
+    { id: 'common', name: 'Common Questions', questions: commonLogicalQuestions },
+  ];
 
-  const handleComplete = (practiceResults: any) => {
-    setResults(practiceResults);
-    setPracticeComplete(true);
+  const allQuestions = selectedCompany 
+    ? companies.find(c => c.id === selectedCompany)?.questions || []
+    : [];
+
+  const difficulties = ['Easy', 'Medium', 'Hard'];
+  const categories = [...new Set(allQuestions.map(q => q.category))];
+
+  const filteredQuestions = allQuestions.filter(q => {
+    if (selectedDifficulty && q.difficulty !== selectedDifficulty) return false;
+    if (selectedCategory && q.category !== selectedCategory) return false;
+    return true;
+  });
+
+  const currentQuestions = filteredQuestions;
+
+  const handleAnswer = (answer: string) => {
+    const currentQues = currentQuestions[currentQuestion];
+    const isCorrect = answer === currentQues.correctAnswer;
+    
+    setAnswers(prev => ({
+      ...prev,
+      [currentQues.id]: answer
+    }));
+    
+    if (!answers[currentQues.id] && isCorrect) {
+      setScore(prev => prev + 1);
+    }
+    
+    setShowExplanation(true);
   };
 
+  const nextQuestion = () => {
+    if (currentQuestion < currentQuestions.length - 1) {
+      setCurrentQuestion(prev => prev + 1);
+      setShowExplanation(false);
+    }
+  };
+
+  const prevQuestion = () => {
+    if (currentQuestion > 0) {
+      setCurrentQuestion(prev => prev - 1);
+      setShowExplanation(false);
+    }
+  };
+
+  const resetPractice = () => {
+    setCurrentQuestion(0);
+    setAnswers({});
+    setShowExplanation(false);
+    setScore(0);
+    setSelectedDifficulty(null);
+    setSelectedCategory(null);
+  };
+
+  const FilterPanel = () => (
+    <motion.div
+      initial={{ opacity: 0, height: 0 }}
+      animate={{ opacity: 1, height: 'auto' }}
+      exit={{ opacity: 0, height: 0 }}
+      className="bg-white/5 border border-white/10 rounded-xl p-6 mb-6"
+    >
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div>
+          <h3 className="text-white font-medium mb-3">Difficulty</h3>
+          <div className="space-y-2">
+            {difficulties.map(difficulty => (
+              <button
+                key={difficulty}
+                onClick={() => setSelectedDifficulty(selectedDifficulty === difficulty ? null : difficulty)}
+                className={`px-4 py-2 rounded-lg text-sm transition-all ${
+                  selectedDifficulty === difficulty
+                    ? 'bg-[#fcba28] text-black'
+                    : 'bg-white/5 text-white hover:bg-white/10'
+                }`}
+              >
+                {difficulty}
+              </button>
+            ))}
+          </div>
+        </div>
+        <div>
+          <h3 className="text-white font-medium mb-3">Category</h3>
+          <div className="space-y-2">
+            {categories.map(category => (
+              <button
+                key={category}
+                onClick={() => setSelectedCategory(selectedCategory === category ? null : category)}
+                className={`px-4 py-2 rounded-lg text-sm transition-all ${
+                  selectedCategory === category
+                    ? 'bg-[#fcba28] text-black'
+                    : 'bg-white/5 text-white hover:bg-white/10'
+                }`}
+              >
+                {category}
+              </button>
+            ))}
+          </div>
+        </div>
+      </div>
+    </motion.div>
+  );
+
   return (
-    <main className="min-h-screen bg-background relative overflow-hidden">
+    <div className="min-h-screen bg-background py-12 px-4 sm:px-6 lg:px-8">
       {/* Background Effects */}
-      <div className="absolute inset-0">
-        <motion.div
-          animate={{
-            backgroundPosition: ["0% 0%", "100% 100%"],
-          }}
-          transition={{
-            duration: 20,
-            repeat: Infinity,
-            repeatType: "reverse",
-          }}
-          className="absolute inset-0 bg-[radial-gradient(circle_at_center,#fcba2810_0%,transparent_65%)] blur-3xl"
-        />
+      <div className="fixed inset-0 overflow-hidden pointer-events-none">
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,#fcba2810_0%,transparent_65%)] blur-3xl" />
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_80%_20%,#fcba2815_0%,transparent_50%)]" />
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_20%_80%,#fcba2815_0%,transparent_50%)]" />
         <div className="absolute inset-0 bg-[linear-gradient(to_right,#80808012_1px,transparent_1px),linear-gradient(to_bottom,#80808012_1px,transparent_1px)] bg-[size:24px_24px]" />
       </div>
 
-      <div className="relative z-10">
-        <MaxWidthWrapper className="py-8">
-          {/* Navigation */}
-          <div className="mb-8">
-            <Link 
-              href="/products/aptitude-ai/standard/logical-reasoning"
-              className="inline-flex items-center text-[#fcba28] hover:text-[#ffd700] transition-colors gap-2 group"
+      <div className="max-w-3xl mx-auto relative">
+        {/* Header */}
+        <div className="flex items-center justify-between mb-8">
+          <Link 
+            href="/products/aptitude-ai/standard/logical-reasoning"
+            className="text-gray-400 hover:text-white transition-colors inline-flex items-center"
+          >
+            <FaArrowLeft className="w-5 h-5 mr-2" />
+            Back to Logical Reasoning
+          </Link>
+          <div className="flex items-center gap-4">
+            <button
+              onClick={() => setShowFilters(!showFilters)}
+              className="text-gray-400 hover:text-white transition-colors"
             >
-              <FaArrowLeft className="group-hover:-translate-x-1 transition-transform" />
-              Back to Overview
-            </Link>
+              <FaFilter className="w-5 h-5" />
+            </button>
+            <div className="text-white font-medium">
+              Score: {score}/{currentQuestions.length}
+            </div>
           </div>
+        </div>
 
-          {practiceComplete ? (
+        {/* Filters */}
+        {showFilters && selectedCompany && <FilterPanel />}
+
+        {/* Company Selection */}
+        {!selectedCompany ? (
+          <div className="space-y-6">
+            <div className="text-center mb-8">
+              <motion.div
+                initial={{ opacity: 0, scale: 0.5 }}
+                animate={{ opacity: 1, scale: 1 }}
+                className="inline-block p-4 rounded-full bg-[#fcba28]/20 mb-6"
+              >
+                <FaBrain className="w-8 h-8 text-[#fcba28]" />
+              </motion.div>
+              <h2 className="text-2xl font-bold text-white mb-4">
+                Choose Your Practice Set
+              </h2>
+              <p className="text-gray-400">
+                Test your logical reasoning skills with company-specific questions
+              </p>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {companies.map((company, index) => (
+                <motion.button
+                  key={company.id}
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: index * 0.1 }}
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
+                  onClick={() => setSelectedCompany(company.id)}
+                  className="bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl p-6 text-left transition-all group"
+                >
+                  <h3 className="text-xl font-semibold text-white mb-2 group-hover:text-[#fcba28] transition-colors">
+                    {company.name}
+                  </h3>
+                  <p className="text-gray-400 mb-4">
+                    {company.questions.length} questions
+                  </p>
+                  <div className="flex items-center text-[#fcba28] group-hover:gap-2 transition-all">
+                    Start Practice
+                    <FaArrowLeft className="rotate-180 ml-2" />
+                  </div>
+                </motion.button>
+              ))}
+            </div>
+          </div>
+        ) : currentQuestions.length > 0 ? (
+          <>
+            {/* Question Card */}
             <motion.div
+              key={currentQuestion}
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
-              className="text-center py-12"
+              className="bg-white/5 border border-white/10 rounded-xl p-6 mb-6"
             >
-              <h1 className="text-4xl font-bold text-white mb-6">Practice Complete!</h1>
-              <p className="text-gray-300 mb-8">
-                You've completed {questions.length} questions. Here's your performance:
-              </p>
-              
-              {/* Results summary */}
-              <div className="grid grid-cols-3 gap-6 max-w-3xl mx-auto mb-12">
-                <div className="p-6 rounded-xl bg-black/40 backdrop-blur-lg border border-[#fcba28]/20">
-                  <div className="text-3xl font-bold text-[#fcba28] mb-2">
-                    {results.filter((r: any) => r.correct).length}/{questions.length}
-                  </div>
-                  <div className="text-gray-400">Correct Answers</div>
-                </div>
-                <div className="p-6 rounded-xl bg-black/40 backdrop-blur-lg border border-[#fcba28]/20">
-                  <div className="text-3xl font-bold text-[#fcba28] mb-2">
-                    {Math.round((results.filter((r: any) => r.correct).length / questions.length) * 100)}%
-                  </div>
-                  <div className="text-gray-400">Accuracy</div>
-                </div>
-                <div className="p-6 rounded-xl bg-black/40 backdrop-blur-lg border border-[#fcba28]/20">
-                  <div className="text-3xl font-bold text-[#fcba28] mb-2">
-                    {Math.round(results.reduce((acc: number, r: any) => acc + r.timeSpent, 0) / results.length)}s
-                  </div>
-                  <div className="text-gray-400">Avg. Time per Question</div>
-                </div>
+              <div className="flex justify-between items-center mb-4">
+                <span className="text-gray-400">
+                  Question {currentQuestion + 1} of {currentQuestions.length}
+                </span>
+                <span className="text-gray-400">
+                  {currentQuestions[currentQuestion].category} • {currentQuestions[currentQuestion].difficulty}
+                </span>
               </div>
+              <h2 className="text-xl text-white mb-6">
+                {currentQuestions[currentQuestion].question}
+              </h2>
+              <div className="space-y-4">
+                {currentQuestions[currentQuestion].options.map((option, index) => {
+                  const isSelected = answers[currentQuestions[currentQuestion].id] === option[0];
+                  const isCorrect = option[0] === currentQuestions[currentQuestion].correctAnswer;
+                  const showResult = showExplanation && isSelected;
 
-              {/* Action buttons */}
-              <div className="flex justify-center gap-4">
-                <Link
-                  href="/products/aptitude-ai/standard/logical-reasoning"
-                  className="px-6 py-3 bg-black/40 backdrop-blur-lg border border-[#fcba28]/20 text-[#fcba28] rounded-xl hover:border-[#fcba28]/40 transition-colors"
-                >
-                  Back to Topics
-                </Link>
-                <button
-                  onClick={() => {
-                    setPracticeComplete(false);
-                    setResults(null);
-                  }}
-                  className="px-6 py-3 bg-[#fcba28] text-black rounded-xl hover:bg-[#ffd700] transition-colors"
-                >
-                  Practice Again
-                </button>
+                  return (
+                    <button
+                      key={index}
+                      onClick={() => !showExplanation && handleAnswer(option[0])}
+                      disabled={showExplanation}
+                      className={`w-full p-4 rounded-lg text-left transition-all ${
+                        showResult
+                          ? isCorrect
+                            ? 'bg-green-500/20 text-green-300 border border-green-500/30'
+                            : 'bg-red-500/20 text-red-300 border border-red-500/30'
+                          : isSelected
+                          ? 'bg-[#fcba28] text-black'
+                          : 'bg-white/5 text-white hover:bg-white/10'
+                      }`}
+                    >
+                      {option}
+                    </button>
+                  );
+                })}
               </div>
             </motion.div>
-          ) : (
-            <PracticeMode 
-              questions={questions}
-              onComplete={handleComplete}
-            />
-          )}
-        </MaxWidthWrapper>
+
+            {/* Explanation */}
+            {showExplanation && (
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="bg-white/5 border border-white/10 rounded-xl p-6 mb-6"
+              >
+                <h3 className="text-lg font-semibold text-white mb-2">Explanation</h3>
+                <p className="text-gray-400 whitespace-pre-line">
+                  {currentQuestions[currentQuestion].explanation}
+                </p>
+              </motion.div>
+            )}
+
+            {/* Navigation Buttons */}
+            <div className="flex justify-between">
+              <motion.button
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+                onClick={prevQuestion}
+                disabled={currentQuestion === 0}
+                className={`px-6 py-3 rounded-lg transition-all ${
+                  currentQuestion === 0
+                    ? 'bg-white/5 text-gray-500 cursor-not-allowed'
+                    : 'bg-white/10 text-white hover:bg-white/20'
+                }`}
+              >
+                Previous
+              </motion.button>
+              {currentQuestion === currentQuestions.length - 1 ? (
+                <motion.button
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
+                  onClick={resetPractice}
+                  className="px-6 py-3 rounded-lg transition-all bg-[#fcba28] text-black hover:bg-[#fcba28]/90"
+                >
+                  Restart Practice
+                </motion.button>
+              ) : (
+                <motion.button
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
+                  onClick={nextQuestion}
+                  className="px-6 py-3 rounded-lg transition-all bg-[#fcba28] text-black hover:bg-[#fcba28]/90"
+                >
+                  Next
+                </motion.button>
+              )}
+            </div>
+          </>
+        ) : (
+          <div className="text-center py-12">
+            <h3 className="text-xl text-white mb-4">No questions match the selected filters</h3>
+            <button
+              onClick={resetPractice}
+              className="px-6 py-3 rounded-lg transition-all bg-[#fcba28] text-black hover:bg-[#fcba28]/90"
+            >
+              Reset Filters
+            </button>
+          </div>
+        )}
       </div>
-    </main>
+    </div>
   );
 }

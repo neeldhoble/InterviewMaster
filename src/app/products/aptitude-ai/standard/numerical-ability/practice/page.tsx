@@ -1,142 +1,228 @@
 'use client';
 
-import { useState } from 'react';
-import { motion } from "framer-motion";
-import { MaxWidthWrapper } from "@/components/MaxWidthWrapper";
-import Link from "next/link";
-import { FaArrowLeft } from "react-icons/fa6";
-import { PracticeMode } from "../../components/PracticeMode";
+import React, { useState } from 'react';
+import { motion } from 'framer-motion';
+import Link from 'next/link';
+import { FaArrowLeft } from 'react-icons/fa';
+import { tcsNumericalQuestions } from '../questions/tcs';
+import { infosysNumericalQuestions } from '../questions/infosys';
+import { wiproNumericalQuestions } from '../questions/wipro';
+import { accentureNumericalQuestions } from '../questions/accenture';
+import { commonNumericalQuestions } from '../questions/common';
 
-// Sample questions - replace with your actual questions
-const questions = [
-  {
-    id: "na1",
-    question: "If a shirt's price is reduced by 20% from $100, what is the final price?",
-    options: ["$80", "$85", "$75", "$90"],
-    answer: "$80",
-    explanation: "To find the final price after a 20% discount:\n1. Calculate 20% of $100 = $20\n2. Subtract the discount from original price: $100 - $20 = $80",
-    difficulty: "Easy" as const,
-    category: "Percentages",
-    hints: [
-      "Convert percentage to decimal: 20% = 0.2",
-      "Use the formula: Original - (Original × Discount%)"
-    ]
-  },
-  {
-    id: "na2",
-    question: "What is the ratio of 15 to 25 in its simplest form?",
-    options: ["3:5", "5:3", "2:5", "5:2"],
-    answer: "3:5",
-    explanation: "To simplify a ratio:\n1. Find the GCD of 15 and 25 (5)\n2. Divide both numbers by GCD: 15÷5 : 25÷5 = 3:5",
-    difficulty: "Medium" as const,
-    category: "Ratios",
-    hints: [
-      "Find the Greatest Common Divisor (GCD)",
-      "Divide both numbers by the GCD"
-    ]
-  }
-];
+export default function NumericalPracticePage() {
+  const [selectedCompany, setSelectedCompany] = useState<string | null>(null);
+  const [currentQuestion, setCurrentQuestion] = useState(0);
+  const [answers, setAnswers] = useState<{ [key: string]: string }>({});
+  const [showExplanation, setShowExplanation] = useState(false);
+  const [score, setScore] = useState(0);
 
-export default function NumericalAbilityPracticePage() {
-  const [practiceComplete, setPracticeComplete] = useState(false);
-  const [results, setResults] = useState<any>(null);
+  const companies = [
+    { id: 'tcs', name: 'TCS', questions: tcsNumericalQuestions },
+    { id: 'infosys', name: 'Infosys', questions: infosysNumericalQuestions },
+    { id: 'wipro', name: 'Wipro', questions: wiproNumericalQuestions },
+    { id: 'accenture', name: 'Accenture', questions: accentureNumericalQuestions },
+    { id: 'common', name: 'Common Questions', questions: commonNumericalQuestions },
+  ];
 
-  const handleComplete = (practiceResults: any) => {
-    setResults(practiceResults);
-    setPracticeComplete(true);
+  const currentQuestions = selectedCompany 
+    ? companies.find(c => c.id === selectedCompany)?.questions || []
+    : [];
+
+  const handleAnswer = (answer: string) => {
+    const currentQues = currentQuestions[currentQuestion];
+    const isCorrect = answer === currentQues.correctAnswer;
+    
+    setAnswers(prev => ({
+      ...prev,
+      [currentQues.id]: answer
+    }));
+    
+    if (!answers[currentQues.id] && isCorrect) {
+      setScore(prev => prev + 1);
+    }
+    
+    setShowExplanation(true);
+  };
+
+  const nextQuestion = () => {
+    if (currentQuestion < currentQuestions.length - 1) {
+      setCurrentQuestion(prev => prev + 1);
+      setShowExplanation(false);
+    }
+  };
+
+  const prevQuestion = () => {
+    if (currentQuestion > 0) {
+      setCurrentQuestion(prev => prev - 1);
+      setShowExplanation(false);
+    }
+  };
+
+  const resetPractice = () => {
+    setCurrentQuestion(0);
+    setAnswers({});
+    setShowExplanation(false);
+    setScore(0);
   };
 
   return (
-    <main className="min-h-screen bg-background relative overflow-hidden">
+    <div className="min-h-screen bg-background py-12 px-4 sm:px-6 lg:px-8">
       {/* Background Effects */}
-      <div className="absolute inset-0">
-        <motion.div
-          animate={{
-            backgroundPosition: ["0% 0%", "100% 100%"],
-          }}
-          transition={{
-            duration: 20,
-            repeat: Infinity,
-            repeatType: "reverse",
-          }}
-          className="absolute inset-0 bg-[radial-gradient(circle_at_center,#fcba2810_0%,transparent_65%)] blur-3xl"
-        />
+      <div className="fixed inset-0 overflow-hidden pointer-events-none">
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,#fcba2810_0%,transparent_65%)] blur-3xl" />
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_80%_20%,#fcba2815_0%,transparent_50%)]" />
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_20%_80%,#fcba2815_0%,transparent_50%)]" />
         <div className="absolute inset-0 bg-[linear-gradient(to_right,#80808012_1px,transparent_1px),linear-gradient(to_bottom,#80808012_1px,transparent_1px)] bg-[size:24px_24px]" />
       </div>
 
-      <div className="relative z-10">
-        <MaxWidthWrapper className="py-8">
-          {/* Navigation */}
-          <div className="mb-8">
-            <Link 
-              href="/products/aptitude-ai/standard/numerical-ability"
-              className="inline-flex items-center text-[#fcba28] hover:text-[#ffd700] transition-colors gap-2 group"
-            >
-              <FaArrowLeft className="group-hover:-translate-x-1 transition-transform" />
-              Back to Overview
-            </Link>
+      <div className="max-w-3xl mx-auto relative">
+        {/* Header */}
+        <div className="flex items-center justify-between mb-8">
+          <Link 
+            href="/products/aptitude-ai/standard/numerical-ability"
+            className="text-gray-400 hover:text-white transition-colors inline-flex items-center"
+          >
+            <FaArrowLeft className="w-5 h-5 mr-2" />
+            Back to Numerical Ability
+          </Link>
+          <div className="text-white font-medium">
+            Score: {score}/{currentQuestions.length}
           </div>
+        </div>
 
-          {practiceComplete ? (
+        {/* Company Selection */}
+        {!selectedCompany ? (
+          <div className="space-y-6">
+            <h2 className="text-2xl font-bold text-white text-center mb-8">
+              Choose Your Practice Set
+            </h2>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {companies.map((company, index) => (
+                <motion.button
+                  key={company.id}
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: index * 0.1 }}
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
+                  onClick={() => setSelectedCompany(company.id)}
+                  className="bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl p-6 text-left transition-all group"
+                >
+                  <h3 className="text-xl font-semibold text-white mb-2 group-hover:text-[#fcba28] transition-colors">
+                    {company.name}
+                  </h3>
+                  <p className="text-gray-400 mb-4">
+                    {company.questions.length} questions
+                  </p>
+                  <div className="flex items-center text-[#fcba28] group-hover:gap-2 transition-all">
+                    Start Practice
+                    <FaArrowLeft className="rotate-180 ml-2" />
+                  </div>
+                </motion.button>
+              ))}
+            </div>
+          </div>
+        ) : (
+          <>
+            {/* Question Card */}
             <motion.div
+              key={currentQuestion}
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
-              className="text-center py-12"
+              className="bg-white/5 border border-white/10 rounded-xl p-6 mb-6"
             >
-              <h1 className="text-4xl font-bold text-white mb-6">Practice Complete!</h1>
-              <p className="text-gray-300 mb-8">
-                You've completed {questions.length} questions. Here's your performance:
-              </p>
-              
-              {/* Results summary */}
-              <div className="grid grid-cols-3 gap-6 max-w-3xl mx-auto mb-12">
-                <div className="p-6 rounded-xl bg-black/40 backdrop-blur-lg border border-[#fcba28]/20">
-                  <div className="text-3xl font-bold text-[#fcba28] mb-2">
-                    {results.filter((r: any) => r.correct).length}/{questions.length}
-                  </div>
-                  <div className="text-gray-400">Correct Answers</div>
-                </div>
-                <div className="p-6 rounded-xl bg-black/40 backdrop-blur-lg border border-[#fcba28]/20">
-                  <div className="text-3xl font-bold text-[#fcba28] mb-2">
-                    {Math.round((results.filter((r: any) => r.correct).length / questions.length) * 100)}%
-                  </div>
-                  <div className="text-gray-400">Accuracy</div>
-                </div>
-                <div className="p-6 rounded-xl bg-black/40 backdrop-blur-lg border border-[#fcba28]/20">
-                  <div className="text-3xl font-bold text-[#fcba28] mb-2">
-                    {Math.round(results.reduce((acc: number, r: any) => acc + r.timeSpent, 0) / results.length)}s
-                  </div>
-                  <div className="text-gray-400">Avg. Time per Question</div>
-                </div>
+              <div className="flex justify-between items-center mb-4">
+                <span className="text-gray-400">
+                  Question {currentQuestion + 1} of {currentQuestions.length}
+                </span>
+                <span className="text-gray-400">
+                  {currentQuestions[currentQuestion].category} • {currentQuestions[currentQuestion].difficulty}
+                </span>
               </div>
+              <h2 className="text-xl text-white mb-6">
+                {currentQuestions[currentQuestion].question}
+              </h2>
+              <div className="space-y-4">
+                {currentQuestions[currentQuestion].options.map((option, index) => {
+                  const isSelected = answers[currentQuestions[currentQuestion].id] === option[0];
+                  const isCorrect = option[0] === currentQuestions[currentQuestion].correctAnswer;
+                  const showResult = showExplanation && isSelected;
 
-              {/* Action buttons */}
-              <div className="flex justify-center gap-4">
-                <Link
-                  href="/products/aptitude-ai/standard/numerical-ability"
-                  className="px-6 py-3 bg-black/40 backdrop-blur-lg border border-[#fcba28]/20 text-[#fcba28] rounded-xl hover:border-[#fcba28]/40 transition-colors"
-                >
-                  Back to Topics
-                </Link>
-                <button
-                  onClick={() => {
-                    setPracticeComplete(false);
-                    setResults(null);
-                  }}
-                  className="px-6 py-3 bg-[#fcba28] text-black rounded-xl hover:bg-[#ffd700] transition-colors"
-                >
-                  Practice Again
-                </button>
+                  return (
+                    <button
+                      key={index}
+                      onClick={() => !showExplanation && handleAnswer(option[0])}
+                      disabled={showExplanation}
+                      className={`w-full p-4 rounded-lg text-left transition-all ${
+                        showResult
+                          ? isCorrect
+                            ? 'bg-green-500/20 text-green-300 border border-green-500/30'
+                            : 'bg-red-500/20 text-red-300 border border-red-500/30'
+                          : isSelected
+                          ? 'bg-[#fcba28] text-black'
+                          : 'bg-white/5 text-white hover:bg-white/10'
+                      }`}
+                    >
+                      {option}
+                    </button>
+                  );
+                })}
               </div>
             </motion.div>
-          ) : (
-            <PracticeMode 
-              questions={questions}
-              onComplete={handleComplete}
-            />
-          )}
-        </MaxWidthWrapper>
+
+            {/* Explanation */}
+            {showExplanation && (
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="bg-white/5 border border-white/10 rounded-xl p-6 mb-6"
+              >
+                <h3 className="text-lg font-semibold text-white mb-2">Explanation</h3>
+                <p className="text-gray-400 whitespace-pre-line">
+                  {currentQuestions[currentQuestion].explanation}
+                </p>
+              </motion.div>
+            )}
+
+            {/* Navigation Buttons */}
+            <div className="flex justify-between">
+              <motion.button
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+                onClick={prevQuestion}
+                disabled={currentQuestion === 0}
+                className={`px-6 py-3 rounded-lg transition-all ${
+                  currentQuestion === 0
+                    ? 'bg-white/5 text-gray-500 cursor-not-allowed'
+                    : 'bg-white/10 text-white hover:bg-white/20'
+                }`}
+              >
+                Previous
+              </motion.button>
+              {currentQuestion === currentQuestions.length - 1 ? (
+                <motion.button
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
+                  onClick={resetPractice}
+                  className="px-6 py-3 rounded-lg transition-all bg-[#fcba28] text-black hover:bg-[#fcba28]/90"
+                >
+                  Restart Practice
+                </motion.button>
+              ) : (
+                <motion.button
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
+                  onClick={nextQuestion}
+                  className="px-6 py-3 rounded-lg transition-all bg-[#fcba28] text-black hover:bg-[#fcba28]/90"
+                >
+                  Next
+                </motion.button>
+              )}
+            </div>
+          </>
+        )}
       </div>
-    </main>
+    </div>
   );
 }
