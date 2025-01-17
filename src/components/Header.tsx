@@ -128,7 +128,8 @@ const dropdownClasses = cn(
   'absolute hidden group-hover:flex flex-col mt-4 w-[480px] py-6 px-4 rounded-2xl shadow-2xl',
   'backdrop-blur-2xl bg-background/80 border border-border/10',
   'transition-all duration-400 transform scale-98 group-hover:scale-100 opacity-0 group-hover:opacity-100 z-50',
-  'before:content-[""] before:absolute before:inset-0 before:rounded-2xl before:bg-gradient-to-b before:from-white/5 before:to-white/5 before:backdrop-blur-xl before:-z-10'
+  'before:content-[""] before:absolute before:inset-0 before:rounded-2xl before:bg-gradient-to-b before:from-white/5 before:to-white/5 before:backdrop-blur-xl before:-z-10',
+  '[&.active]:flex [&.active]:opacity-100 [&.active]:scale-100'
 );
 
 const menuItemClasses = cn(
@@ -147,10 +148,11 @@ export const Header = () => {
   const timeoutRef = useRef<NodeJS.Timeout>();
   const menuRef = useRef<HTMLDivElement>(null);
   const [isNavigating, setIsNavigating] = useState(false);
+  const [clickedMenu, setClickedMenu] = useState<number | null>(null);
 
   // Increased timeout duration for smoother interaction
   const HOVER_TIMEOUT = 200; // Opening delay
-  const CLOSE_TIMEOUT = 500; // Closing delay
+  const CLOSE_TIMEOUT = 1000; // Closing delay
 
   // Mount check
   useEffect(() => {
@@ -190,29 +192,38 @@ export const Header = () => {
     }
   });
 
-  // Enhanced menu hover handler with improved timing
+  // Enhanced menu hover handler with improved timing and click state
   const handleMenuHover = useCallback((index: number | null) => {
-    if (!isMounted || isNavigating) return;
+    if (!isMounted || isNavigating || clickedMenu !== null) return;
     
     if (timeoutRef.current) {
       clearTimeout(timeoutRef.current);
     }
 
     if (index === null) {
-      // Delay closing the menu
       timeoutRef.current = setTimeout(() => {
         setActiveMenu(null);
       }, CLOSE_TIMEOUT);
     } else {
-      // Open menu with a shorter delay
       timeoutRef.current = setTimeout(() => {
         setActiveMenu(index);
       }, HOVER_TIMEOUT);
     }
-  }, [isMounted, isNavigating, HOVER_TIMEOUT, CLOSE_TIMEOUT]);
+  }, [isMounted, isNavigating, clickedMenu, HOVER_TIMEOUT, CLOSE_TIMEOUT]);
+
+  // Handle menu click
+  const handleMenuClick = useCallback((index: number) => {
+    if (clickedMenu === index) {
+      setClickedMenu(null);
+      setActiveMenu(null);
+    } else {
+      setClickedMenu(index);
+      setActiveMenu(index);
+    }
+  }, [clickedMenu, setActiveMenu, setClickedMenu]);
 
   // Navigation handler
-  const handleMenuClick = useCallback((href: string) => {
+  const handleMenuClickNavigate = useCallback((href: string) => {
     if (isNavigating) return;
     
     setIsNavigating(true);
@@ -226,18 +237,18 @@ export const Header = () => {
         setIsNavigating(false);
       }, 100);
     }
-  }, [router, isNavigating]);
+  }, [router, isNavigating, setActiveMenu, setIsNavigating]);
 
   // Keyboard navigation
   const handleKeyDown = useCallback((event: React.KeyboardEvent, href?: string) => {
     if (!isMounted || isNavigating) return;
     
     if (event.key === 'Enter' && href) {
-      handleMenuClick(href);
+      handleMenuClickNavigate(href);
     } else if (event.key === 'Escape') {
       setActiveMenu(null);
     }
-  }, [handleMenuClick, isMounted, isNavigating]);
+  }, [handleMenuClickNavigate, isMounted, isNavigating, setActiveMenu]);
 
   if (!isMounted) {
     return (
@@ -294,6 +305,7 @@ export const Header = () => {
                     aria-label={menu.title}
                     whileHover={{ scale: 1.02 }}
                     whileTap={{ scale: 0.98 }}
+                    onClick={() => handleMenuClick(idx)}
                   >
                     {menu.icon && (
                       <menu.icon className="text-lg opacity-70 group-hover:opacity-100 group-hover:text-[#fcba28] transition-colors" />
@@ -308,7 +320,7 @@ export const Header = () => {
                         animate={{ opacity: 1, y: 0, scale: 1 }}
                         exit={{ opacity: 0, y: 10, scale: 0.98 }}
                         transition={{ duration: 0.2, ease: 'easeOut' }}
-                        className={dropdownClasses}
+                        className={cn(dropdownClasses, activeMenu === idx && 'active')}
                         role="menu"
                       >
                         <div className="relative grid grid-cols-1 gap-1 px-2">
@@ -322,7 +334,7 @@ export const Header = () => {
                             >
                               <Link
                                 href={link.href}
-                                onClick={() => handleMenuClick(link.href)}
+                                onClick={() => handleMenuClickNavigate(link.href)}
                                 onKeyDown={(e) => handleKeyDown(e, link.href)}
                                 className={menuItemClasses}
                                 role="menuitem"
