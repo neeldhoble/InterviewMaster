@@ -2,6 +2,8 @@
 
 import { useAuthActions } from "@convex-dev/auth/react";
 import { useCurrentUser } from "@/features/auth/api/useCurrentUser";
+import { useRouter } from "next/navigation";
+import { clearAuthCookies } from "../actions/auth";
 
 import { LogOut } from "lucide-react";
 
@@ -21,14 +23,28 @@ import { UserButtonLoading } from "./UserButtonLoading";
 export const UserButton = () => {
     const { signOut } = useAuthActions();
     const { user, isLoading } = useCurrentUser();
+    const router = useRouter();
 
     if (isLoading) {
-        return (
-            <UserButtonLoading />
-        )
-    };
+        return <UserButtonLoading />;
+    }
 
     if (!user) return null;
+
+    const handleSignOut = async () => {
+        try {
+            await signOut();
+            // Clear cookies using server action
+            await clearAuthCookies();
+            // Clear client-side state
+            localStorage.removeItem('user-session');
+            // Navigate and refresh
+            router.push('/');
+            router.refresh();
+        } catch (error) {
+            console.error('Logout error:', error);
+        }
+    };
 
     const avatarFallback = user.name!.charAt(0).toUpperCase();
     return (
@@ -62,11 +78,11 @@ export const UserButton = () => {
                         <span className="text-xs text-muted-foreground">{user.email}</span>
                     </div>
                 </div>
-                <DropdownMenuItem onClick={() => signOut()} className="h-10">
+                <DropdownMenuItem onClick={handleSignOut} className="h-10">
                     <LogOut className="size-4 mr-2" />
                     Logout
                 </DropdownMenuItem>
             </DropdownMenuContent>
         </DropdownMenu>
-    )
+    );
 }
