@@ -1,5 +1,7 @@
 export const UserButtonLoading = () => {
     return (
-        <span className="size-10 rounded-md bg-foreground/50 animate-pulse transition-colors"/>
-    )
+        <div className="relative">
+            <div className="h-8 w-8 rounded-full border-2 border-[#fcba28] bg-background/80 animate-pulse" />
+        </div>
+    );
 }

@@ -420,6 +420,7 @@ export const Header = () => {
             <Authenticated>
               <UserButton />
             </Authenticated>
+
             <div className="h-6 w-px bg-border/10" />
             <MobileMenu />
           </div>

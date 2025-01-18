@@ -34,12 +34,7 @@ export const SignUpCard = ({ setState }: SignUpCardProps) => {
   const [pending, setPending] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const signUpByOAuth = (provider: "github" | "google") => {
-    setPending(true);
-    signIn(provider).finally(() => setPending(false));
-  };
-
-  const signUpByEmail = (e: React.FormEvent<HTMLFormElement>) => {
+  const signUpByEmail = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
 
     if (account.password !== account.confirmPassword) {
@@ -47,17 +42,26 @@ export const SignUpCard = ({ setState }: SignUpCardProps) => {
       return;
     }
 
+    if (!account.name || !account.email || !account.password) {
+      setError("All fields are required");
+      return;
+    }
+
     setPending(true);
-    signIn("password", {
-      name: account.name,
-      email: account.email,
-      password: account.password,
-      flow: "signUp",
-    })
-      .catch(() => {
-        setError("Something went wrong");
-      })
-      .finally(() => setPending(false));
+    try {
+      await signIn("password", {
+        name: account.name.trim(),
+        email: account.email.trim(),
+        password: account.password,
+        flow: "signUp",
+      });
+      setError(null);
+    } catch (err) {
+      console.error("Signup error:", err);
+      setError("Failed to create account. Please try again.");
+    } finally {
+      setPending(false);
+    }
   };
 
   return (
@@ -130,22 +134,22 @@ export const SignUpCard = ({ setState }: SignUpCardProps) => {
           <Button
             type="button"
             variant="outline"
-            onClick={() => signUpByOAuth("google")}
-            disabled={pending}
-            className="h-8 text-xs bg-white/5 border-white/10 hover:bg-white/10 hover:border-white/20 transition-all duration-300"
-          >
-            <FcGoogle className="h-3.5 w-3.5 mr-1.5" />
-            Google
-          </Button>
-          <Button
-            type="button"
-            variant="outline"
-            onClick={() => signUpByOAuth("github")}
+            onClick={() => signIn("github")}
             disabled={pending}
             className="h-8 text-xs bg-white/5 border-white/10 hover:bg-white/10 hover:border-white/20 transition-all duration-300"
           >
             <FaGithub className="h-3.5 w-3.5 mr-1.5" />
             GitHub
+          </Button>
+          <Button
+            type="button"
+            variant="outline"
+            onClick={() => signIn("google")}
+            disabled={pending}
+            className="h-8 text-xs bg-white/5 border-white/10 hover:bg-white/10 hover:border-white/20 transition-all duration-300"
+          >
+            <FcGoogle className="h-3.5 w-3.5 mr-1.5" />
+            Google
           </Button>
         </div>
 
