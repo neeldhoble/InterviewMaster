@@ -1,11 +1,21 @@
 "use client";
 
-import { useState } from 'react';
-import { motion } from 'framer-motion';
-import { FaRobot, FaPaperPlane, FaUserCircle, FaCog } from 'react-icons/fa';
+import { useState, useEffect, useRef } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { FaRobot, FaPaperPlane, FaUserCircle, FaCog, FaMicrophone, FaMicrophoneSlash, FaCompass } from 'react-icons/fa';
 import { getGeminiResponse } from './gemini-service';
 import { BeatLoader } from 'react-spinners';
 import { TypingLoader } from './components/TypingLoader';
+import { useVoiceRecording } from '@/lib/hooks/useVoiceRecording';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { 
+  BrainCircuit, 
+  FileText, 
+  MessageSquare, 
+  Briefcase,
+  GraduationCap,
+  Target
+} from 'lucide-react';
 
 interface CareerProfile {
   experience: string;
@@ -19,27 +29,37 @@ interface CareerProfile {
 }
 
 interface Message {
-  role: 'user' | 'ai';
+  id: string;
+  role: 'user' | 'assistant';
   content: string;
-  structuredContent?: {
-    keyPoints: string[];
-    actionItems: string[];
-    resources: string[];
-    timeline: {
-      shortTerm: string[];
-      mediumTerm: string[];
-      longTerm: string[];
-    };
-    challenges: string[];
-  };
+  timestamp: Date;
 }
 
+const consultationTopics = [
+  {
+    id: 'career-guidance',
+    title: 'Career Guidance',
+    icon: FaCompass,
+    systemPrompt: `As a career guidance expert, provide personalized advice considering:
+      - Current industry trends and market demands
+      - Career growth opportunities
+      - Skills development needs
+      - Work-life balance
+      - Professional networking
+      - Long-term career planning`
+  }
+];
+
 export default function AIConsultationPage() {
+  // Chat state
   const [messages, setMessages] = useState<Message[]>([]);
-  const [input, setInput] = useState('');
+  const [inputMessage, setInputMessage] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const chatContainerRef = useRef<HTMLDivElement>(null);
+
+  // Profile state
   const [showProfile, setShowProfile] = useState(false);
-  const [profile, setProfile] = useState<CareerProfile>({
+  const [careerProfile, setCareerProfile] = useState<CareerProfile>({
     experience: '',
     skills: [],
     interests: [],
@@ -50,41 +70,91 @@ export default function AIConsultationPage() {
     location: ''
   });
 
+  // Voice recording state
+  const [isRecording, setIsRecording] = useState(false);
+  const [recordedText, setRecordedText] = useState('');
+  const { 
+    isRecording: isRecordingVoice, 
+    startRecording, 
+    stopRecording, 
+    transcript 
+  } = useVoiceRecording();
+
+  // Auto-scroll to bottom when new messages arrive
+  useEffect(() => {
+    if (chatContainerRef.current) {
+      chatContainerRef.current.scrollTop = chatContainerRef.current.scrollHeight;
+    }
+  }, [messages]);
+
+  // Initial greeting message
+  useEffect(() => {
+    const initialMessage: Message = {
+      id: 'initial',
+      role: 'assistant',
+      content: "Hi! I'm Sarah Chen, your AI career consultant. I'm here to help you with your career journey. Feel free to ask me anything about your career goals, challenges, or development opportunities. I'm here to provide personalized guidance and support!",
+      timestamp: new Date()
+    };
+    setMessages([initialMessage]);
+  }, []);
+
   const handleProfileUpdate = (field: keyof CareerProfile, value: string) => {
     if (field === 'skills' || field === 'interests') {
-      setProfile(prev => ({
+      setCareerProfile(prev => ({
         ...prev,
         [field]: value.split(',').map(item => item.trim())
       }));
     } else {
-      setProfile(prev => ({
+      setCareerProfile(prev => ({
         ...prev,
         [field]: value
       }));
     }
   };
 
+  const handleVoiceInput = () => {
+    if (isRecordingVoice) {
+      stopRecording();
+      if (transcript) {
+        setInputMessage(transcript);
+      }
+    } else {
+      startRecording();
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!input.trim() || isLoading) return;
+    if (!inputMessage.trim() || isLoading) return;
 
-    const userMessage: Message = { role: 'user', content: input };
+    const userMessage: Message = {
+      id: Date.now().toString(),
+      role: 'user',
+      content: inputMessage,
+      timestamp: new Date()
+    };
+
     setMessages(prev => [...prev, userMessage]);
-    setInput('');
+    setInputMessage('');
     setIsLoading(true);
 
     try {
-      const response = await getGeminiResponse(input, profile);
+      const response = await getGeminiResponse(inputMessage, showProfile ? careerProfile : undefined);
+      
       const aiMessage: Message = {
-        role: 'ai',
-        content: response.keyPoints[0] || "Here's my analysis:",
-        structuredContent: response
+        id: (Date.now() + 1).toString(),
+        role: 'assistant',
+        content: response,
+        timestamp: new Date()
       };
+
       setMessages(prev => [...prev, aiMessage]);
     } catch (error) {
       const errorMessage: Message = {
-        role: 'ai',
-        content: "I apologize, but I'm having trouble processing your request. Please try again."
+        id: (Date.now() + 1).toString(),
+        role: 'assistant',
+        content: "I apologize, but I encountered an issue. Could you please try asking your question again?",
+        timestamp: new Date()
       };
       setMessages(prev => [...prev, errorMessage]);
     } finally {
@@ -148,7 +218,7 @@ export default function AIConsultationPage() {
                 <label className="block text-sm font-medium mb-1">Experience Level</label>
                 <input
                   type="text"
-                  value={profile.experience}
+                  value={careerProfile.experience}
                   onChange={(e) => handleProfileUpdate('experience', e.target.value)}
                   className="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-2 text-white"
                   placeholder="e.g., 5 years"
@@ -158,7 +228,7 @@ export default function AIConsultationPage() {
                 <label className="block text-sm font-medium mb-1">Skills (comma-separated)</label>
                 <input
                   type="text"
-                  value={profile.skills.join(', ')}
+                  value={careerProfile.skills.join(', ')}
                   onChange={(e) => handleProfileUpdate('skills', e.target.value)}
                   className="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-2 text-white"
                   placeholder="e.g., JavaScript, Python, React"
@@ -168,7 +238,7 @@ export default function AIConsultationPage() {
                 <label className="block text-sm font-medium mb-1">Interests (comma-separated)</label>
                 <input
                   type="text"
-                  value={profile.interests.join(', ')}
+                  value={careerProfile.interests.join(', ')}
                   onChange={(e) => handleProfileUpdate('interests', e.target.value)}
                   className="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-2 text-white"
                   placeholder="e.g., AI, Web Development, Data Science"
@@ -178,7 +248,7 @@ export default function AIConsultationPage() {
                 <label className="block text-sm font-medium mb-1">Education</label>
                 <input
                   type="text"
-                  value={profile.education}
+                  value={careerProfile.education}
                   onChange={(e) => handleProfileUpdate('education', e.target.value)}
                   className="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-2 text-white"
                   placeholder="e.g., Bachelor's in Computer Science"
@@ -188,7 +258,7 @@ export default function AIConsultationPage() {
                 <label className="block text-sm font-medium mb-1">Current Role</label>
                 <input
                   type="text"
-                  value={profile.currentRole}
+                  value={careerProfile.currentRole}
                   onChange={(e) => handleProfileUpdate('currentRole', e.target.value)}
                   className="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-2 text-white"
                   placeholder="e.g., Software Developer"
@@ -198,7 +268,7 @@ export default function AIConsultationPage() {
                 <label className="block text-sm font-medium mb-1">Target Role</label>
                 <input
                   type="text"
-                  value={profile.targetRole}
+                  value={careerProfile.targetRole}
                   onChange={(e) => handleProfileUpdate('targetRole', e.target.value)}
                   className="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-2 text-white"
                   placeholder="e.g., Senior Software Engineer"
@@ -208,7 +278,7 @@ export default function AIConsultationPage() {
                 <label className="block text-sm font-medium mb-1">Industry</label>
                 <input
                   type="text"
-                  value={profile.industry}
+                  value={careerProfile.industry}
                   onChange={(e) => handleProfileUpdate('industry', e.target.value)}
                   className="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-2 text-white"
                   placeholder="e.g., Technology"
@@ -218,7 +288,7 @@ export default function AIConsultationPage() {
                 <label className="block text-sm font-medium mb-1">Location</label>
                 <input
                   type="text"
-                  value={profile.location}
+                  value={careerProfile.location}
                   onChange={(e) => handleProfileUpdate('location', e.target.value)}
                   className="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-2 text-white"
                   placeholder="e.g., San Francisco, CA"
@@ -228,40 +298,33 @@ export default function AIConsultationPage() {
           </motion.div>
         )}
 
+        {/* Consultation Topics */}
+        <Tabs value={consultationTopics[0].id} onValueChange={(value) => console.log(value)} className="mb-4">
+          <TabsList className="grid grid-cols-1 gap-2">
+            {consultationTopics.map((topic) => (
+              <TabsTrigger
+                key={topic.id}
+                value={topic.id}
+                className="flex items-center space-x-2 p-2"
+              >
+                <topic.icon className="w-4 h-4" />
+                <span>{topic.title}</span>
+              </TabsTrigger>
+            ))}
+          </TabsList>
+        </Tabs>
+
         {/* Chat Interface */}
         <div className="bg-white/5 border border-white/10 rounded-xl backdrop-blur-lg p-6">
           {/* Messages */}
-          <div className="min-h-[400px] max-h-[600px] overflow-y-auto mb-6 space-y-4 pr-4">
-            {messages.length === 0 ? (
-              <div className="text-center text-gray-400 mt-8">
-                <p>Start your consultation by asking any career-related question</p>
-                <div className="mt-4 space-y-2">
-                  <button
-                    onClick={() => setInput("What career path should I pursue based on my interests?")}
-                    className="block w-full p-3 rounded-lg bg-white/5 hover:bg-white/10 transition-colors duration-200"
-                  >
-                    What career path should I pursue based on my interests?
-                  </button>
-                  <button
-                    onClick={() => setInput("How can I prepare for a tech interview?")}
-                    className="block w-full p-3 rounded-lg bg-white/5 hover:bg-white/10 transition-colors duration-200"
-                  >
-                    How can I prepare for a tech interview?
-                  </button>
-                  <button
-                    onClick={() => setInput("What skills should I develop for future job market?")}
-                    className="block w-full p-3 rounded-lg bg-white/5 hover:bg-white/10 transition-colors duration-200"
-                  >
-                    What skills should I develop for future job market?
-                  </button>
-                </div>
-              </div>
-            ) : (
-              messages.map((message, index) => (
+          <div ref={chatContainerRef} className="min-h-[400px] max-h-[600px] overflow-y-auto mb-6 space-y-4 pr-4">
+            <AnimatePresence>
+              {messages.map((message, index) => (
                 <motion.div
-                  key={index}
+                  key={message.id}
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -20 }}
                   className={`flex ${message.role === 'user' ? 'justify-end' : 'justify-start'}`}
                 >
                   <div
@@ -271,125 +334,20 @@ export default function AIConsultationPage() {
                         : 'bg-white/10 backdrop-blur-sm text-white'
                     }`}
                   >
-                    {message.role === 'ai' && message.structuredContent ? (
-                      <div className="space-y-6">
-                        {message.structuredContent.keyPoints.length > 0 && (
-                          <div>
-                            <h3 className="font-semibold text-[#fcba28] mb-2">Key Points:</h3>
-                            <ul className="space-y-2">
-                              {message.structuredContent.keyPoints.map((point, i) => (
-                                <li key={i} className="flex items-start gap-2">
-                                  <span className="text-[#fcba28]">•</span>
-                                  <span>{point}</span>
-                                </li>
-                              ))}
-                            </ul>
-                          </div>
-                        )}
-                        
-                        {message.structuredContent.actionItems.length > 0 && (
-                          <div>
-                            <h3 className="font-semibold text-[#fcba28] mb-2">Action Items:</h3>
-                            <ul className="space-y-2">
-                              {message.structuredContent.actionItems.map((item, i) => (
-                                <li key={i} className="flex items-start gap-2">
-                                  <span className="text-[#fcba28]">•</span>
-                                  <span>{item}</span>
-                                </li>
-                              ))}
-                            </ul>
-                          </div>
-                        )}
-                        
-                        {message.structuredContent.resources.length > 0 && (
-                          <div>
-                            <h3 className="font-semibold text-[#fcba28] mb-2">Resources:</h3>
-                            <ul className="space-y-2">
-                              {message.structuredContent.resources.map((resource, i) => (
-                                <li key={i} className="flex items-start gap-2">
-                                  <span className="text-[#fcba28]">•</span>
-                                  <span>{resource}</span>
-                                </li>
-                              ))}
-                            </ul>
-                          </div>
-                        )}
-                        
-                        {(message.structuredContent.timeline.shortTerm.length > 0 ||
-                          message.structuredContent.timeline.mediumTerm.length > 0 ||
-                          message.structuredContent.timeline.longTerm.length > 0) && (
-                          <div>
-                            <h3 className="font-semibold text-[#fcba28] mb-2">Timeline:</h3>
-                            {message.structuredContent.timeline.shortTerm.length > 0 && (
-                              <div className="mb-3">
-                                <h4 className="text-sm font-medium text-gray-300 mb-1">Short-term (0-3 months):</h4>
-                                <ul className="space-y-1">
-                                  {message.structuredContent.timeline.shortTerm.map((item, i) => (
-                                    <li key={i} className="flex items-start gap-2">
-                                      <span className="text-[#fcba28]">•</span>
-                                      <span>{item}</span>
-                                    </li>
-                                  ))}
-                                </ul>
-                              </div>
-                            )}
-                            {message.structuredContent.timeline.mediumTerm.length > 0 && (
-                              <div className="mb-3">
-                                <h4 className="text-sm font-medium text-gray-300 mb-1">Medium-term (3-6 months):</h4>
-                                <ul className="space-y-1">
-                                  {message.structuredContent.timeline.mediumTerm.map((item, i) => (
-                                    <li key={i} className="flex items-start gap-2">
-                                      <span className="text-[#fcba28]">•</span>
-                                      <span>{item}</span>
-                                    </li>
-                                  ))}
-                                </ul>
-                              </div>
-                            )}
-                            {message.structuredContent.timeline.longTerm.length > 0 && (
-                              <div>
-                                <h4 className="text-sm font-medium text-gray-300 mb-1">Long-term (6+ months):</h4>
-                                <ul className="space-y-1">
-                                  {message.structuredContent.timeline.longTerm.map((item, i) => (
-                                    <li key={i} className="flex items-start gap-2">
-                                      <span className="text-[#fcba28]">•</span>
-                                      <span>{item}</span>
-                                    </li>
-                                  ))}
-                                </ul>
-                              </div>
-                            )}
-                          </div>
-                        )}
-                        
-                        {message.structuredContent.challenges.length > 0 && (
-                          <div>
-                            <h3 className="font-semibold text-[#fcba28] mb-2">Potential Challenges:</h3>
-                            <ul className="space-y-2">
-                              {message.structuredContent.challenges.map((challenge, i) => (
-                                <li key={i} className="flex items-start gap-2">
-                                  <span className="text-[#fcba28]">•</span>
-                                  <span>{challenge}</span>
-                                </li>
-                              ))}
-                            </ul>
-                          </div>
-                        )}
-                      </div>
-                    ) : (
-                      <p>{message.content}</p>
-                    )}
+                    <p className="whitespace-pre-wrap">{message.content}</p>
                   </div>
                 </motion.div>
-              ))
-            )}
+              ))}
+            </AnimatePresence>
             {isLoading && (
               <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 className="flex justify-start"
               >
-                <TypingLoader />
+                <div className="max-w-[80%] p-4 rounded-xl bg-white/10 backdrop-blur-sm">
+                  <TypingLoader />
+                </div>
               </motion.div>
             )}
           </div>
@@ -398,9 +356,9 @@ export default function AIConsultationPage() {
           <form onSubmit={handleSubmit} className="flex gap-4">
             <input
               type="text"
-              value={input}
-              onChange={(e) => setInput(e.target.value)}
-              placeholder="Type your career-related question..."
+              value={inputMessage}
+              onChange={(e) => setInputMessage(e.target.value)}
+              placeholder="Ask me anything about your career..."
               className="flex-1 bg-white/5 border border-white/10 rounded-lg px-4 py-2 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#fcba28]/50"
               disabled={isLoading}
             />
@@ -419,6 +377,14 @@ export default function AIConsultationPage() {
                   <FaPaperPlane />
                 </>
               )}
+            </button>
+            <button
+              onClick={handleVoiceInput}
+              className={`p-2 rounded-full ${
+                isRecordingVoice ? 'bg-red-500 hover:bg-red-600' : 'bg-blue-500 hover:bg-blue-600'
+              }`}
+            >
+              {isRecordingVoice ? <FaMicrophoneSlash /> : <FaMicrophone />}
             </button>
           </form>
         </div>
