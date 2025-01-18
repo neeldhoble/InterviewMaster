@@ -12,7 +12,7 @@ import { MessageSquare, BarChart, Download, Share2, ThumbsUp, Volume2, Mic, Came
 import { recordingService } from './services/recordingService';
 import { aiAnalysisService } from './services/aiAnalysisService';
 import { enhancedAnalysisService } from './services/enhancedAnalysisService';
-import { MessageSquare, Activity, Lightbulb, CheckCircle } from 'lucide-react';
+import { CheckCircle } from 'lucide-react';
 import { AnswerAnalysis } from './components/analysis';
 
 export default function SimulationPage() {
