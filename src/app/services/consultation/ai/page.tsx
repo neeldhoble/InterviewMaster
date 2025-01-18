@@ -26,6 +26,9 @@ interface CareerProfile {
   targetRole: string;
   industry: string;
   location: string;
+  linkedinUrl: string;
+  githubUrl: string;
+  portfolioUrl: string;
 }
 
 interface Message {
@@ -67,7 +70,10 @@ export default function AIConsultationPage() {
     currentRole: '',
     targetRole: '',
     industry: '',
-    location: ''
+    location: '',
+    linkedinUrl: '',
+    githubUrl: '',
+    portfolioUrl: ''
   });
 
   // Voice recording state
@@ -293,6 +299,43 @@ export default function AIConsultationPage() {
                   className="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-2 text-white"
                   placeholder="e.g., San Francisco, CA"
                 />
+              </div>
+            </div>
+
+            {/* External Profile Links */}
+            <div className="space-y-4 mb-6">
+              <h3 className="text-lg font-semibold text-[#fcba28]">External Profiles</h3>
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium mb-1">LinkedIn URL</label>
+                  <input
+                    type="url"
+                    value={careerProfile.linkedinUrl}
+                    onChange={(e) => handleProfileUpdate('linkedinUrl', e.target.value)}
+                    placeholder="https://linkedin.com/in/yourprofile"
+                    className="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-2"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium mb-1">GitHub URL</label>
+                  <input
+                    type="url"
+                    value={careerProfile.githubUrl}
+                    onChange={(e) => handleProfileUpdate('githubUrl', e.target.value)}
+                    placeholder="https://github.com/yourusername"
+                    className="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-2"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium mb-1">Portfolio URL</label>
+                  <input
+                    type="url"
+                    value={careerProfile.portfolioUrl}
+                    onChange={(e) => handleProfileUpdate('portfolioUrl', e.target.value)}
+                    placeholder="https://yourportfolio.com"
+                    className="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-2"
+                  />
+                </div>
               </div>
             </div>
           </motion.div>
