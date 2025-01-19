@@ -9,6 +9,8 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { Check, ChevronsUpDown, MapPin } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { motion } from 'framer-motion';
+import { ResumeUpload } from './ResumeUpload';
+import { TargetCompanyInput } from './TargetCompanyInput';
 
 const locations = [
   // Indian Metro Cities
@@ -120,6 +122,8 @@ export function SalaryForm({ onSubmit }: { onSubmit: (data: any) => void }) {
     managementLevel: '', // individual, team-lead, manager, director, executive
     projectCount: '',
     teamSize: '',
+    targetCompany: null as any,
+    resumeAnalysis: null as any
   });
 
   const [open, setOpen] = useState(false);
@@ -189,6 +193,53 @@ export function SalaryForm({ onSubmit }: { onSubmit: (data: any) => void }) {
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.5 }}
     >
+      {/* Resume Upload Section */}
+      <div className="space-y-6">
+        <motion.h3
+          initial={{ opacity: 0, x: -20 }}
+          animate={{ opacity: 1, x: 0 }}
+          className="text-xl font-semibold text-[#fcba28] mb-4"
+        >
+          Resume Analysis
+        </motion.h3>
+        <ResumeUpload
+          onUpload={(resumeData) => {
+            setFormData(prev => ({
+              ...prev,
+              resumeAnalysis: resumeData,
+              // Pre-fill form fields based on resume data
+              role: resumeData.currentRole || prev.role,
+              experience: resumeData.yearsOfExperience || prev.experience,
+              skills: [...new Set([...prev.skills, ...(resumeData.skills || [])])],
+              education: resumeData.highestEducation || prev.education,
+              certifications: [...new Set([...prev.certifications, ...(resumeData.certifications || [])])],
+            }));
+          }}
+        />
+      </div>
+
+      {/* Target Company Section */}
+      <div className="space-y-6">
+        <motion.h3
+          initial={{ opacity: 0, x: -20 }}
+          animate={{ opacity: 1, x: 0 }}
+          className="text-xl font-semibold text-[#fcba28] mb-4"
+        >
+          Target Company
+        </motion.h3>
+        <TargetCompanyInput
+          onCompanySelect={(company) => {
+            setFormData(prev => ({
+              ...prev,
+              targetCompany: company,
+              industry: company.industry || prev.industry,
+              companySize: company.size || prev.companySize,
+              location: company.location || prev.location,
+            }));
+          }}
+        />
+      </div>
+
       {/* Basic Information */}
       <div className="space-y-6">
         <motion.h3
