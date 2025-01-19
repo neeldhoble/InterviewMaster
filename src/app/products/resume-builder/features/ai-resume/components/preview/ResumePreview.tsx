@@ -80,6 +80,21 @@ export const ResumePreview = () => {
         format: 'a4'
       });
 
+      // Add CSS to prevent section splitting
+      const style = document.createElement('style');
+      style.textContent = `
+        .section {
+          break-inside: avoid;
+          page-break-inside: avoid;
+          -webkit-column-break-inside: avoid;
+        }
+        .two-column-grid {
+          break-inside: avoid-column;
+          page-break-inside: avoid;
+        }
+      `;
+      document.head.appendChild(style);
+
       // Calculate proper dimensions for A4 page
       const a4Width = 210; // mm
       const a4Height = 297; // mm
@@ -99,9 +114,30 @@ export const ResumePreview = () => {
             // Reset any scaling and set exact dimensions
             clonedElement.style.transform = 'none';
             clonedElement.style.width = `${pdfWidthInPx}px`;
-            clonedElement.style.height = 'auto'; // Let height adjust to content
+            clonedElement.style.height = 'auto';
             clonedElement.style.margin = '0';
-            clonedElement.style.padding = '20px'; // Add some padding
+            clonedElement.style.padding = '20px';
+
+            // Add page-break classes to all sections
+            const sections = clonedElement.querySelectorAll('.section, [class*="space-y"]');
+            sections.forEach(section => {
+              section.classList.add('section');
+            });
+
+            // Special handling for two-column template
+            const twoColumnGrid = clonedElement.querySelector('.grid-cols-3');
+            if (twoColumnGrid) {
+              twoColumnGrid.classList.add('two-column-grid');
+              // Ensure each column stays together
+              const columns = twoColumnGrid.children;
+              Array.from(columns).forEach(column => {
+                column.classList.add('section');
+              });
+            }
+
+            // Add styles for better text rendering
+            const styleClone = style.cloneNode(true);
+            clonedDoc.head.appendChild(styleClone);
           }
         }
       });
@@ -110,7 +146,7 @@ export const ResumePreview = () => {
       const imgWidth = a4Width;
       const imgHeight = (canvas.height * a4Width) / canvas.width;
       
-      // Handle multi-page content
+      // Handle multi-page content with section awareness
       let heightLeft = imgHeight;
       let position = 0;
       let pageCount = 0;
@@ -121,7 +157,10 @@ export const ResumePreview = () => {
           pdf.addPage();
         }
 
+        // Calculate the height for this page
         const currentHeight = Math.min(a4Height, heightLeft);
+
+        // Add the image
         pdf.addImage(
           canvas.toDataURL('image/png', 1.0),
           'PNG',
@@ -137,6 +176,9 @@ export const ResumePreview = () => {
         position -= a4Height;
         pageCount++;
       }
+
+      // Clean up the added style element
+      document.head.removeChild(style);
 
       pdf.save(`${resumeData.personalInfo.fullName.replace(/\s+/g, '_')}_resume.pdf`);
     } catch (error) {
