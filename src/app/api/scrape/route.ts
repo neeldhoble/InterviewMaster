@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import * as cheerio from 'cheerio';
+import { parse } from 'node-html-parser';
 
 export async function GET(request: Request) {
   try {
@@ -15,82 +15,116 @@ export async function GET(request: Request) {
     const html = await response.text();
 
     // Parse the HTML content
-    const $ = cheerio.load(html);
-
-    // Remove scripts and styles
-    $('script').remove();
-    $('style').remove();
+    const root = parse(html);
 
     let extractedContent = '';
 
     if (url.includes('linkedin.com')) {
       // LinkedIn specific extraction
-      extractedContent = extractLinkedInContent($);
+      extractedContent = extractLinkedInContent(root);
     } else if (url.includes('github.com')) {
       // GitHub specific extraction
-      extractedContent = extractGitHubContent($);
+      extractedContent = extractGitHubContent(root);
     } else {
-      // Generic content extraction
-      extractedContent = extractGenericContent($);
+      // Generic extraction
+      extractedContent = extractGenericContent(root);
     }
 
     return NextResponse.json({ content: extractedContent });
+
   } catch (error) {
-    console.error('Error scraping URL:', error);
-    return NextResponse.json(
-      { error: 'Failed to scrape URL content' },
-      { status: 500 }
-    );
+    console.error('Error scraping content:', error);
+    return NextResponse.json({ error: 'Failed to scrape content' }, { status: 500 });
   }
 }
 
-function extractLinkedInContent($: cheerio.CheerioAPI): string {
-  const content = [];
+function extractLinkedInContent(root: any): string {
+  // Remove scripts and styles
+  root.querySelectorAll('script').forEach((el: any) => el.remove());
+  root.querySelectorAll('style').forEach((el: any) => el.remove());
 
   // Extract profile headline
-  const headline = $('.top-card-layout__headline').text().trim();
-  if (headline) content.push(`Headline: ${headline}`);
+  const headline = root.querySelector('.top-card-layout__headline');
+  if (headline) {
+    const headlineText = headline.textContent.trim();
+    if (headlineText) return `Headline: ${headlineText}`;
+  }
 
   // Extract current position
-  const position = $('.experience-item__title').first().text().trim();
-  if (position) content.push(`Current Position: ${position}`);
+  const position = root.querySelector('.experience-item__title');
+  if (position) {
+    const positionText = position.textContent.trim();
+    if (positionText) return `Current Position: ${positionText}`;
+  }
 
   // Extract skills
-  const skills = $('.skills-section .skill-pill')
-    .map((_, el) => $(el).text().trim())
-    .get()
-    .join(', ');
-  if (skills) content.push(`Skills: ${skills}`);
+  const skills = root.querySelectorAll('.skills-section .skill-pill');
+  if (skills.length > 0) {
+    const skillsText = Array.from(skills).map((el: any) => el.textContent.trim()).join(', ');
+    return `Skills: ${skillsText}`;
+  }
 
-  return content.join('\\n');
+  // Fallback to main content
+  const mainContent = root.querySelector('main');
+  if (mainContent) {
+    return mainContent.textContent.trim();
+  }
+
+  // Fallback to body content
+  const body = root.querySelector('body');
+  return body ? body.textContent.trim() : '';
 }
 
-function extractGitHubContent($: cheerio.CheerioAPI): string {
-  const content = [];
+function extractGitHubContent(root: any): string {
+  // Remove scripts and styles
+  root.querySelectorAll('script').forEach((el: any) => el.remove());
+  root.querySelectorAll('style').forEach((el: any) => el.remove());
 
   // Extract bio
-  const bio = $('.user-profile-bio').text().trim();
-  if (bio) content.push(`Bio: ${bio}`);
+  const bio = root.querySelector('.user-profile-bio');
+  if (bio) {
+    const bioText = bio.textContent.trim();
+    if (bioText) return `Bio: ${bioText}`;
+  }
 
   // Extract pinned repositories
-  const pinnedRepos = $('.pinned-item-list-item')
-    .map((_, el) => {
-      const name = $(el).find('.repo').text().trim();
-      const description = $(el).find('.pinned-item-desc').text().trim();
+  const pinnedRepos = root.querySelectorAll('.pinned-item-list-item');
+  if (pinnedRepos.length > 0) {
+    const pinnedReposText = Array.from(pinnedRepos).map((el: any) => {
+      const name = el.querySelector('.repo').textContent.trim();
+      const description = el.querySelector('.pinned-item-desc').textContent.trim();
       return `${name}: ${description}`;
-    })
-    .get()
-    .join('\\n');
-  if (pinnedRepos) content.push(`Pinned Repositories:\\n${pinnedRepos}`);
+    }).join('\n');
+    return `Pinned Repositories:\n${pinnedReposText}`;
+  }
 
   // Extract contribution activity
-  const contributions = $('.js-yearly-contributions').text().trim();
-  if (contributions) content.push(`Activity: ${contributions}`);
+  const contributions = root.querySelector('.js-yearly-contributions');
+  if (contributions) {
+    const contributionsText = contributions.textContent.trim();
+    if (contributionsText) return `Activity: ${contributionsText}`;
+  }
 
-  return content.join('\\n');
+  // Extract README content
+  const readme = root.querySelector('#readme');
+  if (readme) {
+    return readme.textContent.trim();
+  }
+
+  // Extract repository description
+  const repoAbout = root.querySelector('.f4.my-3');
+  if (repoAbout) {
+    return repoAbout.textContent.trim();
+  }
+
+  return '';
 }
 
-function extractGenericContent($: cheerio.CheerioAPI): string {
+function extractGenericContent(root: any): string {
+  // Remove scripts and styles
+  root.querySelectorAll('script').forEach((el: any) => el.remove());
+  root.querySelectorAll('style').forEach((el: any) => el.remove());
+
   // Extract main content from common content areas
   const contentSelectors = [
     'main',
@@ -102,12 +136,13 @@ function extractGenericContent($: cheerio.CheerioAPI): string {
   ];
 
   for (const selector of contentSelectors) {
-    const content = $(selector).text().trim();
+    const content = root.querySelector(selector);
     if (content) {
-      return content.substring(0, 1000); // Limit content length
+      return content.textContent.trim().substring(0, 1000); // Limit content length
     }
   }
 
   // Fallback to body text if no content found
-  return $('body').text().trim().substring(0, 1000);
+  const body = root.querySelector('body');
+  return body ? body.textContent.trim().substring(0, 1000) : '';
 }

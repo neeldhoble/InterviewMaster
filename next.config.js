@@ -31,6 +31,16 @@ module.exports = {
     config.resolve.alias.canvas = false;
     config.resolve.alias.encoding = false;
 
+    // Add transpilation rule for cheerio
+    config.module.rules.push({
+      test: /node_modules\/cheerio.*\.js$/,
+      loader: 'babel-loader',
+      options: {
+        presets: ['@babel/preset-env'],
+        plugins: ['@babel/plugin-proposal-private-methods', '@babel/plugin-proposal-class-properties']
+      }
+    });
+
     return config;
   },
 
