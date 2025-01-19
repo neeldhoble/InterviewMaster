@@ -248,6 +248,14 @@ export const ResumePreview = () => {
               </div>
             </div>
 
+             {/* Summary Section */}
+             {resumeData.personalInfo.summary && (
+              <div className={styles.section}>
+                <h3 className={styles.sectionTitle}>Professional Summary</h3>
+                <p className="highlight-text">{resumeData.personalInfo.summary}</p>
+              </div>
+            )}
+
             {/* Experience Section */}
             {resumeData.experiences?.length > 0 && (
               <div className={styles.section}>
@@ -279,13 +287,7 @@ export const ResumePreview = () => {
               </div>
             )}
 
-            {/* Summary Section */}
-            {resumeData.personalInfo.summary && (
-              <div className={styles.section}>
-                <h3 className={styles.sectionTitle}>Professional Summary</h3>
-                <p className="highlight-text">{resumeData.personalInfo.summary}</p>
-              </div>
-            )}
+           
 
             {/* Education Section */}
             {resumeData.education?.length > 0 && (
