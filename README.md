@@ -1,6 +1,6 @@
 # Setup Guide
 
-Hi Chris here 👋
+Hi humesh deshmukh👋
 
 In this guide, I will walk you through the process of setting up your Premium Kit, including installation, Convex backend configuration, authentication, and Stripe integration.
 
