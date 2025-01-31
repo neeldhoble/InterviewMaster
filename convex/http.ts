@@ -9,19 +9,9 @@ const http = httpRouter();
 const stripeHandler: PublicHttpAction = Object.assign(
     async (ctx: GenericActionCtx<DataModel>, request: Request) => {
         const signature = request.headers.get("stripe-signature") as string;
-        const res = await ctx.runAction(internal.stripe.fulfill, {
-            signature, 
-            payload: await request.text()
-        });
-        if (res.success) {
-            return new Response(null, {
-                status: 200,
-            });
-        } else {
-            return new Response("Webhook Error", {
-                status: 400
-            });
-        }
+        
+        // Currently inactive
+        return new Response("Stripe handling is disabled.", { status: 200 });
     },
     { isHttp: true as const }
 );

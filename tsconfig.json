@@ -40,7 +40,7 @@
     "**/*.ts",
     "**/*.tsx",
     ".next/types/**/*.ts"
-  ],
+, ".next/types/app/products/resume-builder/features/ai/page.tsx"  ],
   "exclude": [
     "node_modules"
   ]
