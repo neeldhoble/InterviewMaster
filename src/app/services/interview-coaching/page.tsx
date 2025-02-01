@@ -4,7 +4,7 @@ import { motion } from 'framer-motion';
 import Link from 'next/link';
 import { FaRobot, FaUserTie, FaChartLine, FaUsers, FaTrophy, FaCheckCircle } from 'react-icons/fa';
 
-export default function InterviewCoachingPage() {
+export function InterviewCoachingPage() {
   const stats = [
     { label: 'Success Rate', value: '94%', icon: FaChartLine },
     { label: 'Students Coached', value: '10,000+', icon: FaUsers },
@@ -192,3 +192,4 @@ export default function InterviewCoachingPage() {
     </div>
   );
 }
+export default InterviewCoachingPage;

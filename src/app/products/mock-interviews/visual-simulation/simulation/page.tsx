@@ -1142,3 +1142,4 @@ export function SimulationPage() {
     </div>
   );
 }
+export default SimulationPage;
