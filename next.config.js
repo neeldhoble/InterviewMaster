@@ -13,6 +13,15 @@ module.exports = {
     // Add src directory alias for easier imports
     config.resolve.alias['@'] = `${__dirname}/src`;
     config.resolve.alias['@interview-types'] = `${__dirname}/src/app/products/interview-questions/types.ts`;
+    config.resolve.alias['@components'] = `${__dirname}/src/app/components`;
+    config.resolve.alias['@public'] = `${__dirname}/public`;
+    config.resolve.alias['@styles'] = `${__dirname}/src/styles`;
+    config.resolve.alias['@utils'] = `${__dirname}/src/utils`;
+    config.resolve.alias['@data'] = `${__dirname}/src/data`;
+    config.resolve.alias['@hooks'] = `${__dirname}/src/hooks`;
+    config.resolve.alias['@lib'] = `${__dirname}/src/lib`;
+    config.resolve.alias['@models'] = `${__dirname}/src/models`;
+    config.resolve.alias['@services'] = `${__dirname}/src/services`;
 
     // Handle client-side modules
     if (!isServer) {
@@ -47,6 +56,16 @@ module.exports = {
   // Setup redirects
   async redirects() {
     return [
+      {
+        source: '/old-route',   // Old URL
+        destination: '/new-route',  // New URL
+        permanent: true,  // Permanent redirect
+      },
+      {
+        source: '/another-old-route',   // Old URL
+        destination: '/another-new-route',  // New URL
+        permanent: true,  // Permanent redirect
+      },
       {
         source: '/old-route',   // Old URL
         destination: '/new-route',  // New URL
