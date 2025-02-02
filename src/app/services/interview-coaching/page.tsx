@@ -29,6 +29,10 @@ export function InterviewCoachingPage() {
     'Post-interview feedback and follow-up'
   ];
 
+  const handleNavigationError = (error: Error) => {
+    console.error('Navigation error:', error);
+  };
+
   return (
     <div className="min-h-screen bg-background text-white pt-20">
       {/* Background Effects */}
@@ -110,6 +114,7 @@ export function InterviewCoachingPage() {
             </ul>
             <Link
               href="/services/interview-coaching/ai"
+              onClick={() => handleNavigationError(new Error('Navigation to /services/interview-coaching/ai'))}
               className="block w-full py-3 px-6 bg-[#fcba28] text-black rounded-xl text-center font-semibold hover:bg-[#fcd978] transition-colors duration-300"
             >
               Start AI Coaching

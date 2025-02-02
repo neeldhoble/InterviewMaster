@@ -84,6 +84,10 @@ const features = [
   }
 ];
 
+const handleNavigationError = (error: any) => {
+  console.error('Navigation error:', error);
+};
+
 export default function VisualSimulationPage() {
   const [selectedMode, setSelectedMode] = useState('practice');
 
@@ -151,7 +155,7 @@ export default function VisualSimulationPage() {
                     </li>
                   ))}
                 </ul>
-                <Link href={mode.link}>
+                <Link href={mode.link} onClick={() => handleNavigationError(new Error('Navigation to ' + mode.link))}>
                   <button className="w-full px-6 py-3 bg-[#fcba28] text-black rounded-lg hover:bg-[#fcd978] transition-colors duration-200 font-medium flex items-center justify-center gap-2">
                     Start Now
                     <Play className="w-4 h-4" />
