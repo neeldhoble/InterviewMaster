@@ -39,7 +39,7 @@ interface AnswerFeedback {
   };
 }
 
-export  function AIInterviewCoachingPage() {
+export default function AIInterviewCoachingPage() {
   const [role, setRole] = useState('Software Engineer');
   const [experience, setExperience] = useState('5+ years');
   const [isSessionStarted, setIsSessionStarted] = useState(false);
@@ -809,4 +809,3 @@ export  function AIInterviewCoachingPage() {
   );
 }
 
-export default AIInterviewCoachingPage;

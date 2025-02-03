@@ -15,7 +15,7 @@ import { enhancedAnalysisService } from './services/enhancedAnalysisService';
 import { CheckCircle } from 'lucide-react';
 import { AnswerAnalysis } from './components/analysis';
 
-export  function SimulationPage() {
+export default function SimulationPage() {
   const [isRecording, setIsRecording] = useState(false);
   const [currentQuestion, setCurrentQuestion] = useState(0);
   const [questions, setQuestions] = useState(interviewQuestions);
@@ -1142,5 +1142,3 @@ export  function SimulationPage() {
     </div>
   );
 }
-
-export default SimulationPage;
