@@ -65,7 +65,7 @@ const navigationMenus = [
     title: 'Products',
     icon: FaCube,
     links: [
-      // { href: '/products/resume-builder', label: 'Resume Builder', icon: FaFile, description: 'Create professional resumes with AI assistance' },
+      { href: '/products/resume-builder', label: 'Resume Builder', icon: FaFile, description: 'Create professional resumes with AI assistance' },
       { href: '/products/mock-interviews', label: 'Mock Interviews', icon: FaUserTie, description: 'Practice with AI-powered interview simulations' },
       // { href: '/products/ai-feedback', label: 'AI Feedback', icon: FaRobot, description: 'Get instant feedback on your interview responses' },
       // { href: '/products/coding-practice', label: 'Coding Practice', icon: FaCode, description: 'Improve your coding skills with real-world problems' },
@@ -78,7 +78,7 @@ const navigationMenus = [
     title: 'Services',
     icon: FaGear,
     links: [
-      { href: '/services/consultation', label: 'Career Consultation', icon: FaComments, description: 'Get expert career guidance' },
+      { href: '/services/consultation', label: 'Consultation', icon: FaComments, description: 'Get expert career guidance' },
       { href: '/services/cv-revision', label: 'CV Revision', icon: FaPen, description: 'Professional CV review and optimization' },
       // { href: '/services/mock-tests', label: 'Mock Tests', icon: FaListCheck, description: 'Practice with real interview scenarios' },
       { href: '/services/interview-coaching', label: 'Interview Coaching', icon: FaChalkboard, description: 'One-on-one interview preparation' },
