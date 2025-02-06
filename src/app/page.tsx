@@ -13,11 +13,11 @@ export default function Home() {
     <main className="bg-background w-full">
       <Hero />
       <BannerStacks />
-      <TimeComparisonTable />
-      <Features />
-      <HowToUse />
+      {/* <TimeComparisonTable /> */}
+      {/* <Features /> */}
+      {/* <HowToUse />
       <Pricing />
-      <Testimonials />
+      <Testimonials /> */}
       <FAQ />
       <CTA />
     </main>
