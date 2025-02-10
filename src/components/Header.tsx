@@ -99,7 +99,7 @@ const navigationMenus = [
     ],
   },
   {
-    // title: 'Community',
+    title: 'Community',
     icon: FaUsers,
     links: [
       { href: '/community/forums', label: 'Forums', icon: FaComments, description: 'Join the discussion' },
@@ -111,7 +111,7 @@ const navigationMenus = [
     ],
   },
   {
-    // title: 'Company',
+    title: 'Company',
     icon: FaBuilding,
     links: [
       { href: '/company/about', label: 'About Us', icon: FaInfo, description: 'Our story and mission' },
