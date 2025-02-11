@@ -3,13 +3,12 @@
 import { useState } from 'react';
 import { motion } from 'framer-motion';
 import { 
-  ChevronDown, 
-  ChevronUp, 
   RefreshCw, 
   Download,
   Copy,
   Check,
-  ArrowLeft
+  ArrowLeft,
+  ChevronRight
 } from 'lucide-react';
 import { InterviewQuestion, InterviewResult } from '../types';
 
@@ -20,16 +19,8 @@ interface ResultsPageProps {
 }
 
 export default function ResultsPage({ result, onBack, onGenerateMore }: ResultsPageProps) {
-  const [expandedQuestions, setExpandedQuestions] = useState<string[]>([]);
+  const [selectedQuestion, setSelectedQuestion] = useState<string | null>(result.questions[0]?.id || null);
   const [copiedId, setCopiedId] = useState<string | null>(null);
-
-  const toggleQuestion = (id: string) => {
-    setExpandedQuestions(prev => 
-      prev.includes(id) 
-        ? prev.filter(qId => qId !== id)
-        : [...prev, id]
-    );
-  };
 
   const copyToClipboard = async (text: string, id: string) => {
     await navigator.clipboard.writeText(text);
@@ -39,7 +30,7 @@ export default function ResultsPage({ result, onBack, onGenerateMore }: ResultsP
 
   const downloadResults = () => {
     const content = result.questions.map(q => 
-      `Question: ${q.question}\nAnswer: ${q.answer || 'Not provided'}\n\n`
+      `Question: ${q.question}\n\nAnswer: ${q.answer}\n\nCategory: ${q.category}\nDifficulty: ${q.difficulty}\n\n---\n\n`
     ).join('');
     
     const blob = new Blob([content], { type: 'text/plain' });
@@ -53,16 +44,19 @@ export default function ResultsPage({ result, onBack, onGenerateMore }: ResultsP
     URL.revokeObjectURL(url);
   };
 
+  const selectedQuestionData = result.questions.find(q => q.id === selectedQuestion);
+
   return (
-    <div className="min-h-screen bg-background text-white py-12 px-4 md:px-8">
-      <div className="max-w-4xl mx-auto">
-        <div className="flex items-center justify-between mb-8">
+    <div className="min-h-screen bg-background text-white flex flex-col">
+      {/* Header */}
+      <div className="fixed top-0 left-0 right-0 bg-background/80 backdrop-blur-sm z-10 border-b border-white/10">
+        <div className="max-w-[2000px] mx-auto px-4 py-4 flex items-center justify-between">
           <button
             onClick={onBack}
             className="flex items-center text-white/60 hover:text-white transition-colors"
           >
             <ArrowLeft className="w-5 h-5 mr-2" />
-            Back to Form
+            Back
           </button>
           <div className="flex gap-4">
             <button
@@ -70,7 +64,7 @@ export default function ResultsPage({ result, onBack, onGenerateMore }: ResultsP
               className="flex items-center px-4 py-2 rounded-lg bg-white/5 hover:bg-white/10 transition-colors"
             >
               <Download className="w-4 h-4 mr-2" />
-              Download
+              Download All
             </button>
             <button
               onClick={onGenerateMore}
@@ -81,63 +75,102 @@ export default function ResultsPage({ result, onBack, onGenerateMore }: ResultsP
             </button>
           </div>
         </div>
+      </div>
 
-        <div className="space-y-6">
-          {result.questions.map((question, index) => (
+      {/* Main Content */}
+      <div className="flex flex-1 pt-[72px]">
+        {/* Questions Panel (Left Side) */}
+        <div className="w-[400px] bg-background border-r border-white/10 overflow-y-auto fixed top-[72px] bottom-0">
+          <div className="p-4">
+            <h2 className="text-xl font-semibold mb-4">Interview Questions ({result.questions.length})</h2>
+            <div className="space-y-2 pb-4">
+              {result.questions.map((question, index) => (
+                <motion.button
+                  key={question.id}
+                  initial={{ opacity: 0, x: -20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ delay: index * 0.1 }}
+                  onClick={() => setSelectedQuestion(question.id)}
+                  className={`w-full text-left p-4 rounded-lg transition-all ${
+                    selectedQuestion === question.id
+                      ? 'bg-[#fcba28] text-black'
+                      : 'bg-white/5 hover:bg-white/10'
+                  }`}
+                >
+                  <div className="flex items-start">
+                    <span className="mr-2 font-mono">{(index + 1).toString().padStart(2, '0')}.</span>
+                    <div className="flex-1">
+                      <p className="line-clamp-2">{question.question}</p>
+                      <div className="flex gap-2 mt-2">
+                        <span className={`text-xs px-2 py-1 rounded-full ${
+                          selectedQuestion === question.id
+                            ? 'bg-black/20'
+                            : 'bg-white/10'
+                        }`}>
+                          {question.category}
+                        </span>
+                        <span className={`text-xs px-2 py-1 rounded-full ${
+                          selectedQuestion === question.id
+                            ? 'bg-black/20'
+                            : 'bg-white/10'
+                        }`}>
+                          {question.difficulty}
+                        </span>
+                      </div>
+                    </div>
+                    {selectedQuestion === question.id && (
+                      <ChevronRight className="w-5 h-5 ml-auto flex-shrink-0" />
+                    )}
+                  </div>
+                </motion.button>
+              ))}
+            </div>
+          </div>
+        </div>
+
+        {/* Answer Panel (Right Side) */}
+        <div className="ml-[400px] flex-1 p-8 min-h-[calc(100vh-72px)] overflow-y-auto">
+          {selectedQuestionData ? (
             <motion.div
-              key={question.id}
+              key={selectedQuestionData.id}
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: index * 0.1 }}
-              className="bg-white/5 rounded-xl p-6 hover:bg-white/10 transition-all"
+              className="max-w-3xl mx-auto pb-8"
             >
-              <div 
-                className="flex justify-between items-start cursor-pointer"
-                onClick={() => toggleQuestion(question.id)}
-              >
-                <div className="flex-1">
-                  <h3 className="text-lg font-medium text-white">
-                    {index + 1}. {question.question}
-                  </h3>
-                  {question.category && (
-                    <span className="inline-block mt-2 px-3 py-1 rounded-full text-sm bg-white/10 text-white/60">
-                      {question.category}
-                    </span>
-                  )}
+              <div className="bg-white/5 rounded-xl p-6 mb-6">
+                <h2 className="text-2xl font-semibold mb-4">{selectedQuestionData.question}</h2>
+                <div className="flex gap-2 mb-6">
+                  <span className="bg-white/10 text-sm px-3 py-1 rounded-full">
+                    {selectedQuestionData.category}
+                  </span>
+                  <span className="bg-white/10 text-sm px-3 py-1 rounded-full">
+                    {selectedQuestionData.difficulty}
+                  </span>
                 </div>
-                <button className="ml-4 text-white/60 hover:text-white transition-colors">
-                  {expandedQuestions.includes(question.id) ? (
-                    <ChevronUp className="w-5 h-5" />
-                  ) : (
-                    <ChevronDown className="w-5 h-5" />
-                  )}
-                </button>
-              </div>
-
-              {expandedQuestions.includes(question.id) && question.answer && (
-                <motion.div
-                  initial={{ opacity: 0, height: 0 }}
-                  animate={{ opacity: 1, height: 'auto' }}
-                  exit={{ opacity: 0, height: 0 }}
-                  className="mt-4 pt-4 border-t border-white/10"
-                >
-                  <div className="flex justify-between items-start">
-                    <p className="text-white/80 leading-relaxed">{question.answer}</p>
-                    <button
-                      onClick={() => copyToClipboard(question.answer, question.id)}
-                      className="ml-4 text-white/60 hover:text-white transition-colors"
-                    >
-                      {copiedId === question.id ? (
-                        <Check className="w-5 h-5 text-green-500" />
-                      ) : (
-                        <Copy className="w-5 h-5" />
-                      )}
-                    </button>
+                <div className="relative">
+                  <div className="prose prose-invert max-w-none">
+                    <p className="text-white/80 leading-relaxed whitespace-pre-line">
+                      {selectedQuestionData.answer}
+                    </p>
                   </div>
-                </motion.div>
-              )}
+                  <button
+                    onClick={() => copyToClipboard(selectedQuestionData.answer, selectedQuestionData.id)}
+                    className="absolute top-0 right-0 p-2 text-white/60 hover:text-white transition-colors"
+                  >
+                    {copiedId === selectedQuestionData.id ? (
+                      <Check className="w-5 h-5 text-green-500" />
+                    ) : (
+                      <Copy className="w-5 h-5" />
+                    )}
+                  </button>
+                </div>
+              </div>
             </motion.div>
-          ))}
+          ) : (
+            <div className="text-center text-white/60">
+              Select a question to view its answer
+            </div>
+          )}
         </div>
       </div>
     </div>

@@ -23,149 +23,199 @@ function extractJsonArray(text: string): string {
   throw new Error('No JSON array found in response');
 }
 
-export async function POST(request: Request) {
-  try {
-    const userInput: UserInput = await request.json();
-
-    const prompt = `You are an experienced interviewer at ${userInput.company}. Generate a comprehensive set of interview questions for a ${userInput.jobRole} position.
+async function generateQuestionBatch(
+  model: any,
+  userInput: UserInput,
+  category: string,
+  count: number
+): Promise<InterviewQuestion[]> {
+  const prompt = `As an expert technical interviewer at ${userInput.company}, generate ${count} ${category} interview questions for a ${userInput.jobRole} position.
 
 Candidate Profile:
-- Experience: ${userInput.experience} years
-- Skills: ${userInput.skills.join(', ')}
+- Experience Level: ${userInput.experience} years
+- Key Skills: ${userInput.skills.join(', ')}
 ${userInput.resumeText ? `- Resume Context: ${userInput.resumeText}` : ''}
 
-Generate 15 detailed interview questions covering:
-1. Technical Skills (5 questions)
-   - Focus on ${userInput.skills.slice(0, 3).join(', ')}
-   - Include practical scenarios
-   
-2. Behavioral/Soft Skills (5 questions)
-   - Team collaboration
-   - Problem-solving
-   - Communication
-   - Conflict resolution
-   - Leadership/Initiative
-   
-3. Company/Role Specific (5 questions)
-   - Company culture fit
-   - Role-specific challenges
-   - Industry knowledge
-   - Career goals alignment
-   - Project management
+Generate exactly ${count} detailed questions focusing on ${category} aspects.
+Make each question specific to ${userInput.company}'s industry and tech stack.
+Provide detailed model answers (300-400 words) that:
+- Use the STAR method where applicable
+- Include specific examples and scenarios
+- Demonstrate technical depth while maintaining clarity
+- Sound natural and conversational
 
-For each question:
-1. Make it specific to ${userInput.company}'s industry and culture
-2. Provide a detailed, human-like sample answer (300-400 words)
-3. Include specific examples and STAR method responses where applicable
-4. Add follow-up points the interviewer might ask
-
-Return the response in this exact JSON format:
+Return ONLY a JSON array with exactly this format:
 [
   {
     "question": "detailed question text",
     "answer": "comprehensive answer with examples",
-    "category": "Technical|Behavioral|Company Specific",
+    "category": "${category}",
     "difficulty": "easy|medium|hard"
   }
-]
+]`;
 
-Make the answers sound natural and conversational, as if a real person is responding in an interview.`;
-
-    // Generate content using Gemini
-    const model = genAI.getGenerativeModel({ model: 'gemini-pro' });
+  try {
     const geminiResponse = await model.generateContent(prompt);
     const response = await geminiResponse.response;
-    let text = response.text();
+    const text = response.text();
+    
+    const cleanedText = extractJsonArray(text);
+    const parsedQuestions = JSON.parse(cleanedText);
+    
+    return parsedQuestions.map((q: any) => ({
+      id: uuidv4(),
+      question: q.question || 'Question not provided',
+      answer: q.answer || 'Answer not provided',
+      category: q.category || category,
+      difficulty: (q.difficulty?.toLowerCase() === 'easy' || 
+                  q.difficulty?.toLowerCase() === 'medium' || 
+                  q.difficulty?.toLowerCase() === 'hard')
+                  ? q.difficulty.toLowerCase()
+                  : 'medium'
+    }));
+  } catch (error) {
+    console.error(`Error generating ${category} questions:`, error);
+    return [];
+  }
+}
 
-    // Parse the response and format it
-    let questions: InterviewQuestion[] = [];
-    try {
-      text = extractJsonArray(text);
-      text = cleanJsonString(text);
-      if (!text.startsWith('[')) {
-        text = `[${text}]`;
-      }
-      const parsedQuestions = JSON.parse(text);
-      
-      questions = parsedQuestions.map((q: any) => ({
-        id: uuidv4(),
-        question: q.question || 'Question not provided',
-        answer: q.answer || 'Answer not provided',
-        category: q.category || 'General',
-        difficulty: (q.difficulty?.toLowerCase() === 'easy' || 
-                    q.difficulty?.toLowerCase() === 'medium' || 
-                    q.difficulty?.toLowerCase() === 'hard')
-                    ? q.difficulty.toLowerCase()
-                    : 'medium'
-      }));
-    } catch (error) {
-      console.error('Error parsing AI response:', error);
-      // Generate comprehensive fallback questions
+export async function POST(request: Request) {
+  try {
+    const userInput: UserInput = await request.json();
+    const model = genAI.getGenerativeModel({ model: 'gemini-pro' });
+
+    // Generate questions in parallel batches
+    const [technicalQuestions, problemSolvingQuestions, behavioralQuestions] = await Promise.all([
+      generateQuestionBatch(model, userInput, 'Technical', 5),
+      generateQuestionBatch(model, userInput, 'Problem-Solving', 5),
+      generateQuestionBatch(model, userInput, 'Behavioral', 5)
+    ]);
+
+    let questions = [
+      ...technicalQuestions,
+      ...problemSolvingQuestions,
+      ...behavioralQuestions
+    ];
+
+    // If we don't have enough questions, add fallback questions
+    if (questions.length < 5) {
       questions = [
         {
           id: uuidv4(),
-          question: `Can you describe a challenging project you've worked on using ${userInput.skills[0]}?`,
-          answer: `Here's how I would structure my response using the STAR method:
+          question: `Can you walk us through a challenging project where you used ${userInput.skills[0]}?`,
+          answer: `Let me share a significant project from my experience using the STAR method:
 
-Situation: In my previous role, I led a critical project to implement ${userInput.skills[0]} in our core system.
+Situation: At my previous company, we faced a critical challenge with our e-commerce platform that was experiencing performance issues during peak hours, affecting thousands of users.
 
-Task: We needed to improve system performance by 50% while maintaining code quality and ensuring minimal downtime.
+Task: I was tasked with optimizing the platform's performance using ${userInput.skills[0]}, with the goal of reducing load times by 50% and handling 3x more concurrent users.
 
-Action: I took several strategic steps:
-1. First, I conducted a thorough analysis of the existing system
-2. Created a detailed implementation plan with clear milestones
-3. Led a team of 4 developers, delegating tasks based on expertise
-4. Implemented automated testing to ensure quality
-5. Conducted regular code reviews and optimization sessions
+Action: I took a systematic approach:
+1. First, I conducted a thorough performance audit using profiling tools
+2. Identified bottlenecks in the database queries and caching strategy
+3. Implemented a distributed caching solution
+4. Optimized database indexes and query patterns
+5. Set up load balancing and horizontal scaling
+6. Established monitoring and alerting systems
 
-Result: The project was completed 2 weeks ahead of schedule, achieving a 65% performance improvement. This exceeded our initial goal and received recognition from senior management.
+Result: The improvements exceeded expectations:
+- Reduced average load times by 65%
+- Increased system capacity to handle 5x more concurrent users
+- Achieved 99.99% uptime during peak shopping seasons
+- Received recognition from senior management
+- The solution became a template for other teams
 
-I learned the importance of thorough planning, clear communication, and regular testing throughout the development cycle.`,
+Key Learnings:
+- The importance of thorough analysis before implementation
+- The value of incremental improvements and testing
+- How to effectively communicate technical decisions to stakeholders
+- The significance of monitoring and proactive optimization`,
           category: 'Technical',
           difficulty: 'hard'
         },
         {
           id: uuidv4(),
-          question: `How do you handle disagreements with team members when working on complex projects?`,
-          answer: `I believe in addressing conflicts professionally and constructively. Let me share a specific example:
+          question: `How do you approach learning new technologies, and how would you apply this at ${userInput.company}?`,
+          answer: `I have a structured approach to learning new technologies that I've refined over my ${userInput.experience} years in the industry:
 
-In a recent project, a team member and I had different approaches to implementing a critical feature. Instead of letting it create tension, I:
+1. Strategic Assessment:
+- First, I evaluate how the new technology fits into the existing ecosystem
+- Research its strengths, limitations, and best use cases
+- Review community support and documentation quality
 
-1. Scheduled a private meeting to discuss our perspectives
-2. Actively listened to their concerns and shared my viewpoint
-3. Found common ground by focusing on our shared goal of project success
-4. Proposed a hybrid solution that incorporated the best elements of both approaches
-5. Documented our decision and the reasoning behind it
+2. Hands-on Learning:
+- Start with official documentation and tutorials
+- Build small proof-of-concept projects
+- Gradually increase complexity
+- Focus on best practices from the beginning
 
-This approach not only resolved the immediate conflict but also strengthened our working relationship. We ended up creating a better solution than either of us had initially proposed.
+3. Real-world Application:
+- Identify potential use cases within current projects
+- Start with low-risk implementations
+- Seek feedback from experienced users
+- Share knowledge through internal workshops
+- Create documentation for team reference
 
-The key lessons I learned were:
-- Always approach disagreements with respect and openness
-- Focus on the problem, not the person
-- Look for opportunities to create win-win solutions
-- Document decisions and learnings for future reference`,
+At ${userInput.company}, I would:
+- Align learning with your technical roadmap
+- Focus on technologies that complement your stack
+- Share knowledge through internal workshops
+- Create documentation for team reference
+
+Example: Recently, I learned [relevant technology] by:
+1. Building a sample application
+2. Contributing to an open-source project
+3. Writing technical blog posts
+4. Mentoring junior developers
+
+This approach ensures both depth of understanding and practical application.`,
           category: 'Behavioral',
           difficulty: 'medium'
         },
         {
           id: uuidv4(),
-          question: `Why are you interested in joining ${userInput.company}, and how do you see yourself contributing to our team?`,
-          answer: `I'm particularly excited about joining ${userInput.company} for several reasons:
+          question: `How do you handle complex system design challenges? Can you give an example?`,
+          answer: `Let me share my approach to system design using a recent example:
 
-First, I've been following your company's innovative work in [industry/field], and I'm impressed by your recent [mention specific project or achievement]. Your commitment to [company value/mission] aligns perfectly with my professional values.
+Situation: We needed to design a scalable notification system that could handle millions of users with different preferences and delivery channels.
 
-In terms of contribution, I believe my ${userInput.experience} years of experience in ${userInput.jobRole} positions me well to:
+Task: Create a system that could:
+- Process notifications in real-time
+- Support multiple delivery channels (email, push, SMS)
+- Handle user preferences and time zones
+- Ensure delivery reliability
+- Scale horizontally
 
-1. Bring fresh perspectives to your projects, especially in [specific area]
-2. Share best practices from my experience with ${userInput.skills.join(', ')}
-3. Contribute to team growth through mentoring and knowledge sharing
-4. Help drive innovation in [specific company initiative]
+Action:
+1. Requirements Analysis:
+   - Documented functional and non-functional requirements
+   - Estimated traffic and data volume
+   - Identified potential bottlenecks
 
-I've also noticed that ${userInput.company} emphasizes [company culture aspect], which resonates with my working style. In my previous roles, I've consistently [specific achievement], and I'm excited to bring that same energy and commitment to your team.
+2. Architecture Design:
+   - Implemented event-driven architecture
+   - Used message queues for async processing
+   - Designed with microservices pattern
+   - Created data partitioning strategy
 
-Long-term, I see myself growing with the company and taking on increasing responsibilities as I develop deeper expertise in your domain.`,
-          category: 'Company Specific',
-          difficulty: 'medium'
+3. Implementation Strategy:
+   - Built proof of concept
+   - Conducted load testing
+   - Implemented circuit breakers
+   - Added monitoring and alerting
+
+Result:
+- Successfully handled 10x increase in notification volume
+- Reduced delivery latency by 70%
+- Achieved 99.99% delivery reliability
+- System easily scaled during peak loads
+
+This experience taught me the importance of:
+- Thorough planning and requirement analysis
+- Building for scale from the start
+- Implementing proper monitoring
+- Having fallback mechanisms`,
+          category: 'Problem-Solving',
+          difficulty: 'hard'
         }
       ];
     }
