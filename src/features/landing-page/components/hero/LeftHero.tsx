@@ -184,25 +184,17 @@ export const LeftHero = () => {
                 <Link href="/products/mock-interviews/visual-simulation">
                     <FeatureCard
                         icon={Brain}
-                        title="Visual Interview Simulation"
-                        description="Experience realistic interview scenarios with our AI-powered visual simulator"
+                        title="AI Interview Simulation"
+                        description="Practice with our intelligent AI interviewer in a realistic interview environment"
                         delay={0.3}
                     />
                 </Link>
-                <Link href="/products/interview-questions">
+                <Link href="/products/interview-generator">
                     <FeatureCard
                         icon={Target}
-                        title="Interview Questions"
-                        description="Access our comprehensive database of technical and behavioral questions"
+                        title="Smart Question Generator"
+                        description="Generate personalized interview questions and get instant AI-powered feedback"
                         delay={0.4}
-                    />
-                </Link>
-                <Link href="/products/ai-feedback">
-                    <FeatureCard
-                        icon={Trophy}
-                        title="AI Performance Analysis"
-                        description="Get instant feedback and personalized improvement suggestions"
-                        delay={0.5}
                     />
                 </Link>
             </div>
