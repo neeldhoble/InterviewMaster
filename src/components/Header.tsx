@@ -71,6 +71,12 @@ const navigationMenus = [
       // { href: '/products/coding-practice', label: 'Coding Practice', icon: FaCode, description: 'Improve your coding skills with real-world problems' },
       { href: '/products/aptitude-ai', label: 'Aptitude-ai', icon: FaBrain, description: 'Enhance your logical and numerical abilities' },
       // { href: '/products/interview-questions', label: 'Interview Questions', icon: FaCircleQuestion, description: 'Access curated interview questions' },
+      { 
+        href: '/products/interview-generator', 
+        label: 'AI Interview Generator', 
+        icon: FaRobot, 
+        description: 'Generate personalized interview questions with AI' 
+      },
       { href: '/products/Practice-Tests', label: 'Practice Tests', icon: FaClipboard, description: 'Take industry-specific practice tests' },
     ],
   },
