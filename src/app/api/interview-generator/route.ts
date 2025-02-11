@@ -23,6 +23,17 @@ function extractJsonArray(text: string): string {
   throw new Error('No JSON array found in response');
 }
 
+function cleanAnswer(answer: string): string {
+  return answer
+    // Remove asterisks
+    .replace(/\*\*/g, '')
+    .replace(/\*/g, '')
+    // Fix common formatting issues
+    .replace(/\n{3,}/g, '\n\n') // Replace multiple newlines with double newline
+    .replace(/[ \t]+$/gm, '') // Remove trailing whitespace
+    .trim();
+}
+
 async function generateQuestionBatch(
   model: any,
   userInput: UserInput,
@@ -40,6 +51,9 @@ Each question must have:
 2. Detailed answer using STAR method
 3. Real-world examples
 4. Best practices
+
+DO NOT use markdown formatting or asterisks in the answers.
+Format answers in plain text with clear sections and line breaks.
 
 Format as JSON array:
 [{
@@ -64,7 +78,7 @@ Format as JSON array:
     return parsedQuestions.map((q: any) => ({
       id: uuidv4(),
       question: q.question || 'Question not provided',
-      answer: q.answer || 'Answer not provided',
+      answer: cleanAnswer(q.answer || 'Answer not provided'),
       category: q.category || category,
       difficulty: (q.difficulty?.toLowerCase() === 'easy' || 
                   q.difficulty?.toLowerCase() === 'medium' || 
@@ -236,6 +250,12 @@ Example: Recently solved a memory leak by using heap snapshots and implementing 
 
       questions = [...questions, ...fallbackQuestions];
     }
+
+    // Clean all answers one more time before sending
+    questions = questions.map(q => ({
+      ...q,
+      answer: cleanAnswer(q.answer)
+    }));
 
     const interviewResult: InterviewResult = {
       questions: questions.slice(0, 16), // Return up to 16 questions
