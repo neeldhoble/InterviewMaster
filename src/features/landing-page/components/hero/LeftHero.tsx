@@ -1,14 +1,71 @@
-import { motion } from "framer-motion";
+'use client';
+
+import { motion, useAnimation } from "framer-motion";
 import Link from "next/link";
 import { ArrowRight, CheckCircle2, Trophy, Target, Brain, Users, Sparkles } from "lucide-react";
-import { TypeAnimation } from 'react-type-animation';
+import { useEffect, useState } from "react";
+
+const interviewTypes = [
+    'Technical',
+    'Non-Technical',
+    'Behavioral',
+    'Leadership',
+    'Project Management',
+    'General'
+];
+
+const AutoTypingText = () => {
+    const [currentText, setCurrentText] = useState(interviewTypes[0]);
+    const [currentIndex, setCurrentIndex] = useState(0);
+    const controls = useAnimation();
+
+    useEffect(() => {
+        const animateText = async () => {
+            // Fade out current text
+            await controls.start({
+                opacity: 0,
+                y: -20,
+                transition: { duration: 0.3 }
+            });
+
+            // Update text
+            setCurrentText(interviewTypes[currentIndex]);
+
+            // Fade in new text
+            await controls.start({
+                opacity: 1,
+                y: 0,
+                transition: { duration: 0.3 }
+            });
+
+            // Wait before next change
+            setTimeout(() => {
+                setCurrentIndex((prev) => (prev + 1) % interviewTypes.length);
+            }, 1500);
+        };
+
+        animateText();
+    }, [currentIndex, controls]);
+
+    return (
+        <span className="relative inline-block min-w-[300px]">
+            <motion.span
+                animate={controls}
+                className="text-[#fcba28] absolute left-0"
+            >
+                {currentText}
+            </motion.span>
+            <span className="invisible">Project Management</span>
+        </span>
+    );
+};
 
 const FeatureCard = ({ icon: Icon, title, description, delay = 0 }) => (
     <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay }}
-        className="flex gap-4 p-4 rounded-xl bg-white/5 border border-white/10 backdrop-blur-sm"
+        className="flex gap-4 p-4 rounded-xl bg-white/5 border border-white/10 backdrop-blur-sm hover:bg-white/10 transition-colors"
     >
         <motion.div
             animate={{
@@ -77,30 +134,13 @@ export const LeftHero = () => {
                 <motion.h1
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
-                    className="text-5xl font-bold leading-tight mb-4"
+                    className="text-5xl font-bold leading-tight mb-4 min-h-[120px]"
                 >
-                    Master Your{' '}
-                    <TypeAnimation
-                        sequence={[
-                            'Technical',
-                            1500,
-                            'Non-Technical',
-                            1500,
-                            'Behavioral',
-                            1500,
-                            'Leadership',
-                            1500,
-                            'Project Management',
-                            1500,
-                            'General',
-                            1500,
-                        ]}
-                        wrapper="span"
-                        speed={50}
-                        className="text-[#fcba28]"
-                        repeat={Infinity}
-                    />{' '}
-                    Interview Journey with AI
+                    <div className="relative">
+                        Master Your{' '}
+                        <AutoTypingText />
+                        {' '}Interview Journey with AI
+                    </div>
                 </motion.h1>
                 <motion.p
                     initial={{ opacity: 0, y: 20 }}
@@ -133,7 +173,7 @@ export const LeftHero = () => {
                 </Link>
                 <Link
                     href="/products/Practice-Tests"
-                    className="flex items-center gap-2 px-6 py-3 rounded-xl bg-white/5 border border-white/10 font-semibold hover:bg-white/10"
+                    className="flex items-center gap-2 px-6 py-3 rounded-xl bg-white/5 border border-white/10 font-semibold hover:bg-white/10 transition-colors"
                 >
                     Practice Tests
                 </Link>
@@ -199,33 +239,15 @@ export const LeftHero = () => {
                 className="flex flex-col gap-3"
             >
                 {[
-                    "Interactive visual interview simulations",
-                    "Comprehensive question database",
-                    "Real-time AI feedback and analysis",
+                    "Trusted by 100,000+ users worldwide",
+                    "AI-powered personalized feedback",
+                    "Regular updates with new features",
                 ].map((text, index) => (
-                    <motion.div
-                        key={index}
-                        initial={{ opacity: 0, x: -20 }}
-                        animate={{ opacity: 1, x: 0 }}
-                        transition={{ delay: 1 + index * 0.1 }}
-                        className="flex items-center gap-2 text-sm text-white/60"
-                    >
+                    <div key={index} className="flex items-center gap-2 text-sm text-white/60">
                         <CheckCircle2 className="w-4 h-4 text-[#fcba28]" />
                         {text}
-                    </motion.div>
+                    </div>
                 ))}
-            </motion.div>
-
-            {/* Quick Links */}
-            <motion.div
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                transition={{ delay: 1.3 }}
-                className="flex gap-4 text-sm text-white/60"
-            >
-                <Link href="/services/consultation" className="hover:text-[#fcba28]">Consultation</Link>
-                <Link href="/services/interview-coaching" className="hover:text-[#fcba28]">Interview Coaching</Link>
-                <Link href="/services/cv-revision" className="hover:text-[#fcba28]">CV Revision</Link>
             </motion.div>
         </div>
     );
