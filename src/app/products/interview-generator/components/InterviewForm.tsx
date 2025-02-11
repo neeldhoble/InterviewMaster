@@ -9,16 +9,18 @@ import {
   Clock,
   Loader,
   ArrowRight,
-  X
+  X,
+  Loader2
 } from 'lucide-react';
 import { UserInput } from '../types';
 
 interface InterviewFormProps {
   onClose: () => void;
   onSubmit: (data: UserInput) => Promise<void>;
+  loading: boolean;
 }
 
-export default function InterviewForm({ onClose, onSubmit }: InterviewFormProps) {
+export default function InterviewForm({ onClose, onSubmit, loading }: InterviewFormProps) {
   const [isLoading, setIsLoading] = useState(false);
   const [userInput, setUserInput] = useState<UserInput>({
     name: '',
@@ -26,8 +28,8 @@ export default function InterviewForm({ onClose, onSubmit }: InterviewFormProps)
     experience: '',
     skills: [],
     jobRole: '',
-    company: '', // Added company field
-    resumeText: '', // Will store OCR text
+    company: '', 
+    resumeText: '', 
   });
 
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -52,6 +54,11 @@ export default function InterviewForm({ onClose, onSubmit }: InterviewFormProps)
     } finally {
       setIsLoading(false);
     }
+  };
+
+  const handleSkillsChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const skills = e.target.value.split(',').map(skill => skill.trim()).filter(Boolean);
+    setUserInput(prev => ({ ...prev, skills }));
   };
 
   return (
@@ -126,7 +133,7 @@ export default function InterviewForm({ onClose, onSubmit }: InterviewFormProps)
                 required
                 className="w-full px-4 py-3 rounded-xl bg-white/5 text-white border border-white/10 focus:border-[#fcba28] focus:ring-1 focus:ring-[#fcba28] focus:outline-none transition-all hover:border-white/20"
                 value={userInput.skills.join(', ')}
-                onChange={(e) => setUserInput({ ...userInput, skills: e.target.value.split(',').map(s => s.trim()) })}
+                onChange={handleSkillsChange}
               />
             </div>
 
@@ -162,12 +169,12 @@ export default function InterviewForm({ onClose, onSubmit }: InterviewFormProps)
 
             <button
               type="submit"
-              disabled={isLoading}
-              className="w-full bg-gradient-to-r from-[#fcba28] to-[#fcd978] hover:from-[#fcd978] hover:to-[#fcba28] text-black font-semibold py-4 px-6 rounded-xl transition-all duration-300 flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed group"
+              disabled={isLoading || loading}
+              className={`w-full bg-gradient-to-r from-[#fcba28] to-[#fcd978] hover:from-[#fcd978] hover:to-[#fcba28] text-black font-semibold py-4 px-6 rounded-xl transition-all duration-300 flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed group`}
             >
-              {isLoading ? (
+              {(isLoading || loading) ? (
                 <>
-                  <Loader className="w-5 h-5 mr-2 animate-spin" />
+                  <Loader2 className="w-5 h-5 mr-2 animate-spin" />
                   Generating Questions...
                 </>
               ) : (
