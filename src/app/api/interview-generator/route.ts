@@ -27,32 +27,27 @@ async function generateQuestionBatch(
   model: any,
   userInput: UserInput,
   category: string,
-  count: number
+  count: number,
+  retryCount = 0
 ): Promise<InterviewQuestion[]> {
-  const prompt = `As an expert technical interviewer at ${userInput.company}, generate ${count} ${category} interview questions for a ${userInput.jobRole} position.
+  const prompt = `Generate ${count} interview questions for a ${userInput.jobRole} position at ${userInput.company}.
+Focus on ${category} questions.
+Key skills: ${userInput.skills.join(', ')}
+Experience: ${userInput.experience} years
 
-Candidate Profile:
-- Experience Level: ${userInput.experience} years
-- Key Skills: ${userInput.skills.join(', ')}
-${userInput.resumeText ? `- Resume Context: ${userInput.resumeText}` : ''}
+Each question must have:
+1. Clear, specific question text
+2. Detailed answer using STAR method
+3. Real-world examples
+4. Best practices
 
-Generate exactly ${count} detailed questions focusing on ${category} aspects.
-Make each question specific to ${userInput.company}'s industry and tech stack.
-Provide detailed model answers (300-400 words) that:
-- Use the STAR method where applicable
-- Include specific examples and scenarios
-- Demonstrate technical depth while maintaining clarity
-- Sound natural and conversational
-
-Return ONLY a JSON array with exactly this format:
-[
-  {
-    "question": "detailed question text",
-    "answer": "comprehensive answer with examples",
-    "category": "${category}",
-    "difficulty": "easy|medium|hard"
-  }
-]`;
+Format as JSON array:
+[{
+  "question": "question text",
+  "answer": "detailed answer",
+  "category": "${category}",
+  "difficulty": "easy|medium|hard"
+}]`;
 
   try {
     const geminiResponse = await model.generateContent(prompt);
@@ -62,6 +57,10 @@ Return ONLY a JSON array with exactly this format:
     const cleanedText = extractJsonArray(text);
     const parsedQuestions = JSON.parse(cleanedText);
     
+    if (!Array.isArray(parsedQuestions) || parsedQuestions.length === 0) {
+      throw new Error('Invalid response format');
+    }
+
     return parsedQuestions.map((q: any) => ({
       id: uuidv4(),
       question: q.question || 'Question not provided',
@@ -75,6 +74,11 @@ Return ONLY a JSON array with exactly this format:
     }));
   } catch (error) {
     console.error(`Error generating ${category} questions:`, error);
+    // Retry up to 3 times with a smaller batch
+    if (retryCount < 3) {
+      console.log(`Retrying ${category} questions, attempt ${retryCount + 1}`);
+      return generateQuestionBatch(model, userInput, category, Math.max(2, Math.floor(count / 2)), retryCount + 1);
+    }
     return [];
   }
 }
@@ -84,144 +88,157 @@ export async function POST(request: Request) {
     const userInput: UserInput = await request.json();
     const model = genAI.getGenerativeModel({ model: 'gemini-pro' });
 
-    // Generate questions in parallel batches
-    const [technicalQuestions, problemSolvingQuestions, behavioralQuestions] = await Promise.all([
-      generateQuestionBatch(model, userInput, 'Technical', 5),
-      generateQuestionBatch(model, userInput, 'Problem-Solving', 5),
-      generateQuestionBatch(model, userInput, 'Behavioral', 5)
+    // Generate questions in smaller batches with retries
+    const batches = await Promise.all([
+      // Technical questions in two batches
+      generateQuestionBatch(model, userInput, 'Technical', 3),
+      generateQuestionBatch(model, userInput, 'Technical', 3),
+      // Problem-solving questions in two batches
+      generateQuestionBatch(model, userInput, 'Problem-Solving', 3),
+      generateQuestionBatch(model, userInput, 'Problem-Solving', 2),
+      // Behavioral questions in two batches
+      generateQuestionBatch(model, userInput, 'Behavioral', 3),
+      generateQuestionBatch(model, userInput, 'Behavioral', 2)
     ]);
 
-    let questions = [
-      ...technicalQuestions,
-      ...problemSolvingQuestions,
-      ...behavioralQuestions
-    ];
+    let questions = batches.flat();
 
-    // If we don't have enough questions, add fallback questions
-    if (questions.length < 5) {
-      questions = [
+    // If we still don't have enough questions, add fallback questions
+    if (questions.length < 10) {
+      const fallbackQuestions = [
         {
           id: uuidv4(),
-          question: `Can you walk us through a challenging project where you used ${userInput.skills[0]}?`,
-          answer: `Let me share a significant project from my experience using the STAR method:
+          question: `Describe a challenging project where you used ${userInput.skills[0]}. What problems did you face and how did you solve them?`,
+          answer: `Let me share a significant project that showcases my experience with ${userInput.skills[0]}:
 
-Situation: At my previous company, we faced a critical challenge with our e-commerce platform that was experiencing performance issues during peak hours, affecting thousands of users.
+Situation: Our team was facing performance issues with our main application during peak hours, affecting user experience.
 
-Task: I was tasked with optimizing the platform's performance using ${userInput.skills[0]}, with the goal of reducing load times by 50% and handling 3x more concurrent users.
+Task: I was tasked with optimizing the application performance and reducing load times by 50%.
 
-Action: I took a systematic approach:
-1. First, I conducted a thorough performance audit using profiling tools
-2. Identified bottlenecks in the database queries and caching strategy
-3. Implemented a distributed caching solution
-4. Optimized database indexes and query patterns
-5. Set up load balancing and horizontal scaling
-6. Established monitoring and alerting systems
+Action:
+1. Conducted thorough performance profiling
+2. Identified bottlenecks in database queries
+3. Implemented caching strategy
+4. Optimized front-end assets
+5. Set up monitoring tools
 
-Result: The improvements exceeded expectations:
-- Reduced average load times by 65%
-- Increased system capacity to handle 5x more concurrent users
-- Achieved 99.99% uptime during peak shopping seasons
-- Received recognition from senior management
-- The solution became a template for other teams
+Result:
+- Reduced load times by 65%
+- Improved user satisfaction scores
+- Implemented best practices that became team standards
+- Received recognition from management
 
-Key Learnings:
-- The importance of thorough analysis before implementation
-- The value of incremental improvements and testing
-- How to effectively communicate technical decisions to stakeholders
-- The significance of monitoring and proactive optimization`,
+This project taught me valuable lessons about performance optimization and the importance of monitoring.`,
           category: 'Technical',
           difficulty: 'hard'
         },
         {
           id: uuidv4(),
-          question: `How do you approach learning new technologies, and how would you apply this at ${userInput.company}?`,
-          answer: `I have a structured approach to learning new technologies that I've refined over my ${userInput.experience} years in the industry:
+          question: `How do you stay updated with new technologies and best practices?`,
+          answer: `I have a systematic approach to continuous learning:
 
-1. Strategic Assessment:
-- First, I evaluate how the new technology fits into the existing ecosystem
-- Research its strengths, limitations, and best use cases
-- Review community support and documentation quality
+1. Daily Practice:
+- Read technical blogs and documentation
+- Follow industry experts on social media
+- Participate in online communities
 
 2. Hands-on Learning:
-- Start with official documentation and tutorials
-- Build small proof-of-concept projects
-- Gradually increase complexity
-- Focus on best practices from the beginning
+- Build side projects
+- Contribute to open source
+- Take online courses
 
-3. Real-world Application:
-- Identify potential use cases within current projects
-- Start with low-risk implementations
-- Seek feedback from experienced users
-- Share knowledge through internal workshops
-- Create documentation for team reference
+3. Knowledge Sharing:
+- Write technical articles
+- Mentor junior developers
+- Present at team meetings
 
-At ${userInput.company}, I would:
-- Align learning with your technical roadmap
-- Focus on technologies that complement your stack
-- Share knowledge through internal workshops
-- Create documentation for team reference
-
-Example: Recently, I learned [relevant technology] by:
-1. Building a sample application
-2. Contributing to an open-source project
-3. Writing technical blog posts
-4. Mentoring junior developers
-
-This approach ensures both depth of understanding and practical application.`,
+I recently learned [new technology] by building a small project and sharing my learnings with the team.`,
           category: 'Behavioral',
           difficulty: 'medium'
         },
         {
           id: uuidv4(),
-          question: `How do you handle complex system design challenges? Can you give an example?`,
-          answer: `Let me share my approach to system design using a recent example:
+          question: `How would you design a scalable notification system?`,
+          answer: `Here's my approach to designing a scalable notification system:
 
-Situation: We needed to design a scalable notification system that could handle millions of users with different preferences and delivery channels.
+Architecture Components:
+1. Message Queue (RabbitMQ/Kafka)
+2. Worker Services
+3. Database Sharding
+4. Caching Layer
 
-Task: Create a system that could:
-- Process notifications in real-time
-- Support multiple delivery channels (email, push, SMS)
-- Handle user preferences and time zones
-- Ensure delivery reliability
-- Scale horizontally
+Key Features:
+- Asynchronous processing
+- Multiple delivery channels
+- Retry mechanism
+- Rate limiting
+- Analytics
 
-Action:
-1. Requirements Analysis:
-   - Documented functional and non-functional requirements
-   - Estimated traffic and data volume
-   - Identified potential bottlenecks
+Implementation:
+1. Use event-driven architecture
+2. Implement circuit breakers
+3. Add monitoring and alerts
+4. Use horizontal scaling
 
-2. Architecture Design:
-   - Implemented event-driven architecture
-   - Used message queues for async processing
-   - Designed with microservices pattern
-   - Created data partitioning strategy
-
-3. Implementation Strategy:
-   - Built proof of concept
-   - Conducted load testing
-   - Implemented circuit breakers
-   - Added monitoring and alerting
-
-Result:
-- Successfully handled 10x increase in notification volume
-- Reduced delivery latency by 70%
-- Achieved 99.99% delivery reliability
-- System easily scaled during peak loads
-
-This experience taught me the importance of:
-- Thorough planning and requirement analysis
-- Building for scale from the start
-- Implementing proper monitoring
-- Having fallback mechanisms`,
+This design ensures reliability and scalability while maintaining performance.`,
           category: 'Problem-Solving',
           difficulty: 'hard'
+        },
+        {
+          id: uuidv4(),
+          question: `How do you handle conflicts in a team environment?`,
+          answer: `I approach conflicts professionally and constructively:
+
+1. Listen First:
+- Understand all perspectives
+- Stay objective
+- Focus on facts
+
+2. Find Common Ground:
+- Identify shared goals
+- Look for win-win solutions
+- Keep team success in focus
+
+3. Take Action:
+- Propose solutions
+- Document decisions
+- Follow up regularly
+
+Example: Recently mediated a disagreement about coding standards by organizing a team workshop to create shared guidelines.`,
+          category: 'Behavioral',
+          difficulty: 'medium'
+        },
+        {
+          id: uuidv4(),
+          question: `Explain your approach to debugging complex issues.`,
+          answer: `My systematic debugging approach:
+
+1. Reproduce the Issue:
+- Gather information
+- Document steps
+- Identify patterns
+
+2. Analyze:
+- Check logs
+- Use debugging tools
+- Test hypotheses
+
+3. Solve:
+- Make targeted changes
+- Test thoroughly
+- Document solution
+
+Example: Recently solved a memory leak by using heap snapshots and implementing proper cleanup methods.`,
+          category: 'Problem-Solving',
+          difficulty: 'medium'
         }
       ];
+
+      questions = [...questions, ...fallbackQuestions];
     }
 
     const interviewResult: InterviewResult = {
-      questions,
+      questions: questions.slice(0, 16), // Return up to 16 questions
       timestamp: new Date().toISOString(),
       userInput,
     };
