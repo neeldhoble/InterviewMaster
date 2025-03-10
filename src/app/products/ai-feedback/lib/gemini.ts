@@ -28,7 +28,7 @@ export async function analyzeWithGemini(
   level: string
 ): Promise<DetailedFeedback> {
   try {
-    const model = genAI.getGenerativeModel({ model: "gemini-pro" });
+    const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash-exp" });
 
     const prompt = `As an expert technical interviewer for ${role} positions, analyze this ${type} interview response for a ${level} position:
 

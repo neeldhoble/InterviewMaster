@@ -205,7 +205,7 @@ Return only the HTML structure without any CSS or explanations.`;
 
 const enhanceContent = async (content: string, role: string, industry: string) => {
   const genAI = new GoogleGenerativeAI(process.env.NEXT_PUBLIC_GEMINI_API_KEY || '');
-  const model = genAI.getGenerativeModel({ model: "gemini-pro" });
+  const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash-exp" });
 
   const enhancementPrompt = `Enhance this resume content for a ${role} position in the ${industry} industry:
 
@@ -230,7 +230,7 @@ Return only the enhanced HTML without any explanations.`;
 export const generateDynamicTemplate = async (resumeData: ResumeData, options: CustomizationOptions) => {
   try {
     const genAI = new GoogleGenerativeAI(process.env.NEXT_PUBLIC_GEMINI_API_KEY || '');
-    const model = genAI.getGenerativeModel({ model: "gemini-pro" });
+    const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash-exp" });
 
     // Generate base styles
     const baseStyles = generateBaseStyles();

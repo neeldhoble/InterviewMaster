@@ -172,7 +172,7 @@ export const ResumeProvider = ({ children }: { children: ReactNode }) => {
 
   const analyzeResume = async () => {
     try {
-      const model = genAI.getGenerativeModel({ model: "gemini-pro" });
+      const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash-exp" });
       const prompt = `Analyze this resume and provide feedback:
       ${JSON.stringify(resumeData, null, 2)}`;
 

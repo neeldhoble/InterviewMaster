@@ -30,7 +30,7 @@ export async function POST(request: Request) {
       );
     }
 
-    const model = genAI.getGenerativeModel({ model: "gemini-pro" });
+    const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash-exp" });
 
     const prompt = `
     Act as an expert personal branding consultant. Analyze the following professional profile and provide detailed branding recommendations. Format your response as a valid JSON object with the structure shown below.

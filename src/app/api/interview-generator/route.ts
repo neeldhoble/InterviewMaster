@@ -100,7 +100,7 @@ Format as JSON array:
 export async function POST(request: Request) {
   try {
     const userInput: UserInput = await request.json();
-    const model = genAI.getGenerativeModel({ model: 'gemini-pro' });
+    const model = genAI.getGenerativeModel({ model: 'gemini-2.0-flash-exp' });
 
     // Generate questions in smaller batches with retries
     const batches = await Promise.all([

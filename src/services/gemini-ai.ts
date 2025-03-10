@@ -27,7 +27,7 @@ export const generatePersonalizedTest = async (
     weakAreas: string[];
   }
 ): Promise<PersonalizedTest> => {
-  const model = genAI.getGenerativeModel({ model: "gemini-pro" });
+  const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash-exp" });
 
   const prompt = `Generate a personalized aptitude test based on the following criteria:
     User Level: ${userLevel}
@@ -64,7 +64,7 @@ export const generateFeedback = async (
   question: AptitudeQuestion,
   timeTaken: number
 ): Promise<string> => {
-  const model = genAI.getGenerativeModel({ model: "gemini-pro" });
+  const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash-exp" });
 
   const prompt = `Analyze this aptitude question response:
     Question: ${question.question}

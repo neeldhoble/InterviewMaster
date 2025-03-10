@@ -23,7 +23,7 @@ export async function generateQuestions(params: {
       throw new Error('Gemini AI not initialized');
     }
 
-    const model = genAI.getGenerativeModel({ model: 'gemini-pro' });
+    const model = genAI.getGenerativeModel({ model: 'gemini-2.0-flash-exp' });
 
     const prompt = `Generate ${params.questionsCount} ${params.difficulty} difficulty practice questions for these topics: ${params.topics.join(', ')}.
     
@@ -81,7 +81,7 @@ export async function generateAssessment(params: {
       throw new Error('Gemini AI not initialized');
     }
 
-    const model = genAI.getGenerativeModel({ model: 'gemini-pro' });
+    const model = genAI.getGenerativeModel({ model: 'gemini-2.0-flash-exp' });
 
     const prompt = `Generate a ${params.difficulty} difficulty assessment with ${params.questionsCount} questions for these topics: ${params.topics.join(', ')}.
     The assessment should be completed in ${params.duration} minutes.

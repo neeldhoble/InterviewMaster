@@ -175,7 +175,7 @@ export async function analyzeCV(cvText: string): Promise<any> {
     console.log('Initializing Gemini client...'); // Debug log
     const genAI = getGeminiClient();
     console.log('Getting Gemini model...'); // Debug log
-    const model = genAI.getGenerativeModel({ model: "gemini-pro" });
+    const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash-exp" });
 
     console.log('Calculating ATS scores...'); // Debug log
     const atsScores = calculateATSScores(cvText);

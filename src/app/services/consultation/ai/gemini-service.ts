@@ -72,7 +72,7 @@ export async function getGeminiResponse(
   profile?: CareerProfile
 ): Promise<string> {
   try {
-    const model = genAI.getGenerativeModel({ model: 'gemini-pro' });
+    const model = genAI.getGenerativeModel({ model: 'gemini-2.0-flash-exp' });
     
     let externalData: ExternalProfileData = {};
     if (profile) {

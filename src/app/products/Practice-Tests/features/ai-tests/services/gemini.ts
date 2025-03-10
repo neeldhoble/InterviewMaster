@@ -113,7 +113,7 @@ export async function generateTest(formData: TestFormData) {
   }
 
   try {
-    const model = genAI.getGenerativeModel({ model: 'gemini-pro' });
+    const model = genAI.getGenerativeModel({ model: 'gemini-2.0-flash-exp' });
     const prompt = generatePrompt(formData);
 
     const result = await model.generateContent(prompt);

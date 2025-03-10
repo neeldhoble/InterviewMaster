@@ -29,7 +29,7 @@ export async function parseResumeWithGemini(resumeText: string): Promise<ParsedR
     }
 
     // Get the generative model
-    const model = genAI.getGenerativeModel({ model: 'gemini-pro' });
+    const model = genAI.getGenerativeModel({ model: 'gemini-2.0-flash-exp' });
 
     // Create a structured prompt for resume parsing
     const prompt = `

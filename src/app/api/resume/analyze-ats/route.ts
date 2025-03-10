@@ -47,7 +47,7 @@ export async function POST(req: Request) {
     `;
 
     // Initialize the model
-    const model = genAI.getGenerativeModel({ model: "gemini-pro" });
+    const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash-exp" });
 
     // Prompt for ATS analysis
     const prompt = `

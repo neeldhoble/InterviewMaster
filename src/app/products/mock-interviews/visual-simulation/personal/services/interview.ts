@@ -59,7 +59,7 @@ export async function parseResume(resumeText: string): Promise<ResumeData> {
       throw new Error('Gemini API key is not configured');
     }
 
-    const model = genAI.getGenerativeModel({ model: 'gemini-pro' });
+    const model = genAI.getGenerativeModel({ model: 'gemini-2.0-flash-exp' });
     
     // Create a more structured prompt that forces JSON output
     const prompt = `You are a professional resume parser. Your task is to extract key information from the resume and return it in a specific JSON format. Do not include any explanations or text outside of the JSON structure.
@@ -191,7 +191,7 @@ export async function generateInterviewQuestions(resumeData: ResumeData, targetR
       throw new Error('Gemini API key is not configured');
     }
 
-    const model = genAI.getGenerativeModel({ model: 'gemini-pro' });
+    const model = genAI.getGenerativeModel({ model: 'gemini-2.0-flash-exp' });
     
     // Create a structured prompt for generating interview questions
     const prompt = `You are an expert technical interviewer. Generate a series of interview questions based on the candidate's resume and ${targetRole ? `target role: ${targetRole}` : 'current role'}. 
@@ -317,7 +317,7 @@ export async function generateFeedback(
       throw new Error('API key not configured');
     }
 
-    const model = genAI.getGenerativeModel({ model: 'gemini-pro' });
+    const model = genAI.getGenerativeModel({ model: 'gemini-2.0-flash-exp' });
     const prompt = `As an expert interviewer, evaluate this interview response.
 
 Question Type: ${question.type}
@@ -391,7 +391,7 @@ export async function generateFollowUpResponse(
       throw new Error('API key not configured');
     }
 
-    const model = genAI.getGenerativeModel({ model: 'gemini-pro' });
+    const model = genAI.getGenerativeModel({ model: 'gemini-2.0-flash-exp' });
     const prompt = `As an expert interviewer, generate a natural follow-up response to the candidate's answer.
 
 Context:

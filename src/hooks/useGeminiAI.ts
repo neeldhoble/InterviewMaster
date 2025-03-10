@@ -6,7 +6,7 @@ const genAI = new GoogleGenerativeAI(process.env.NEXT_PUBLIC_GEMINI_API_KEY || "
 export function useGeminiAI() {
   const generateQuestion = async (topic: string, difficulty: string, previousPerformance?: string) => {
     try {
-      const model = genAI.getGenerativeModel({ model: "gemini-pro" });
+      const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash-exp" });
       
       const prompt = `Generate a ${difficulty} level aptitude question for ${topic}.
       Format the response as a JSON object with the following structure:
@@ -35,7 +35,7 @@ export function useGeminiAI() {
 
   const analyzePerfomance = async (questions: any[], answers: any[]) => {
     try {
-      const model = genAI.getGenerativeModel({ model: "gemini-pro" });
+      const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash-exp" });
       
       const prompt = `Analyze the user's performance on these aptitude questions:
       Questions and Answers: ${JSON.stringify({ questions, answers })}
@@ -68,7 +68,7 @@ export function useGeminiAI() {
     difficulty: string
   ) => {
     try {
-      const model = genAI.getGenerativeModel({ model: "gemini-pro" });
+      const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash-exp" });
       
       const prompt = `Provide personalized feedback for this aptitude question:
       Question: ${question}
