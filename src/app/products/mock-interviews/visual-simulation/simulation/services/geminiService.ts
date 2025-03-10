@@ -54,9 +54,9 @@ Respond in this exact JSON format (do not include any other text):
         // Provide a more helpful default response
         return {
           analysis: "Let me analyze your response about your background. Your answer includes some basic information about your education and experience, but it could be more structured and professional. Consider organizing your response using the STAR method.",
-          improvedAnswer: "Hello, I'm Umesh Deshmukh, currently a third-year B.Tech student in Computer Science and Business Systems at St. Vincent Pallotti College of Engineering in Nagpur. I have experience in C and C++ development through my work at Cognizant, and I've also gained valuable experience in marketing. I'm passionate about combining my technical skills with business knowledge to create innovative solutions.",
+          improvedAnswer: "Hello, I'm Humesh Deshmukh, currently a third-year B.Tech student in Computer Science and Business Systems at St. Vincent Pallotti College of Engineering in Nagpur. I have experience in C and C++ development through my work at Cognizant, and I've also gained valuable experience in marketing. I'm passionate about combining my technical skills with business knowledge to create innovative solutions.",
           modelAnswer: "Hello, I'm a third-year Computer Science and Business Systems student with a strong foundation in software development and a keen interest in business applications. My academic journey at St. Vincent Pallotti College has equipped me with both technical expertise and business acumen. I've gained practical experience through my work with C and C++ development, and I've also explored marketing to understand the business side of technology. I'm particularly interested in how technology can solve real-world business challenges, which is why I chose this specific program that combines both aspects.",
-          score: 65,
+          score: 75,
           keyImprovements: [
             "Structure your answer with a clear introduction, relevant experience, and future goals",
             "Polish your delivery by avoiding fragmented sentences and maintaining better flow",
